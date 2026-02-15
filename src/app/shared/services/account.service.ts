@@ -74,7 +74,7 @@ export class AccountService {
 
   environment = {
     production: false,
-    urlAddress: 'https://localhost:7087',
+    urlAddress: 'https://dev.fovestta.com/auth',
   };
 
   public get userValue() {

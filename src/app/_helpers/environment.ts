@@ -4,15 +4,15 @@
 
 export const environment = {
   production: false,
-  urlAddress: 'https://localhost:7087',
+  urlAddress: 'https://dev.fovestta.com/auth',
   biometricAddress: 'https://localhost:7230',
-  ESSBaseUrl: 'https://localhost:7230',
+  ESSBaseUrl: 'https://dev.fovestta.com/employee',
   cnbUrlAddress: 'https://localhost:7245',
-   salaryUrlAddress: 'https://localhost:7046',
-     reportsUrl: 'https://localhost:7225',
-    reimbursementUrl: 'https://localhost:7281',
-    EssUrlAddress: 'https://localhost:7064',
-    masterUrlAddress: 'https://localhost:7291',
+  salaryUrlAddress: 'https://dev.fovestta.com/master',
+  reportsUrl: 'https://localhost:7225',
+  reimbursementUrl: 'https://localhost:7281',
+  EssUrlAddress: 'https://dev.fovestta.com/employee',
+  masterUrlAddress: 'https://dev.fovestta.com/master',
 };
 
 // Alternative for development with TLS issues:

@@ -5,13 +5,9 @@
 
   <ng-container *ngIf="user; else notLoggedIn">
     <div class="profile-card">
-      <img 
-        class="profile-image" 
-        [src]="user.employeePhoto || 'assets/img/user_profile_.jpg'" 
-        alt="Profile Image"
-      />
-      <h3><b>Welcome, {{ user.firstName }} {{ user.lastName }}!</b></h3>
-      <p>📧 {{ user.email }}</p>
+      <img class="profile-image" [src]="user.employeePhoto || 'assets/img/user_profile_.jpg'" alt="Profile Image" />
+      <h3><b>Welcome, {{ user.firstName || user.employeeName || user.firstName }} {{ user.lastName || '' }}!</b></h3>
+      <p>📧 {{ user.email || user.employeeEmail }}</p>
       <!-- <button mat-menu-item routerLink="#" (click)="logout()">
         Logout
       </button> -->
@@ -23,26 +19,25 @@
         <div class="form-row">
           <div class="input-group">
             <label>Name</label>
-            <input type="text" [value]="user.firstName + ' ' + user.lastName" readonly>
+            <input type="text" [value]="(user.firstName || user.employeeName || '') + ' ' + (user.lastName || '')"
+              readonly>
           </div>
           <div class="input-group">
             <label>Code</label>
-            <input type="text" [value]="user.employeeCode" readonly>
+            <input type="text" [value]="user.employeeCode || user.code" readonly>
           </div>
         </div>
 
         <div class="form-row">
           <div class="input-group">
             <label>Designation</label>
-            <input type="text" [value]="user.designationName" readonly>
+            <input type="text" [value]="user.designationName || user.designation" readonly>
           </div>
           <div class="input-group">
             <label>Role</label>
-            <input 
-              type="text" 
-              [value]="user.employeeRoleLoginDtos?.[0]?.roleName || user.employeeRoleLoginDtos?.[0]?.roleDisplayName || 'N/A'" 
-              readonly
-            >
+            <input type="text"
+              [value]="user.employeeRoleLoginDtos?.[0]?.roleName || user.employeeRoleLoginDtos?.[0]?.roleDisplayName || user.role || 'N/A'"
+              readonly>
           </div>
         </div>
 
@@ -50,18 +45,18 @@
         <div class="form-row">
           <div class="input-group">
             <label>Department</label>
-            <input type="text" [value]="user.departmentName" readonly>
+            <input type="text" [value]="user.departmentName || user.department" readonly>
           </div>
           <div class="input-group">
             <label>Company</label>
-            <input type="text" [value]="user.companyName" readonly>
+            <input type="text" [value]="user.companyName || user.company" readonly>
           </div>
         </div>
 
         <div class="form-row">
           <div class="input-group">
             <label>Branch</label>
-            <input type="text" [value]="user.branchName" readonly>
+            <input type="text" [value]="user.branchName || user.branch" readonly>
           </div>
         </div>
       </form>

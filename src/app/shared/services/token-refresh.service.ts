@@ -6,9 +6,9 @@ import { AccountService } from './account.service';
 import { ErrorLoggingService } from './error-logging.service';
 
 export interface Login {
-    email: string;
-    password: string;
-    rememberMe?: boolean;
+  email: string;
+  password: string;
+  rememberMe?: boolean;
 }
 
 @Injectable({
@@ -23,7 +23,7 @@ export class TokenRefreshService {
     private http: HttpClient,
     private accountService: AccountService,
     private errorLogger: ErrorLoggingService
-  ) {}
+  ) { }
 
   /**
    * Attempt to refresh the token
@@ -32,9 +32,9 @@ export class TokenRefreshService {
    * 2. Re-authenticate using stored credentials
    * 3. Return null if refresh is not possible
    */
-    environment = {
+  environment = {
     production: false,
-    urlAddress: 'https://localhost:7274',
+    urlAddress: 'https://dev.fovestta.com/auth',
   };
   refreshToken(): Observable<string | null> {
     // If refresh is already in progress, return the subject
@@ -47,7 +47,7 @@ export class TokenRefreshService {
 
     // Try to get refresh token from storage
     const refreshToken = this.getRefreshToken();
-    
+
     if (refreshToken) {
       // Strategy 1: Use refresh token endpoint
       return this.refreshTokenUsingRefreshToken(refreshToken);
@@ -62,7 +62,7 @@ export class TokenRefreshService {
    */
   private refreshTokenUsingRefreshToken(refreshToken: string): Observable<string | null> {
     const url = `${this.environment.urlAddress}/api/Account/RefreshToken`;
-    
+
     return this.http.post<{ token: string; refreshToken?: string }>(url, { refreshToken }).pipe(
       tap((response) => {
         if (response.token) {
@@ -94,7 +94,7 @@ export class TokenRefreshService {
   private refreshTokenUsingStoredCredentials(): Observable<string | null> {
     // Check if we have stored credentials (only if user opted for "remember me")
     const storedCredentials = this.getStoredCredentials();
-    
+
     if (!storedCredentials) {
       this.refreshTokenInProgress = false;
       this.refreshTokenSubject.next(null);
@@ -131,8 +131,8 @@ export class TokenRefreshService {
    */
   private getRefreshToken(): string | null {
     try {
-      const refreshToken = sessionStorage.getItem('refreshToken') || 
-                          localStorage.getItem('refreshToken');
+      const refreshToken = sessionStorage.getItem('refreshToken') ||
+        localStorage.getItem('refreshToken');
       return refreshToken ? JSON.parse(refreshToken) : null;
     } catch {
       return null;

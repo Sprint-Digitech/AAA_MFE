@@ -1,0 +1,88 @@
+<div class="shell-wrapper" [ngClass]="{'no-shell': isLoginPage, 'sidebar-collapsed': isSidebarCollapsed}">
+  <!-- Sidebar -->
+  <aside class="sidebar" *ngIf="!isLoginPage">
+    <div class="sidebar-header">
+      <div class="logo-group">
+        <img src="/assets/img/fovesta1.png" alt="Logo" class="sidebar-logo">
+        <span class="divider"></span>
+        <span class="brand-text">HRMS</span>
+      </div>
+      <button class="toggle-btn" (click)="toggleSidebar()">
+        <mat-icon>menu</mat-icon>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <!-- Static Demo Items based on screenshot -->
+        <li><a routerLink="/master" routerLinkActive="active"><mat-icon>grid_view</mat-icon> <span>Master</span></a>
+        </li>
+        <li><a routerLink="/settings" routerLinkActive="active"><mat-icon>settings</mat-icon> <span>Settings</span></a>
+        </li>
+        <li><a routerLink="/employee/employeesList" routerLinkActive="active"><mat-icon>badge</mat-icon>
+            <span>Employee</span></a>
+        </li>
+        <li><a routerLink="/alms" routerLinkActive="active"><mat-icon>calendar_today</mat-icon> <span>ALMS</span></a>
+        </li>
+        <li><a routerLink="/salary/salaryreport" routerLinkActive="active"><mat-icon>currency_rupee</mat-icon>
+            <span>Salary</span></a></li>
+        <li><a routerLink="/loan" routerLinkActive="active"><mat-icon>account_balance_wallet</mat-icon>
+            <span>Loan</span></a></li>
+        <li><a routerLink="/reports" routerLinkActive="active"><mat-icon>assessment</mat-icon> <span>Reports</span></a>
+        </li>
+        <li><a routerLink="/bonus" routerLinkActive="active"><mat-icon>emoji_events</mat-icon> <span>Bonus</span></a>
+        </li>
+        <li><a routerLink="/reimbursement" routerLinkActive="active"><mat-icon>payments</mat-icon>
+            <span>Reimbursement</span></a></li>
+        <li><a routerLink="/ess" routerLinkActive="active"><mat-icon>info</mat-icon> <span>ESS Portal</span></a></li>
+        <li><a routerLink="/access" routerLinkActive="active"><mat-icon>vpn_key</mat-icon> <span>Access
+              Rights</span></a></li>
+        <li><a routerLink="/gratuity" routerLinkActive="active"><mat-icon>account_balance</mat-icon>
+            <span>Gratuity</span></a></li>
+        <li><a routerLink="/arrear" routerLinkActive="active"><mat-icon>history</mat-icon> <span>Arrear</span></a></li>
+
+        <!-- Dynamic Items if any (filtered) -->
+        <ng-container *ngFor="let menu of menus">
+          <li *ngIf="!['Master', 'Settings', 'Employee', 'ALMS', 'Salary'].includes(menu.menuDisplayName)">
+            <a [routerLink]="menu.menuPath" routerLinkActive="active">
+              <mat-icon>list</mat-icon> <span>{{ menu.menuDisplayName }}</span>
+            </a>
+          </li>
+        </ng-container>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>Copyright © 2024</p>
+      <p>Outsmart Technology</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Box -->
+  <div class="main-container">
+    <!-- Header -->
+    <header class="header" *ngIf="!isLoginPage">
+      <div class="header-left">
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search">
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="company-badge" *ngIf="user">
+          <img src="/assets/img/fovesta1.png" alt="Company" class="company-logo">
+          <span class="company-name">{{ user.companyName || 'Core Tech Pvt Ltd' }}</span>
+        </div>
+        <div class="user-profile">
+          <div class="avatar">{{ user?.firstName?.charAt(0) || 'N' }}{{ user?.lastName?.charAt(0) || 'P' }}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area" [ngClass]="{'full-page': isLoginPage}">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

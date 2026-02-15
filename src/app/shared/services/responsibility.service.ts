@@ -5,11 +5,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   providedIn: 'root',
 })
 export class ResponsibilityService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   environment = {
     production: false,
-    urlAddress: 'https://localhost:7274',
+    urlAddress: 'https://dev.fovestta.com/auth',
   };
 
   private createCompleteRoute = (route: string, envAddress: string) => {

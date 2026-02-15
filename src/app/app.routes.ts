@@ -47,234 +47,90 @@ export const routes: Routes = [
             ),
     },
     {
-        path: 'company/companyGroup',
-        loadComponent: () =>
-            import('./registration/company-group/company-group.component').then(
-                (m) => m.CompanyGroupComponent
-            ),
+        path: 'company',
+        children: [
+            { path: 'companyGroup', loadComponent: () => import('./registration/company-group/company-group.component').then(m => m.CompanyGroupComponent) },
+            { path: 'updateCompanyGroup/:id', loadComponent: () => import('./registration/company-group-add/company-group-add.component').then(m => m.CompanyGroupAddComponent) },
+            { path: 'list', loadComponent: () => import('./registration/companies/companies.component').then(m => m.CompaniesComponent) },
+            { path: 'update/:companyId', loadComponent: () => import('./registration/add-company/add-company.component').then(m => m.AddCompanyComponent) },
+            { path: 'details/:companyId', loadComponent: () => import('./registration/company-details/company-details.component').then(m => m.CompanyDetailsComponent) },
+            { path: 'addBranch/:companyId', loadComponent: () => import('./registration/add-branch/add-branch.component').then(m => m.AddBranchComponent) },
+            { path: 'updateBranch/:companyId/:id', loadComponent: () => import('./registration/add-branch/add-branch.component').then(m => m.AddBranchComponent) },
+            { path: 'branchDetails/:companyId/:id', loadComponent: () => import('./registration/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
+            { path: 'workspace', loadComponent: () => import('./registration/workspace/workspace.component').then(m => m.WorkspaceComponent) },
+            { path: 'add-existing-company', loadComponent: () => import('./registration/add-existing-company/add-existing-company.component').then(m => m.AddExistingCompanyComponent) }
+        ]
     },
     {
-        path: 'company/updateCompanyGroup/:id',
-        loadComponent: () =>
-            import('./registration/company-group-add/company-group-add.component').then(
-                (m) => m.CompanyGroupAddComponent
-            ),
+        path: 'MenuMaster',
+        children: [
+            { path: 'MenuMasterList', loadComponent: () => import('./registration/menu-master/menu-master.component').then(m => m.MenuMasterComponent) },
+            { path: 'addMenuMaster', loadComponent: () => import('./registration/add-menu-master/add-menu-master.component').then(m => m.AddMenuMasterComponent) },
+            { path: 'updateMenuMaster/:menuID', loadComponent: () => import('./registration/add-menu-master/add-menu-master.component').then(m => m.AddMenuMasterComponent) },
+            { path: 'MenuRoleMapping', loadComponent: () => import('./registration/menu-role-mapping/menu-role-mapping.component').then(m => m.MenuRoleMappingComponent) },
+            { path: 'addMenuRoleMapping', loadComponent: () => import('./registration/edit-menu-role-mapping/edit-menu-role-mapping.component').then(m => m.EditMenuRoleMappingComponent) }
+        ]
     },
     {
-        path: 'company/list',
-        loadComponent: () =>
-            import('./registration/companies/companies.component').then(
-                (m) => m.CompaniesComponent
-            ),
+        path: 'userRolesAndPermissions',
+        children: [
+            { path: 'roles', loadComponent: () => import('./registration/roles/roles.component').then(m => m.RolesComponent) },
+            { path: 'addRoles', loadComponent: () => import('./registration/roles-add/roles-add.component').then(m => m.RolesAddComponent) },
+            { path: 'updateRoles/:roleID', loadComponent: () => import('./registration/roles-add/roles-add.component').then(m => m.RolesAddComponent) }
+        ]
     },
     {
-        path: 'company/update/:companyId',
-        loadComponent: () =>
-            import('./registration/add-company/add-company.component').then(
-                (m) => m.AddCompanyComponent
-            ),
+        path: 'responsibility',
+        children: [
+            { path: 'responsibility-list', loadComponent: () => import('./registration/responsibility-list/responsibility-list.component').then(m => m.ResponsibilityListComponent) },
+            { path: 'addResponsibilityList', loadComponent: () => import('./registration/add-responsibility-list/add-responsibility-list.component').then(m => m.AddResponsibilityListComponent) },
+            { path: 'updateResponsibilityList', loadComponent: () => import('./registration/add-responsibility-list/add-responsibility-list.component').then(m => m.AddResponsibilityListComponent) },
+            { path: 'archResponsibilityMappingList', loadComponent: () => import('./registration/responsibility-arch-mapping-list/responsibility-arch-mapping-list.component').then(m => m.ResponsibilityArchMappingListComponent) },
+            { path: 'addArchResponsibilityMappingList', loadComponent: () => import('./registration/add-responsibility-arch-mapping-list/add-responsibility-arch-mapping-list.component').then(m => m.AddResponsibilityArchMappingListComponent) },
+            { path: 'updateArchResponsibilityMappingList', loadComponent: () => import('./registration/add-responsibility-arch-mapping-list/add-responsibility-arch-mapping-list.component').then(m => m.AddResponsibilityArchMappingListComponent) },
+            { path: 'mappingResponsibilityList', loadComponent: () => import('./registration/responsibility-mapping-list/responsibility-mapping-list.component').then(m => m.ResponsibilityMappingListComponent) },
+            { path: 'addMappingResponsibilityList', loadComponent: () => import('./registration/add-responsibility-mapping-list/add-responsibility-mapping-list.component').then(m => m.AddResponsibilityMappingListComponent) },
+            { path: 'updateMappingResponsibilityList', loadComponent: () => import('./registration/add-responsibility-mapping-list/add-responsibility-mapping-list.component').then(m => m.AddResponsibilityMappingListComponent) }
+        ]
     },
     {
-        path: 'company/details/:companyId',
-        loadComponent: () =>
-            import('./registration/company-details/company-details.component').then(
-                (m) => m.CompanyDetailsComponent
-            ),
+        path: 'esiCalculationMonthLimit', loadComponent: () => import('./registration/esi-calculation-month-list/esi-calculation-month-list.component').then(m => m.EsiCalculationMonthListComponent)
     },
     {
-        path: 'company/addBranch/:companyId',
-        loadComponent: () =>
-            import('./registration/add-branch/add-branch.component').then(
-                (m) => m.AddBranchComponent
-            ),
+        path: 'addEsiCalculationMonthLimit', loadComponent: () => import('./registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component').then(m => m.AddEsiCalculationMonthLimitComponent)
     },
     {
-        path: 'company/updateBranch/:companyId/:id',
-        loadComponent: () =>
-            import('./registration/add-branch/add-branch.component').then(
-                (m) => m.AddBranchComponent
-            ),
+        path: 'updateEsiCalculationMonthLimit/:id', loadComponent: () => import('./registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component').then(m => m.AddEsiCalculationMonthLimitComponent)
     },
     {
-        path: 'company/branchDetails/:companyId/:id',
-        loadComponent: () =>
-            import('./registration/branch-details/branch-details.component').then(
-                (m) => m.BranchDetailsComponent
-            ),
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            if (path === 'employee') return { consumed: url };
+            return null;
+        },
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'http://localhost:4207', title: 'Employee Management' }
     },
     {
-        path: 'company/workspace',
-        loadComponent: () =>
-            import('./registration/workspace/workspace.component').then(
-                (m) => m.WorkspaceComponent
-            ),
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            const salaryModules = ['bonus', 'reimbursement', 'ess', 'access', 'gratuity', 'arrear', 'salary', 'loan', 'reports', 'master', 'utility', 'attendance', 'payroll', 'settings'];
+            if (salaryModules.includes(path)) return { consumed: url };
+            return null;
+        },
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'http://localhost:4206', title: 'Salary & Master Data' }
     },
     {
-        path: 'company/add-existing-company',
-        loadComponent: () =>
-            import(
-                './registration/add-existing-company/add-existing-company.component'
-            ).then((m) => m.AddExistingCompanyComponent),
-    },
-    {
-        path: 'MenuMaster/MenuMasterList',
-        loadComponent: () =>
-            import('./registration/menu-master/menu-master.component').then(
-                (m) => m.MenuMasterComponent
-            ),
-    },
-    {
-        path: 'MenuMaster/addMenuMaster',
-        loadComponent: () =>
-            import('./registration/add-menu-master/add-menu-master.component').then(
-                (m) => m.AddMenuMasterComponent
-            ),
-    },
-    {
-        path: 'MenuMaster/updateMenuMaster/:menuID',
-        loadComponent: () =>
-            import('./registration/add-menu-master/add-menu-master.component').then(
-                (m) => m.AddMenuMasterComponent
-            ),
-    },
-    {
-        path: 'MenuMaster/MenuRoleMapping',
-        loadComponent: () =>
-            import('./registration/menu-role-mapping/menu-role-mapping.component').then(
-                (m) => m.MenuRoleMappingComponent
-            ),
-    },
-    {
-        path: 'MenuMaster/addMenuRoleMapping',
-        loadComponent: () =>
-            import(
-                './registration/edit-menu-role-mapping/edit-menu-role-mapping.component'
-            ).then((m) => m.EditMenuRoleMappingComponent),
-    },
-    {
-        path: 'userRolesAndPermissions/roles',
-        loadComponent: () =>
-            import('./registration/roles/roles.component').then(
-                (m) => m.RolesComponent
-            ),
-    },
-    {
-        path: 'userRolesAndPermissions/addRoles',
-        loadComponent: () =>
-            import('./registration/roles-add/roles-add.component').then(
-                (m) => m.RolesAddComponent
-            ),
-    },
-    {
-        path: 'userRolesAndPermissions/updateRoles/:roleID',
-        loadComponent: () =>
-            import('./registration/roles-add/roles-add.component').then(
-                (m) => m.RolesAddComponent
-            ),
-    },
-    {
-        path: 'responsibility/responsibility-list',
-        loadComponent: () =>
-            import(
-                './registration/responsibility-list/responsibility-list.component'
-            ).then((m) => m.ResponsibilityListComponent),
-    },
-    {
-        path: 'responsibility/addResponsibilityList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-list/add-responsibility-list.component'
-            ).then((m) => m.AddResponsibilityListComponent),
-    },
-    {
-        path: 'responsibility/updateResponsibilityList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-list/add-responsibility-list.component'
-            ).then((m) => m.AddResponsibilityListComponent),
-    },
-    {
-        path: 'responsibility/archResponsibilityMappingList',
-        loadComponent: () =>
-            import(
-                './registration/responsibility-arch-mapping-list/responsibility-arch-mapping-list.component'
-            ).then((m) => m.ResponsibilityArchMappingListComponent),
-    },
-    {
-        path: 'responsibility/addArchResponsibilityMappingList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-arch-mapping-list/add-responsibility-arch-mapping-list.component'
-            ).then((m) => m.AddResponsibilityArchMappingListComponent),
-    },
-    {
-        path: 'responsibility/updateArchResponsibilityMappingList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-arch-mapping-list/add-responsibility-arch-mapping-list.component'
-            ).then((m) => m.AddResponsibilityArchMappingListComponent),
-    },
-    {
-        path: 'responsibility/mappingResponsibilityList',
-        loadComponent: () =>
-            import(
-                './registration/responsibility-mapping-list/responsibility-mapping-list.component'
-            ).then((m) => m.ResponsibilityMappingListComponent),
-    },
-    {
-        path: 'responsibility/addMappingResponsibilityList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-mapping-list/add-responsibility-mapping-list.component'
-            ).then((m) => m.AddResponsibilityMappingListComponent),
-    },
-    {
-        path: 'responsibility/updateMappingResponsibilityList',
-        loadComponent: () =>
-            import(
-                './registration/add-responsibility-mapping-list/add-responsibility-mapping-list.component'
-            ).then((m) => m.AddResponsibilityMappingListComponent),
-    },
-    {
-        path: 'esiCalculationMonthLimit',
-        loadComponent: () =>
-            import(
-                './registration/esi-calculation-month-list/esi-calculation-month-list.component'
-            ).then((m) => m.EsiCalculationMonthListComponent),
-    },
-    {
-        path: 'addEsiCalculationMonthLimit',
-        loadComponent: () =>
-            import(
-                './registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component'
-            ).then((m) => m.AddEsiCalculationMonthLimitComponent),
-    },
-    {
-        path: 'updateEsiCalculationMonthLimit/:id',
-        loadComponent: () =>
-            import(
-                './registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component'
-            ).then((m) => m.AddEsiCalculationMonthLimitComponent),
-    },
-    {
-        path: 'branch-probation-setting',
-        loadComponent: () =>
-            import(
-                './registration/branch-probation-settings-list/branch-probation-settings-list.component'
-            ).then((m) => m.BranchProbationSettingsListComponent),
-    },
-    {
-        path: 'add-branch-probation-setting',
-        loadComponent: () =>
-            import(
-                './registration/add-branch-probation-settings/add-branch-probation-settings.component'
-            ).then((m) => m.AddBranchProbationSettingsComponent),
-    },
-    {
-        path: 'update-branch-probation-setting/:branchProbationSettingId',
-        loadComponent: () =>
-            import(
-                './registration/add-branch-probation-settings/add-branch-probation-settings.component'
-            ).then((m) => m.AddBranchProbationSettingsComponent),
-    },
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            if (path === 'alms') return { consumed: url };
+            return null;
+        },
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'http://localhost:4205', title: 'ALMS' }
+    }
 ];

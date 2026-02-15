@@ -1,1 +1,98 @@
-<router-outlet />
+<div class="shell-wrapper" [ngClass]="{'no-shell': isLoginPage, 'sidebar-collapsed': !isExpanded}">
+    <!-- Sidebar (SD Nemo Style) -->
+    <aside class="sidebar" [class.expanded]="isExpanded" *ngIf="!isLoginPage">
+        <div class="menu-items">
+            <div class="menu-header">
+                <ng-container *ngIf="!isExpanded; else expandedHeader">
+                    <button class="logo-toggle" type="button" (click)="toggleSidebar()">
+                        <div class="logo-box">
+                            <img src="assets/img/fovesta1.png" alt="Logo" class="logo-img">
+                        </div>
+                    </button>
+                </ng-container>
+                <ng-template #expandedHeader>
+                    <div class="logo-wrapper">
+                        <div class="logo-box">
+                            <img src="assets/img/fovesta1.png" alt="Logo" class="logo-img">
+                            <span class="divider-line"></span>
+                            <span class="label">HRMS</span>
+                        </div>
+                        <span class="hamburger-icon" (click)="toggleSidebar()">
+                            <mat-icon>menu</mat-icon>
+                        </span>
+                    </div>
+                </ng-template>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="menu-item" *ngFor="let item of menus" [class.active]="isSubmenuOpen(item.menuDisplayName)">
+                    <div class="menu-item-content" (click)="onMenuClick($event, item)"
+                        [routerLink]="!hasSubmenu(item) ? item.menuPath : null" routerLinkActive="active">
+                        <span class="icon">
+                            <mat-icon>{{ getIcon(item.menuDisplayName) }}</mat-icon>
+                        </span>
+                        <span class="label" *ngIf="isExpanded">{{ item.menuDisplayName }}</span>
+                    </div>
+
+                    <!-- Fixed-position Flyout Submenu -->
+                    <div class="submenu" *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName) && isExpanded"
+                        [style.top.px]="currentSubmenuTop" [style.left.px]="isExpanded ? 180 : 60"
+                        (click)="$event.stopPropagation()">
+                        <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
+                            routerLinkActive="active-submenu" (click)="closeSubmenus()">
+                            {{ sub.menuDisplayName }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Fallback Static Items -->
+                <ng-container *ngIf="!menus || menus.length === 0">
+                    <div class="menu-item">
+                        <div class="menu-item-content" routerLink="/master" routerLinkActive="active">
+                            <span class="icon"><mat-icon>grid_view</mat-icon></span>
+                            <span class="label" *ngIf="isExpanded">Master</span>
+                        </div>
+                    </div>
+                </ng-container>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer (SD Nemo Style) -->
+        <div class="sidebar-footer">
+            <p>Copyright © 2024</p>
+            <p>Outsmart Technology</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Box -->
+    <div class="main-container">
+        <!-- Header (SD Nemo Style) -->
+        <header class="header" *ngIf="!isLoginPage">
+            <div class="header-left">
+                <div class="search-box">
+                    <mat-icon>search</mat-icon>
+                    <input type="text" placeholder="Search">
+                </div>
+            </div>
+
+            <div class="header-brand">
+                <img src="assets/img/fovesta1.png" alt="Brand" class="brand-logo">
+                <span class="brand-name">{{ user?.companyName || 'Outsmart' }}</span>
+            </div>
+
+            <div class="header-right">
+                <div class="user-profile">
+                    <div class="avatar">
+                        {{ user?.firstName?.charAt(0) || user?.employeeName?.charAt(0) || 'N' }}{{
+                        user?.lastName?.charAt(0) || 'P' }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="content-area" [ngClass]="{'full-page': isLoginPage}">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</div>

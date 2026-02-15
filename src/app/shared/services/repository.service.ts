@@ -9,14 +9,14 @@ import { EnvironmentUrlService } from './environment-url.service';
   providedIn: 'root',
 })
 export class RepositoryService {
-    public urlAddress: string = environment.urlAddress;
-    public reportsUrl: string = environment.reportsUrl;
-    public salaryUrlAddress: string = environment.salaryUrlAddress;
+  public urlAddress: string = environment.urlAddress;
+  public reportsUrl: string = environment.reportsUrl;
+  public salaryUrlAddress: string = environment.salaryUrlAddress;
 
 
   constructor(
     private http: HttpClient,
-        private envUrl: EnvironmentUrlService
+    private envUrl: EnvironmentUrlService
 
   ) { }
 
@@ -32,12 +32,12 @@ export class RepositoryService {
   };
   //for report 
   public getReportData(route: string): Observable<any[]> {
-  return this.http.get<any[]>(
-    this.createCompleteRoute(route, this.reportsUrl)
-  );
-}
+    return this.http.get<any[]>(
+      this.createCompleteRoute(route, this.reportsUrl)
+    );
+  }
 
-//for salry 
+  //for salry 
   public getData = (route: string) => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.salaryUrlAddress)
@@ -54,13 +54,13 @@ export class RepositoryService {
     return this.http.put(url, body);
   };
 
-   public getSalaryDetails = (route: any) => {
+  public getSalaryDetails = (route: any) => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.salaryUrlAddress)
     );
   };
 
-   public getEmployeeSalary = (route: string): Observable<any[]> => {
+  public getEmployeeSalary = (route: string): Observable<any[]> => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.salaryUrlAddress)
     );
@@ -73,17 +73,23 @@ export class RepositoryService {
     );
   };
 
-   public getEmployeeSummaries = (route: string): Observable<any[]> => {
+  public getEmployeeSummaries = (route: string): Observable<any[]> => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.salaryUrlAddress)
     );
   };
-  
-    public getEmployeeSalaries = (route: string, options?: any): Observable<any[]> => {
+
+  public getEmployeeSalaries = (route: string, options?: any): Observable<any[]> => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.salaryUrlAddress),
       options
     ) as unknown as Observable<any[]>;
+  };
+
+  public getBranch = (route: string) => {
+    return this.http.get<any[]>(
+      this.createCompleteRoute(route, this.salaryUrlAddress)
+    );
   };
 
   deleteData(route: string, body: any = {}) {

@@ -12,6 +12,10 @@ import { ErrorInterceptor } from './_helpers/error-interceptor';
 import { LoaderInterceptor } from './loader/loader.interceptor';
 import { TokenRefreshInterceptor } from './_helpers/token-refresh.interceptor';
 import { JwtInterceptor } from './_helpers/jwt-interceptor.interceptor';
+import { SOCIAL_AUTH_CONFIG, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
+import {
+  GoogleLoginProvider,
+} from '@abacritt/angularx-social-login';
 
 import { routes } from './app.routes';
 
@@ -47,5 +51,22 @@ export const appConfig: ApplicationConfig = {
       useClass: JwtInterceptor,
       multi: true,
     },
+    {
+      provide: SOCIAL_AUTH_CONFIG,
+      useValue: {
+        autoLogin: false,
+        providers: [
+          {
+            id: GoogleLoginProvider.PROVIDER_ID,
+            provider: new GoogleLoginProvider(
+              'YOUR_CLIENT_ID'
+            )
+          }
+        ],
+        onError: (err) => {
+          console.error(err);
+        }
+      } as SocialAuthServiceConfig,
+    }
   ],
 };

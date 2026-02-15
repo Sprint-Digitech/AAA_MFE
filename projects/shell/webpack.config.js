@@ -2,7 +2,7 @@ const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPl
 
 module.exports = {
   output: {
-    uniqueName: "login",
+    uniqueName: "shell",
     publicPath: "auto",
   },
   optimization: {
@@ -10,10 +10,11 @@ module.exports = {
   },
   plugins: [
     new ModuleFederationPlugin({
-      name: "login",
-      filename: "remoteEntry.js",
-      exposes: {
-        "./Component": "./src/app/app.component.ts",
+      remotes: {
+        login: "login@http://localhost:4204/remoteEntry.js",
+        alms: "alms@http://localhost:4205/remoteEntry.js",
+        salary: "salary@http://localhost:4206/remoteEntry.js",
+        employee: "employee@http://localhost:4207/remoteEntry.js",
       },
       shared: {
         "@angular/core": { singleton: true, strictVersion: true, requiredVersion: "auto" },

@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable, forkJoin } from 'rxjs';
-import { EmployeeEligibilityDto } from '../../../../src/app/_models/employeeEligibilityDto.model';
-import { EligibilityCriteriaDto } from '../../../../src/app/_models/eligibilityCriteriaDto.model';
-import { ApprovalRequestEligibilityDto } from '../../../../src/app/_models/approvalRequestEligibilityDto.model';
-import { ApprovalResponseEligibilityDto } from '../../../../src/app/_models/approvalResponseEligibilityDto.model';
+import { EmployeeEligibilityDto } from '../../_models/employeeEligibilityDto.model';
+import { EligibilityCriteriaDto } from '../../_models/eligibilityCriteriaDto.model';
+import { ApprovalRequestEligibilityDto } from '../../_models/approvalRequestEligibilityDto.model';
+import { ApprovalResponseEligibilityDto } from '../../_models/approvalResponseEligibilityDto.model';
 
 
 interface BonusEligibilityRequest {
@@ -70,7 +70,7 @@ export class EmployeeEligibilityService {
   private baseUrl: string;
   environment = {
     production: false,
-    urlAddress: 'https://localhost:7087',
+    urlAddress: 'https://dev.fovestta.com/auth',
   };
   constructor(
     private http: HttpClient,
