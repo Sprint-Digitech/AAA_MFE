@@ -71,7 +71,61 @@
             <div class="header-left">
                 <div class="search-box">
                     <mat-icon>search</mat-icon>
-                    <input type="text" placeholder="Search">
+                    <input type="text" placeholder="Search employees..." 
+                           [(ngModel)]="globalSearchTerm"
+                               (input)="onHeaderInput(globalSearchTerm)"
+ (focus)="openGlobalSearchResults()" />
+                    <button type="button" class="clear-search-btn" *ngIf="globalSearchTerm" 
+                            (click)="clearGlobalSearch()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+
+                    <!-- Search Results Dropdown -->
+                    <div class="global-search-results" *ngIf="isGlobalSearchOpen">
+                        <div class="global-search-content">
+                            <div class="search-heading">
+                                <span>Employee Search</span>
+                                <button type="button" (click)="closeGlobalSearch()">
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            </div>
+
+                            <div class="search-status" *ngIf="isSearchingEmployees">
+                                <span>Searching employees…</span>
+                            </div>
+
+                            <ng-container *ngIf="!isSearchingEmployees">
+                                <div class="search-empty" *ngIf="!globalEmployeeResults.length">
+                                    <mat-icon>person_off</mat-icon>
+                                    <p>No employees found</p>
+                                    <small>Try searching with another code or name.</small>
+                                </div>
+
+                                <ul class="search-result-list" *ngIf="globalEmployeeResults.length">
+                                    <li *ngFor="let employee of globalEmployeeResults" 
+                                        (click)="navigateToEmployee(employee)">
+                                        <div class="employee-initial">
+                                            {{ (employee?.employeeFirstName || '?') | slice:0:1 }}
+                                        </div>
+                                        <div class="employee-meta">
+                                            <span class="employee-name">
+                                                {{ employee?.employeeFirstName }} 
+                                                {{ employee?.employeeMiddleName }} 
+                                                {{ employee?.employeeLastName }}
+                                            </span>
+                                            <span class="employee-code" *ngIf="employee?.employeeCode">
+                                                Code: {{ employee?.employeeCode }}
+                                            </span>
+                                            <span class="employee-dept" *ngIf="employee?.departmentName">
+                                                {{ employee?.departmentName }}
+                                            </span>
+                                        </div>
+                                        <mat-icon>chevron_right</mat-icon>
+                                    </li>
+                                </ul>
+                            </ng-container>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -81,10 +135,45 @@
             </div>
 
             <div class="header-right">
-                <div class="user-profile">
-                    <div class="avatar">
-                        {{ user?.firstName?.charAt(0) || user?.employeeName?.charAt(0) || 'N' }}{{
-                        user?.lastName?.charAt(0) || 'P' }}
+                 <button type="button" class="user-profile" (click)="onUserClick($event)">
+                    <div class="avatar">{{ userInitials }}</div>
+                </button>
+
+                <!-- User Dropdown Menu -->
+                <div class="user-profile-dropdown" *ngIf="showUserDropdown">
+                    <div class="user-menu__content">
+                        <div class="user-menu__card">
+                            <div class="user-menu__profile">
+                                <div class="user-menu__avatar">{{ userInitials }}</div>
+                                <div class="user-menu__info">
+                                    <div class="user-menu__name">{{ userDetails.name || 'User' }}</div>
+                                    <div class="user-menu__email" *ngIf="userDetails.email">{{ userDetails.email }}</div>
+                                </div>
+                            </div>
+
+                            <div class="user-menu__list" *ngIf="userDetails.role || userDetails.department || userDetails.designation">
+                                <div class="user-menu__row" *ngIf="userDetails.role">
+                                    <span class="user-menu__label">Role</span>
+                                    <span class="user-menu__value">{{ userDetails.role }}</span>
+                                </div>
+                                <div class="user-menu__row" *ngIf="userDetails.department">
+                                    <span class="user-menu__label">Department</span>
+                                    <span class="user-menu__value">{{ userDetails.department }}</span>
+                                </div>
+                                <div class="user-menu__row" *ngIf="userDetails.designation">
+                                    <span class="user-menu__label">Designation</span>
+                                    <span class="user-menu__value">{{ userDetails.designation }}</span>
+                                </div>
+                            </div>
+
+                            <button type="button" class="user-menu__signout" 
+                                    (click)="logout(); $event.stopPropagation()"
+                                    (mouseenter)="onSignoutHover(true)" 
+                                    (mouseleave)="onSignoutHover(false)">
+                                <mat-icon>logout</mat-icon>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

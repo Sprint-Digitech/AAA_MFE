@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+
 
 @Component({
   selector: 'app-login-container',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,],
   template: `
     <div style="height: 100%; width: 100%; border: none; background: #fff;">
-      <div style="padding: 10px; background: #e74c3c; color: white;">
+      <!-- <div style="padding: 10px; background: #e74c3c; color: white; text-align: center; position: absolute; justify-content: center; width: 100%; z-index: 10;">
         Login Container Diagnostic: Attempting to load {{ baseUrl }}
-      </div>
+      </div> -->
       <iframe *ngIf="safeUrl" 
               [src]="safeUrl" 
               style="width: 100%; height: 100%; border: none;"

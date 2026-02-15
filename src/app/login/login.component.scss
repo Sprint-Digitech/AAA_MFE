@@ -11,14 +11,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100vw;
   height: 100vh;
   gap: 0;
   border-radius: 0;
   overflow: hidden;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+}
+
+.main>img {
+  display: none;
 }
 
 .login-wrapper {
@@ -35,39 +35,46 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 .left-section {
   flex: 1;
   background: #e5e5e5;
-  padding: 40px;
+  padding: 40px 40px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   position: relative;
-  height: 100%;
+  margin-top: -130px;
 }
 
 .logo-box {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
   background-color: transparent;
-  margin-bottom: 30px;
+  padding-top: 50px;
+  width: fit-content;
+  margin-top: 33px;
 }
 
 .logo-img {
-  width: 140px;
+  width: 141px;
   height: auto;
   object-fit: contain;
+  background: transparent;
+  mix-blend-mode: multiply;
+  border: none;
+  display: block;
+  transform: translateY(6px);
 }
 
 .divider-line {
   width: 1px;
   height: 28px;
   background-color: #606060;
+  transform: translateY(2px);
 }
 
 .label {
@@ -75,54 +82,63 @@
   font-size: 24px;
   font-weight: 500;
   font-family: 'Poppins';
+  display: flex;
+  align-items: center;
+  transform: translateY(2px);
 }
 
 .text-section {
-  h1 {
-    font-size: 40px;
-    font-weight: 700;
-    color: #0E1B2C;
-    font-family: 'Poppins';
-    margin-bottom: 10px;
-    line-height: 100%;
-  }
+  margin-top: 20px;
+}
 
-  p {
-    color: #303030;
-    line-height: 1.6;
-    font-size: 15px;
-    max-width: 440px;
-    font-weight: 400;
-    font-family: 'Poppins';
-    text-align: left;
-    margin-bottom: 30px;
-  }
+.text-section h1 {
+  font-size: 40px;
+  font-weight: 700;
+  color: #0E1B2C;
+  font-family: 'Poppins';
+  margin-bottom: 10px;
+  font-style: 'bold';
+  line-height: 100%;
+  letter-spacing: 0%;
+}
+
+.text-section p {
+  color: #303030;
+  line-height: 175%;
+  font-size: 15px;
+  max-width: 440px;
+  font-weight: 400;
+  font-family: 'Poppins';
+  text-align: left;
+}
+
+.image-wrapper {
+  margin-top: 0px;
 }
 
 .illustration-img {
   width: 100%;
-  max-width: 380px;
-  height: auto;
+  max-width: 378px;
+  height: 290px;
   object-fit: contain;
+  margin-top: 50px;
 }
+
 
 .footer {
   position: absolute;
-  bottom: 20px;
-  left: 40px;
+  bottom: 10px;
+  left: 60px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #0E1B2C;
+  font-size: 12px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  font-style: 'regular';
+  font-weight: 400;
   font-family: 'Poppins';
-
-  .footer-divider {
-    width: 1px;
-    height: 12px;
-    background: #0E1B2C;
-  }
+  color: #0E1B2C;
 }
 
 .right-section {
@@ -131,18 +147,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  padding: 0 40px;
+  height: 730px;
 }
 
 .login-card {
-  width: 100%;
-  max-width: 400px;
+  width: 400px;
+  height: 480px;
   border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: 30px;
-  border: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  border: 0.5px;
+  align-items: left;
 
   .mat-mdc-card-content:first-child {
     padding-top: 0 !important;
@@ -150,124 +166,670 @@
 }
 
 .login-header {
-  margin-bottom: 24px;
-
-  h1 {
-    font-family: 'Poppins';
-    font-weight: 600;
-    font-size: 32px;
-    color: #151D48;
-    margin: 0;
-  }
+  display: flex;
+  margin-bottom: 10px;
+  justify-content: flex-start;
 }
 
+.login-header h1 {
+  width: 110px;
+  height: auto;
+  font-family: 'Poppins';
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 100%;
+  letter-spacing: 0px;
+  color: #151D48;
+  justify-content: flex-start;
+}
+
+/* Form group and label */
 .form-group {
-  margin-bottom: 16px;
-
-  label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #151D48;
-    font-family: 'Poppins';
-    margin-bottom: 8px;
-  }
-
-  mat-form-field {
-    width: 100%;
-  }
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-bottom: 13px;
 }
 
-::ng-deep {
-  .mat-mdc-form-field-subscript-wrapper {
-    display: none !important;
-  }
-
-  .mat-mdc-text-field-wrapper {
-    background-color: transparent !important;
-    border-radius: 8px !important;
-  }
-
-  .mdc-notched-outline__leading,
-  .mdc-notched-outline__notch,
-  .mdc-notched-outline__trailing {
-    border-color: #8CBBA8 !important;
-  }
-
-  .mat-focused .mdc-notched-outline__leading,
-  .mat-focused .mdc-notched-outline__notch,
-  .mat-focused .mdc-notched-outline__trailing {
-    border-color: #006AFF !important;
-  }
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #151D48;
+  font-family: 'Poppins';
+  margin-bottom: 4px;
+  /* minimal space below label */
+  line-height: 1.2;
+  justify-content: flex-start;
 }
 
+/* Angular Material form field adjustments */
+mat-form-field {
+  width: 100%;
+  margin-top: 0;
+}
+
+.password-field {
+  width: 100%;
+  margin: 0;
+  align-items: center;
+}
+
+mat-form-field.mat-mdc-form-field {
+  margin-top: 0 !important;
+}
+
+.mat-mdc-form-field-wrapper,
+.mat-mdc-text-field-wrapper,
+.mat-mdc-form-field-infix {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.mdc-text-field {
+  padding: 0;
+}
+
+::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+  padding-top: 12px !important;
+  padding-bottom: 0 !important;
+}
+
+::ng-deep .mdc-text-field {
+  padding: 0 !important;
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  height: 0 !important;
+}
+
+/* Input styling */
+mat-form-field input {
+  font-size: 14px;
+  padding: 4px !important;
+  height: 32px !important;
+  border: 0.5px solid #8CBBA8;
+  border-radius: 7px;
+  font-family: 'Poppins';
+  color: #151D48;
+  width: 250px;
+  background-color: transparent;
+
+}
+
+::ng-deep .error {
+  color: red;
+  font-size: 12px;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  text-align: left !important;
+}
+
+lib-required-nemo,
+lib-password-nemo {
+  display: block !important;
+  width: 250px !important;
+  margin: 0 0 0 0 !important;
+  text-align: center !important;
+}
+
+::ng-deep .mat-mdc-form-field,
+::ng-deep .mat-mdc-text-field-wrapper,
+::ng-deep .mat-mdc-form-field-flex,
+::ng-deep .mat-mdc-form-field-infix,
+::ng-deep .mdc-text-field,
+::ng-deep .mdc-text-field--filled,
+::ng-deep .mdc-text-field--outlined {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-flex,
+::ng-deep .mat-mdc-form-field-flex:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__leading,
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__trailing,
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__notch {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+//  Remove focus ripple + underline 
+::ng-deep .mdc-line-ripple,
+::ng-deep .mat-mdc-form-field-underline {
+  display: none !important;
+
+}
+
+::ng-deep .mat-mdc-form-field-flex:hover,
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-flex {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+mat-form-field.password-field input {
+  width: auto !important;
+  padding-left: 0 !important;
+}
+
+// Minimal gap between prefix and input, and between input and suffix
+::ng-deep .password-field .mat-mdc-form-field-icon-prefix {
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  left: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  transform: translateX(0) !important;
+}
+
+::ng-deep .password-field .mat-mdc-form-field-icon-suffix {
+  margin-right: 0 !important;
+  margin-left: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+::ng-deep .password-field .mat-mdc-form-field-infix {
+  display: flex !important;
+  align-items: center !important;
+  column-gap: 0 !important;
+}
+
+/* Add right margin to all outlined MDC text fields without label */
+::ng-deep .custom-password-margin .mat-mdc-text-field-wrapper.mdc-text-field.mdc-text-field--outlined.mdc-text-field--no-label {
+  right: 15px !important;
+}
+
+::ng-deep .password-field .mat-mdc-form-field-icon-prefix.lock-icon {
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  left: 0 !important;
+  position: relative !important;
+  transform: translateX(0) !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+// FORM FIELD SPECIALS
+.user-id-field .mat-mdc-form-field-infix,
+.password-field .mat-mdc-form-field-infix {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  min-height: 40px !important;
+}
+
+// REMOVE GREY BACKGROUND from user id/email
+// ::ng-deep .user-id-field .mat-mdc-form-field-flex {
+//   background: transparent !important;
+//   box-shadow: none !important;
+// }
+::ng-deep .password-field .mat-mdc-form-field-flex {
+  background: transparent !important;
+  border: 1px solid #8CBBA8 !important;
+  border-radius: 7px !important;
+  height: 40px !important;
+  width: 250px !important;
+  padding: 0 6px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Outline border invisible but we use our own */
+::ng-deep .password-field .mdc-notched-outline {
+  display: none !important;
+  border: none !important;
+}
+
+/* Input inside box */
+::ng-deep .password-field input.mat-mdc-input-element {
+  font-size: 14px !important;
+  color: #151d48 !important;
+  font-family: 'Poppins' !important;
+  background: transparent !important;
+  height: 100% !important;
+  border: none !important;
+  outline: none !important;
+  padding-right: 35px !important;
+  /* Space for the icon inside */
+  box-sizing: border-box !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #151d48 !important;
+}
+
+::ng-deep .password-field .mat-mdc-form-field-icon-suffix button {
+  background: transparent !important;
+  color: #151d48 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove Angular Material underline completely */
+::ng-deep .password-field .mat-mdc-form-field-underline,
+::ng-deep .password-field .mdc-line-ripple {
+  display: none !important;
+}
+
+/* On focus: change border color */
+::ng-deep .password-field.mat-focused .mat-mdc-form-field-flex {
+  background: none !important;
+  height: 40px !important;
+  border: 1px solid #8CBBA8 !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
+
+/* Form options */
 .form-options {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-
-  mat-checkbox {
-    font-size: 13px;
-    color: #151D48;
-    font-family: 'Poppins';
-  }
-
-  a {
-    font-size: 13px;
-    color: #006AFF;
-    text-decoration: none;
-    font-weight: 600;
-    font-family: 'Poppins';
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-}
-
-.login-button {
-  width: 100%;
-  height: 44px;
-  border-radius: 8px;
-  background-color: #006AFF !important;
-  color: white !important;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  flex-direction: column;
+  align-items: flex-start !important;
   font-family: 'Poppins';
-
-  &:disabled {
-    opacity: 0.7;
-  }
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  text-wrap: nowrap;
+  color: #303030;
+  gap: 4px;
+  margin-left: 0px;
 }
 
+::ng-deep .form-options mat-checkbox {
+  width: auto !important;
+  /* Only as wide as content */
+  display: inline-flex !important;
+  /* Keep checkbox & label together */
+  align-items: center !important;
+  /* Vertically align label with box */
+  justify-content: flex-start !important;
+  /* Left align label & box */
+  margin-left: 0 !important;
+  /* Remove extra left spacing */
+  padding-left: 0 !important;
+  /* Remove padding */
+  right: 10px;
+}
+
+/* Inner container spacing */
+::ng-deep .form-options .mat-checkbox-inner-container {
+  margin-right: 8px !important;
+  /* Gap between checkbox and label */
+}
+
+/* Checkbox layout container */
+::ng-deep .form-options .mat-checkbox-layout {
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.form-options a {
+  align-self: flex-start !important;
+  font-family: 'Poppins';
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  width: 125px;
+  height: 21px;
+  text-decoration: none;
+  color: #006AFF;
+}
+
+.forgot-link {
+  text-decoration: none;
+  color: #006aff;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Login button */
+.login-button {
+  background-color: #006AFF;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  width: 100%;
+  height: 40px;
+  border-radius: 7px;
+  margin-top: 10px;
+}
+
+/* Create account link */
 .create-account {
   text-align: center;
+  margin-top: 10px;
   font-size: 14px;
-  font-family: 'Poppins';
-
-  .or-text {
-    color: #151D48;
-  }
-
-  a {
-    color: #D700FF;
-    text-decoration: none;
-    font-weight: 600;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
 }
 
-.alert-danger {
-  padding: 10px;
-  border-radius: 6px;
-  background-color: #fff5f5;
-  color: #c53030;
-  font-size: 12px;
-  border: 1px solid #fed7d7;
-  text-align: center;
+.create-account a {
+  text-decoration: none;
+  color: #D700FF;
+  font-weight: 500;
+  font-size: 14px;
 }
+
+.create-account a:hover {
+  text-decoration: underline;
+}
+
+::ng-deep .user-id-field .mat-mdc-form-field-flex {
+  background: transparent !important;
+  border: 1px solid #8CBBA8 !important;
+  border-radius: 7px !important;
+  height: 38px !important;
+  width: 250px !important;
+  align-items: center !important;
+}
+
+::ng-deep .user-id-field input.mat-mdc-input-element {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  width: 100% !important;
+  box-shadow: 0 0 0px 1000px white inset !important;
+}
+
+::ng-deep .user-id-field.mat-focused .mat-mdc-form-field-flex {
+  background: transparent !important;
+}
+
+::ng-deep .mat-mdc-form-field {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .mat-mdc-form-field-flex {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+::ng-deep .mdc-notched-outline,
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__leading,
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__trailing,
+::ng-deep .mdc-text-field--outlined .mdc-notched-outline__notch {
+  border: none !important;
+}
+
+/* Remove Angular Material underline completely */
+::ng-deep .mdc-line-ripple {
+  display: none !important;
+}
+
+// ::ng-deep body {
+//   margin: 0;
+//   padding: 0;
+//   width: 100vw;
+//   height: 100vh;
+//   overflow-x: hidden;
+// }
+
+// .main {
+//   position: relative;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   width: 100vw;
+//   height: 100vh;
+//   gap: 0;
+//   border-radius: 0;
+//   overflow: hidden;
+//   box-sizing: border-box;
+//   margin: 0;
+//   padding: 0;
+// }
+
+// .login-wrapper {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   width: 1000px;
+//   height: 650px;
+//   background: #e5e5e5;
+//   gap: 0;
+//   border-radius: 15px;
+//   overflow: hidden;
+//   border: 0.5px solid #0e1b2c;
+//   box-sizing: border-box;
+//   margin: 0;
+//   padding: 0;
+//   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+// }
+
+// .left-section {
+//   flex: 1;
+//   background: #e5e5e5;
+//   padding: 40px;
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: flex-start;
+//   position: relative;
+//   height: 100%;
+// }
+
+// .logo-box {
+//   display: flex;
+//   align-items: center;
+//   justify-content: flex-start;
+//   gap: 12px;
+//   background-color: transparent;
+//   margin-bottom: 30px;
+// }
+
+// .logo-img {
+//   width: 140px;
+//   height: auto;
+//   object-fit: contain;
+// }
+
+// .divider-line {
+//   width: 1px;
+//   height: 28px;
+//   background-color: #606060;
+// }
+
+// .label {
+//   color: #606060;
+//   font-size: 24px;
+//   font-weight: 500;
+//   font-family: 'Poppins';
+// }
+
+// .text-section {
+//   h1 {
+//     font-size: 40px;
+//     font-weight: 700;
+//     color: #0E1B2C;
+//     font-family: 'Poppins';
+//     margin-bottom: 10px;
+//     line-height: 100%;
+//   }
+
+//   p {
+//     color: #303030;
+//     line-height: 1.6;
+//     font-size: 15px;
+//     max-width: 440px;
+//     font-weight: 400;
+//     font-family: 'Poppins';
+//     text-align: left;
+//     margin-bottom: 30px;
+//   }
+// }
+
+// .illustration-img {
+//   width: 100%;
+//   max-width: 380px;
+//   height: auto;
+//   object-fit: contain;
+// }
+
+// .footer {
+//   position: absolute;
+//   bottom: 20px;
+//   left: 40px;
+//   display: flex;
+//   align-items: center;
+//   gap: 10px;
+//   font-size: 11px;
+//   font-weight: 500;
+//   color: #0E1B2C;
+//   font-family: 'Poppins';
+
+//   .footer-divider {
+//     width: 1px;
+//     height: 12px;
+//     background: #0E1B2C;
+//   }
+// }
+
+// .right-section {
+//   flex: 1;
+//   background: #154487;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   height: 100%;
+//   padding: 0 40px;
+// }
+
+// .login-card {
+//   width: 100%;
+//   max-width: 400px;
+//   border-radius: 12px;
+//   background: #ffffff;
+//   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+//   padding: 30px;
+//   border: none;
+
+//   .mat-mdc-card-content:first-child {
+//     padding-top: 0 !important;
+//   }
+// }
+
+// .login-header {
+//   margin-bottom: 24px;
+
+//   h1 {
+//     font-family: 'Poppins';
+//     font-weight: 600;
+//     font-size: 32px;
+//     color: #151D48;
+//     margin: 0;
+//   }
+// }
+
+// .form-group {
+//   margin-bottom: 16px;
+
+//   label {
+//     display: block;
+//     font-size: 14px;
+//     font-weight: 600;
+//     color: #151D48;
+//     font-family: 'Poppins';
+//     margin-bottom: 8px;
+//   }
+
+//   mat-form-field {
+//     width: 100%;
+//   }
+// }
+
+// ::ng-deep {
+//   .mat-mdc-form-field-subscript-wrapper {
+//     display: none !important;
+//   }
+
+//   .mat-mdc-text-field-wrapper {
+//     background-color: transparent !important;
+//     border-radius: 8px !important;
+//   }
+
+//   .mdc-notched-outline__leading,
+//   .mdc-notched-outline__notch,
+//   .mdc-notched-outline__trailing {
+//     border-color: #8CBBA8 !important;
+//   }
+
+//   .mat-focused .mdc-notched-outline__leading,
+//   .mat-focused .mdc-notched-outline__notch,
+//   .mat-focused .mdc-notched-outline__trailing {
+//     border-color: #006AFF !important;
+//   }
+// }
+
+// .form-options {
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: center;
+//   margin-bottom: 24px;
+
+//   mat-checkbox {
+//     font-size: 13px;
+//     color: #151D48;
+//     font-family: 'Poppins';
+//   }
+
+//   a {
+//     font-size: 13px;
+//     color: #006AFF;
+//     text-decoration: none;
+//     font-weight: 600;
+//     font-family: 'Poppins';
+
+//     &:hover {
+//       text-decoration: underline;
+//     }
+//   }
+// }
+
+// .login-button {
+//   width: 100%;
+//   height: 44px;
+//   border-radius: 8px;
+//   background-color: #006AFF !important;
+//   color: white !important;
+//   font-size: 15px;
+//   font-weight: 600;
+//   margin-bottom: 16px;
+//   font-family: 'Poppins';
+
+//   &:disabled {
+//     opacity: 0.7;
+//   }
+// }
+
+// .create-account {
+//   text-align: center;
+//   font-size: 14px;
+//   font-family: 'Poppins';
+
+//   .or-text {
+//     color: #151D48;
+//   }
+
+//   a {
+//     color: #D700FF;
+//     text-decoration: none;
+//     font-weight: 600;
+
+//     &:hover {
+//       text-decoration: underline;
+//     }
+//   }
+// }
+
+// .alert-danger {
+//   padding: 10px;
+//   border-radius: 6px;
+//   background-color: #fff5f5;
+//   color: #c53030;
+//   font-size: 12px;
+//   border: 1px solid #fed7d7;
+//   text-align: center;
+// }

@@ -1,8 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-
 * {
-    font-family: "Poppins", sans-serif !important;
+    font-family: "Poppins", sans-serif, !important;
     box-sizing: border-box;
 }
 
@@ -14,4 +11,107 @@ body {
 
 mat-icon {
     font-family: "Material Icons" !important;
+}
+
+/* Force hide all page-level scrollbars */
+html, body {
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: fixed; /* Lock the body */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Ensure app-root takes full space */
+app-root {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden !important;
+    position: relative;
+}
+
+/* Fix for shell component */
+app-shell {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden !important;
+}
+
+/* Prevent any component from causing overflow */
+body > * {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+}
+
+/* Table fixes - apply globally */
+table {
+    max-width: 100% !important;
+    table-layout: auto;
+    word-break: break-word;
+}
+
+th, td {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Fix Angular Material table */
+.mat-table {
+    max-width: 100% !important;
+    overflow-x: auto;
+}
+
+.mat-header-row,
+.mat-row {
+    max-width: 100% !important;
+}
+
+/* Ensure images don't overflow */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix for any grid/flex containers */
+.container,
+.row,
+[class*="col-"] {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

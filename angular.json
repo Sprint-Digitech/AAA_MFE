@@ -157,6 +157,7 @@
 							}
 						],
 						"styles": [
+							"node_modules/bootstrap/scss/bootstrap.scss",
 							"projects/shell/src/styles.scss"
 						],
 						"scripts": [],
@@ -231,5 +232,8 @@
 				}
 			}
 		}
-	}
+  },
+  "cli": {
+    "analytics": false
+  }
 }

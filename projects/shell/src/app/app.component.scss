@@ -234,11 +234,13 @@
 
 .content-area {
     flex: 1;
+    overflow-x: hidden !important;
     overflow-y: auto;
     padding: 30px;
     background-color: var(--bg-light);
 
     &.full-page {
         padding: 0;
+        overflow: hidden !important;
     }
 }
