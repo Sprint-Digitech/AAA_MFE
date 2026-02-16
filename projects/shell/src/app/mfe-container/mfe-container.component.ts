@@ -32,10 +32,19 @@ export class MfeContainerComponent implements OnInit {
   constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
+    // Determine the configured base URL for this MFE
     const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4200';
+    console.log('[Shell][MfeContainer] Initialized with Base URL:', mfeBaseUrl);
+
+    // Subscribe to URL changes to update the iframe src dynamically
+    this.route.url.subscribe(() => {
+      this.updateIframeSrc(mfeBaseUrl);
+    });
+  }
+
+  private updateIframeSrc(mfeBaseUrl: string) {
     const currentPath = window.location.pathname;
     const currentSearch = window.location.search;
-
     let targetUrl = mfeBaseUrl;
 
     // Only append the path if it's NOT the dashboard of the shell itself
@@ -46,10 +55,12 @@ export class MfeContainerComponent implements OnInit {
       targetUrl = normalizedBase + normalizedPath + currentSearch;
     }
 
-    console.log('[Shell][MfeContainer] Loading Path:', currentPath);
-    console.log('[Shell][MfeContainer] Target MFE:', targetUrl);
+    console.log('[Shell][MfeContainer] Updating Iframe Src to:', targetUrl);
 
-    this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
-    this.mfeUrl = targetUrl;
+    // Only update if changed to prevent unnecessary reloads
+    if (this.mfeUrl !== targetUrl) {
+      this.mfeUrl = targetUrl;
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
+    }
   }
 }

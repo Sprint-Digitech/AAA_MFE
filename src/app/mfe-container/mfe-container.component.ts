@@ -32,10 +32,19 @@ export class MfeContainerComponent implements OnInit {
   constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
+    // Determine the configured base URL for this MFE
     const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4204';
+    console.log('[MfeContainer] Initialized with Base URL:', mfeBaseUrl);
+
+    // Subscribe to URL changes to update the iframe src dynamically
+    this.route.url.subscribe(() => {
+      this.updateIframeSrc(mfeBaseUrl);
+    });
+  }
+
+  private updateIframeSrc(mfeBaseUrl: string) {
     const currentPath = window.location.pathname;
     const currentSearch = window.location.search;
-
     let targetUrl = mfeBaseUrl;
 
     if (currentPath && currentPath !== '/' && currentPath !== '/dashboard') {
@@ -44,11 +53,12 @@ export class MfeContainerComponent implements OnInit {
       targetUrl = normalizedBase + normalizedPath + currentSearch;
     }
 
-    console.log('[MfeContainer] Current Path:', currentPath);
-    console.log('[MfeContainer] MFE Base URL:', mfeBaseUrl);
-    console.log('[MfeContainer] Target URL:', targetUrl);
+    console.log('[MfeContainer] Updating Iframe Src to:', targetUrl);
 
-    this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
-    this.mfeUrl = targetUrl;
+    // Only update if changed to prevent unnecessary reloads (though in this case we want reloads on nav)
+    if (this.mfeUrl !== targetUrl) {
+      this.mfeUrl = targetUrl;
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
+    }
   }
 }

@@ -15,31 +15,42 @@
     <nav class="sidebar-nav">
       <ul>
         <!-- Static Demo Items based on screenshot -->
-        <li><a routerLink="/master" routerLinkActive="active"><mat-icon>grid_view</mat-icon> <span>Master</span></a>
+        <li><a routerLink="/master" [class.active]="isRouteActive('/master')"><mat-icon>grid_view</mat-icon>
+            <span>Master</span></a>
         </li>
-        <li><a routerLink="/settings" routerLinkActive="active"><mat-icon>settings</mat-icon> <span>Settings</span></a>
+        <li><a routerLink="/settings" [class.active]="isRouteActive('/settings')"><mat-icon>settings</mat-icon>
+            <span>Settings</span></a>
         </li>
-        <li><a routerLink="/employee/employeesList" routerLinkActive="active"><mat-icon>badge</mat-icon>
+        <li><a routerLink="/employee/employeesList"
+            [class.active]="isRouteActive('/employee')"><mat-icon>badge</mat-icon>
             <span>Employee</span></a>
         </li>
-        <li><a routerLink="/alms" routerLinkActive="active"><mat-icon>calendar_today</mat-icon> <span>ALMS</span></a>
+        <li><a routerLink="/alms" [class.active]="isRouteActive('/alms')"><mat-icon>calendar_today</mat-icon>
+            <span>ALMS</span></a>
         </li>
-        <li><a routerLink="/salary/salaryreport" routerLinkActive="active"><mat-icon>currency_rupee</mat-icon>
+        <li><a routerLink="/salary/salaryreport"
+            [class.active]="isRouteActive('/salary')"><mat-icon>currency_rupee</mat-icon>
             <span>Salary</span></a></li>
-        <li><a routerLink="/loan" routerLinkActive="active"><mat-icon>account_balance_wallet</mat-icon>
+        <li><a routerLink="/loan" [class.active]="isRouteActive('/loan')"><mat-icon>account_balance_wallet</mat-icon>
             <span>Loan</span></a></li>
-        <li><a routerLink="/reports" routerLinkActive="active"><mat-icon>assessment</mat-icon> <span>Reports</span></a>
+        <li><a routerLink="/reports" [class.active]="isRouteActive('/reports')"><mat-icon>assessment</mat-icon>
+            <span>Reports</span></a>
         </li>
-        <li><a routerLink="/bonus" routerLinkActive="active"><mat-icon>emoji_events</mat-icon> <span>Bonus</span></a>
+        <li><a routerLink="/bonus" [class.active]="isRouteActive('/bonus')"><mat-icon>emoji_events</mat-icon>
+            <span>Bonus</span></a>
         </li>
-        <li><a routerLink="/reimbursement" routerLinkActive="active"><mat-icon>payments</mat-icon>
+        <li><a routerLink="/reimbursement"
+            [class.active]="isRouteActive('/reimbursement')"><mat-icon>payments</mat-icon>
             <span>Reimbursement</span></a></li>
-        <li><a routerLink="/ess" routerLinkActive="active"><mat-icon>info</mat-icon> <span>ESS Portal</span></a></li>
-        <li><a routerLink="/access" routerLinkActive="active"><mat-icon>vpn_key</mat-icon> <span>Access
+        <li><a routerLink="/ess" [class.active]="isRouteActive('/ess')"><mat-icon>info</mat-icon> <span>ESS
+              Portal</span></a></li>
+        <li><a routerLink="/access" [class.active]="isRouteActive('/access')"><mat-icon>vpn_key</mat-icon> <span>Access
               Rights</span></a></li>
-        <li><a routerLink="/gratuity" routerLinkActive="active"><mat-icon>account_balance</mat-icon>
+        <li><a routerLink="/gratuity" [class.active]="isRouteActive('/gratuity')"><mat-icon>account_balance</mat-icon>
             <span>Gratuity</span></a></li>
-        <li><a routerLink="/arrear" routerLinkActive="active"><mat-icon>history</mat-icon> <span>Arrear</span></a></li>
+        <li><a routerLink="/arrear" [class.active]="isRouteActive('/arrear')"><mat-icon>history</mat-icon>
+            <span>Arrear</span></a></li>
+
 
         <!-- Dynamic Items if any (filtered) -->
         <ng-container *ngFor="let menu of menus">

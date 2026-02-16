@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener,ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule,ReactiveFormsModule,FormsModule,MatInputModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule, ReactiveFormsModule, FormsModule, MatInputModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
   user: any = null;
   currentSubmenuTop = 0;
 
-   // Search functionality
+  // Search functionality
   globalSearchTerm = '';
   isGlobalSearchOpen = false;
   globalEmployeeResults: any[] = [];
@@ -62,7 +62,7 @@ export class AppComponent implements OnInit {
   };
 
   constructor(private router: Router,
-     private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef
   ) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -81,7 +81,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserData();
-     this.hydrateUserDetailsFromSession();
+    this.hydrateUserDetailsFromSession();
   }
 
   loadUserData() {
@@ -92,10 +92,10 @@ export class AppComponent implements OnInit {
     }
     if (storedUser) {
       this.user = JSON.parse(storedUser);
-       this.setUserDetails(this.user);
+      this.setUserDetails(this.user);
     }
   }
-   get userInitials(): string {
+  get userInitials(): string {
     const source = (this.userDetails.name || '').trim();
     if (!source) {
       return '?';
@@ -113,7 +113,7 @@ export class AppComponent implements OnInit {
   // Search functionality
   async onGlobalSearch(): Promise<void> {
     const term = this.globalSearchTerm.trim();
-    
+
     if (!term) {
       this.globalEmployeeResults = [];
       this.isGlobalSearchOpen = false;
@@ -131,12 +131,12 @@ export class AppComponent implements OnInit {
       // const result = await lastValueFrom(
       //   this.employeeService.getEmployee('api/Employee/EmployeeBasicDetailList', { SearchTerm: term })
       // );
-      
+
       // Mock data for demonstration - replace with actual API call
       const result = [
         { employeeId: '1', employeeFirstName: 'John', employeeLastName: 'Doe', employeeCode: 'E001', departmentName: 'IT' },
         { employeeId: '2', employeeFirstName: 'Jane', employeeLastName: 'Smith', employeeCode: 'E002', departmentName: 'HR' }
-      ].filter(emp => 
+      ].filter(emp =>
         emp.employeeFirstName.toLowerCase().includes(term.toLowerCase()) ||
         emp.employeeLastName.toLowerCase().includes(term.toLowerCase()) ||
         emp.employeeCode.toLowerCase().includes(term.toLowerCase())
@@ -232,16 +232,16 @@ export class AppComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
- logout(): void {
+  logout(): void {
     console.log('Logout requested');
-    
+
     // Close the dropdown first
     this.showUserDropdown = false;
-    
+
     // Clear ALL storage
     sessionStorage.clear();
     localStorage.clear();
-    
+
     // Reset all state
     this.setUserDetails(null);
     this.user = null;
@@ -250,13 +250,13 @@ export class AppComponent implements OnInit {
     this.isGlobalSearchOpen = false;
     this.globalEmployeeResults = [];
     this.isLoginPage = true; // Important: Set this to true
-    
+
     // Force immediate UI update
     this.cdr.detectChanges();
-    
+
     // Use direct window location to ensure proper route loading
     window.location.href = '/login';
-}
+  }
   // User details management
   private hydrateUserDetailsFromSession(): void {
     const storedUser = sessionStorage.getItem('user');
@@ -367,11 +367,11 @@ export class AppComponent implements OnInit {
     if (!target.closest('.menu-item') && !target.closest('.submenu')) {
       this.openSubmenus.clear();
     }
-     // Close search results
+    // Close search results
     if (!target.closest('.search-box')) {
       this.closeGlobalSearch();
     }
-      // Close user dropdown if clicking outside
+    // Close user dropdown if clicking outside
     if (!target.closest('.user-profile') && !target.closest('.user-profile-dropdown')) {
       this.showUserDropdown = false;
     }

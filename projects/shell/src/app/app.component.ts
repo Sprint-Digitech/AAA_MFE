@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,21 +16,30 @@ export class AppComponent implements OnInit {
   isSidebarCollapsed = false;
   user: any = null;
   menus: any[] = [];
+  currentUrl: string = '';
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private cdr: ChangeDetectorRef) {
     console.log('Shell Booting...');
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      const url = event.urlAfterRedirects || event.url;
-      console.log('Shell Navigated to:', url);
+      // Strip query params for cleaner matching on routes
+      this.currentUrl = (event.urlAfterRedirects || event.url).split('?')[0];
+      const url = this.currentUrl;
+      console.log('Shell Navigated to (base):', url);
       // Determine if we should show the shell based on the route
       this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password');
       this.loadUserData();
+      this.cdr.detectChanges();
     });
   }
 
+  isRouteActive(routePath: string): boolean {
+    return this.currentUrl.toLowerCase().startsWith(routePath.toLowerCase());
+  }
+
   ngOnInit() {
+    this.currentUrl = this.router.url.split('?')[0];
     this.loadUserData();
   }
 

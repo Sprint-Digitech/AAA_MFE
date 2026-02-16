@@ -71,12 +71,10 @@
             <div class="header-left">
                 <div class="search-box">
                     <mat-icon>search</mat-icon>
-                    <input type="text" placeholder="Search employees..." 
-                           [(ngModel)]="globalSearchTerm"
-                               (input)="onHeaderInput(globalSearchTerm)"
- (focus)="openGlobalSearchResults()" />
-                    <button type="button" class="clear-search-btn" *ngIf="globalSearchTerm" 
-                            (click)="clearGlobalSearch()">
+                    <input type="text" placeholder="Search employees..." [(ngModel)]="globalSearchTerm"
+                        (input)="onHeaderInput(globalSearchTerm)" (focus)="openGlobalSearchResults()" />
+                    <button type="button" class="clear-search-btn" *ngIf="globalSearchTerm"
+                        (click)="clearGlobalSearch()">
                         <mat-icon>close</mat-icon>
                     </button>
 
@@ -102,15 +100,15 @@
                                 </div>
 
                                 <ul class="search-result-list" *ngIf="globalEmployeeResults.length">
-                                    <li *ngFor="let employee of globalEmployeeResults" 
+                                    <li *ngFor="let employee of globalEmployeeResults"
                                         (click)="navigateToEmployee(employee)">
                                         <div class="employee-initial">
                                             {{ (employee?.employeeFirstName || '?') | slice:0:1 }}
                                         </div>
                                         <div class="employee-meta">
                                             <span class="employee-name">
-                                                {{ employee?.employeeFirstName }} 
-                                                {{ employee?.employeeMiddleName }} 
+                                                {{ employee?.employeeFirstName }}
+                                                {{ employee?.employeeMiddleName }}
                                                 {{ employee?.employeeLastName }}
                                             </span>
                                             <span class="employee-code" *ngIf="employee?.employeeCode">
@@ -135,7 +133,7 @@
             </div>
 
             <div class="header-right">
-                 <button type="button" class="user-profile" (click)="onUserClick($event)">
+                <button type="button" class="user-profile" (click)="onUserClick($event)">
                     <div class="avatar">{{ userInitials }}</div>
                 </button>
 
@@ -147,11 +145,13 @@
                                 <div class="user-menu__avatar">{{ userInitials }}</div>
                                 <div class="user-menu__info">
                                     <div class="user-menu__name">{{ userDetails.name || 'User' }}</div>
-                                    <div class="user-menu__email" *ngIf="userDetails.email">{{ userDetails.email }}</div>
+                                    <div class="user-menu__email" *ngIf="userDetails.email">{{ userDetails.email }}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="user-menu__list" *ngIf="userDetails.role || userDetails.department || userDetails.designation">
+                            <div class="user-menu__list"
+                                *ngIf="userDetails.role || userDetails.department || userDetails.designation">
                                 <div class="user-menu__row" *ngIf="userDetails.role">
                                     <span class="user-menu__label">Role</span>
                                     <span class="user-menu__value">{{ userDetails.role }}</span>
@@ -166,10 +166,9 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="user-menu__signout" 
-                                    (click)="logout(); $event.stopPropagation()"
-                                    (mouseenter)="onSignoutHover(true)" 
-                                    (mouseleave)="onSignoutHover(false)">
+                            <button type="button" class="user-menu__signout"
+                                (click)="logout(); $event.stopPropagation()" (mouseenter)="onSignoutHover(true)"
+                                (mouseleave)="onSignoutHover(false)">
                                 <mat-icon>logout</mat-icon>
                                 <span>Sign Out</span>
                             </button>
