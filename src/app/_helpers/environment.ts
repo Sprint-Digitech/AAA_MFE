@@ -3,16 +3,16 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false,
-  urlAddress: 'https://dev.fovestta.com/auth',
-  biometricAddress: 'https://localhost:7230',
-  ESSBaseUrl: 'https://dev.fovestta.com/employee',
-  cnbUrlAddress: 'https://localhost:7245',
-  salaryUrlAddress: 'https://dev.fovestta.com/master',
-  reportsUrl: 'https://localhost:7225',
-  reimbursementUrl: 'https://localhost:7281',
-  EssUrlAddress: 'https://dev.fovestta.com/employee',
-  masterUrlAddress: 'https://dev.fovestta.com/master',
+  production: true,
+  urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
+  biometricAddress: 'https://dev.fovestta.com/Employee/sdapi',
+  ESSBaseUrl: 'https://dev.fovestta.com/Employee/sdapi',
+  cnbUrlAddress: 'https://dev.fovestta.com/Salary/sdapi',
+  salaryUrlAddress: 'https://dev.fovestta.com/Salary/sdapi',
+  reportsUrl: 'https://dev.fovestta.com/Salary/sdapi',
+  reimbursementUrl: 'https://dev.fovestta.com/Salary/sdapi',
+  EssUrlAddress: 'https://dev.fovestta.com/Employee/sdapi',
+  masterUrlAddress: 'https://dev.fovestta.com/master/sdapi',
 };
 
 // Alternative for development with TLS issues:

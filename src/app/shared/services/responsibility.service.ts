@@ -9,7 +9,7 @@ export class ResponsibilityService {
 
   environment = {
     production: false,
-    urlAddress: 'https://dev.fovestta.com/auth',
+    urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
   };
 
   private createCompleteRoute = (route: string, envAddress: string) => {

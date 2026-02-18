@@ -43,15 +43,21 @@ export class MfeContainerComponent implements OnInit {
   }
 
   private updateIframeSrc(mfeBaseUrl: string) {
+    const shellBase = '/Gateway/dist';
     const currentPath = window.location.pathname;
     const currentSearch = window.location.search;
     let targetUrl = mfeBaseUrl;
 
-    // Only append the path if it's NOT the dashboard of the shell itself
-    // We want to pass the deep path (e.g. /employee/dashboardOnboarding) to the MFE
-    if (currentPath && currentPath !== '/' && currentPath !== '/dashboard') {
+    // Remove shell base from the current path
+    let relativePath = currentPath;
+    if (currentPath.startsWith(shellBase)) {
+      relativePath = currentPath.substring(shellBase.length);
+    }
+
+    // Only append path if we are NOT at shell root or dashboard
+    if (relativePath && relativePath !== '/' && relativePath !== '/dashboard') {
       const normalizedBase = mfeBaseUrl.endsWith('/') ? mfeBaseUrl.slice(0, -1) : mfeBaseUrl;
-      const normalizedPath = currentPath.startsWith('/') ? currentPath : '/' + currentPath;
+      const normalizedPath = relativePath.startsWith('/') ? relativePath : '/' + relativePath;
       targetUrl = normalizedBase + normalizedPath + currentSearch;
     }
 

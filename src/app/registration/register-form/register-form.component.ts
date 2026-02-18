@@ -238,7 +238,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private http: HttpClient,
     private location: Location
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initializeForms();
@@ -780,12 +780,14 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
       status: 1,
     };
 
-    console.log('Sending company registration data:', company);
+    const headers = new HttpHeaders({
+      'x-tenant-schema': 'dbo',
+    });
 
     // For critical operations like company registration, don't use takeUntil
     // This ensures the request completes even if component is destroyed
     this.accountService
-      .post('api/Account/CreatCompanyRegitration', company)
+      .post('api/Account/CreatCompanyRegitration', company, headers)
       .pipe(
         finalize(() => {
           console.log('Company registration request finalized');
@@ -1092,8 +1094,8 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
               typeof registeredEmail === 'string'
                 ? registeredEmail
                 : registeredEmail.email ||
-                  registeredEmail.emailId ||
-                  registeredEmail;
+                registeredEmail.emailId ||
+                registeredEmail;
             return emailValue && emailValue.trim().toLowerCase() === email;
           });
           return exists ? { emailExists: true } : null;
@@ -1118,11 +1120,10 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
         'X-Tenant-Schema': 'dbo',
       });
 
-      const url = `${
-        this.accountService.environment.urlAddress
-      }/api/Company/CheckCompanyNameExists?companyName=${encodeURIComponent(
-        companyName
-      )}`;
+      const url = `${this.accountService.environment.urlAddress
+        }/api/Company/CheckCompanyNameExists?companyName=${encodeURIComponent(
+          companyName
+        )}`;
       return this.http.get<{ exists: boolean }>(url, { headers }).pipe(
         map((response: { exists: boolean }) => {
           return response.exists ? { companyNameExists: true } : null;

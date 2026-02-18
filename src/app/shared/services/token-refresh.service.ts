@@ -34,7 +34,7 @@ export class TokenRefreshService {
    */
   environment = {
     production: false,
-    urlAddress: 'https://dev.fovestta.com/auth',
+    urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
   };
   refreshToken(): Observable<string | null> {
     // If refresh is already in progress, return the subject

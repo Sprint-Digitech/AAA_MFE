@@ -23,14 +23,7 @@ export class AppComponent implements OnInit {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      // Strip query params for cleaner matching on routes
-      this.currentUrl = (event.urlAfterRedirects || event.url).split('?')[0];
-      const url = this.currentUrl;
-      console.log('Shell Navigated to (base):', url);
-      // Determine if we should show the shell based on the route
-      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password');
-      this.loadUserData();
-      this.cdr.detectChanges();
+      this.updateState((event.urlAfterRedirects || event.url));
     });
   }
 
@@ -39,8 +32,39 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.currentUrl = this.router.url.split('?')[0];
+    this.updateState(this.router.url);
+  }
+
+  updateState(rawUrl: string) {
+    // Strip query params for cleaner matching on routes
+    this.currentUrl = rawUrl.split('?')[0];
+    const url = this.currentUrl.toLowerCase();
+
+    console.log('Shell: Current URL path:', url);
+
+    // Improved detection: check for common login/register paths
+    // We also check for 'gateway/dist/login' just in case the router state includes the full path
+    this.isLoginPage =
+      url === '/login' ||
+      url === '/' ||
+      url === '' ||
+      url === '/register' ||
+      url.includes('forgot-password') ||
+      url.includes('reset') ||
+      url.includes('/login') ||
+      url.endsWith('/login') ||
+      url.includes('initial-setup') ||
+      url.includes('welcome') ||
+      url.includes('company') ||
+      url.includes('MenuMaster') ||
+      url.includes('userRolesAndPermissions') ||
+      url.includes('responsibility') ||
+      url.includes('esiCalculationMonthLimit');
+
+    console.log('Shell: isLoginPage set to:', this.isLoginPage);
+
     this.loadUserData();
+    this.cdr.detectChanges();
   }
 
   loadUserData() {

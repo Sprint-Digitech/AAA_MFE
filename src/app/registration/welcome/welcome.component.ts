@@ -20,14 +20,28 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-    const tenantSchema = this.route.snapshot.queryParamMap.get('tenant');
-    const email = this.route.snapshot.queryParamMap.get('email');
+    let tenantSchema = this.route.snapshot.queryParamMap.get('tenant');
+    let email = this.route.snapshot.queryParamMap.get('email');
+
+    // Fallback to session storage if query params are missing
+    if (!tenantSchema || !email) {
+      tenantSchema = sessionStorage.getItem('tenantSchema');
+      const storedUser = sessionStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          email = user.email || user.employeeEmail;
+        } catch (e) {
+          console.error('Error parsing user from session', e);
+        }
+      }
+    }
 
     if (tenantSchema && email) {
-      // Set tenant schema for this tab
+      // Ensure it is set in session if it came from query params
       sessionStorage.setItem('tenantSchema', tenantSchema);
 
       // Fetch user details for tenant & email

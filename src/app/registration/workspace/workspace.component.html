@@ -9,7 +9,7 @@
     <mat-card-content>
       <div class="number-img-wrapper">
         <h2>{{overviewData.totalCompanies}}</h2>
-        <img src="/assets/img/office icon.png" alt="office icon" class="stat-icon">
+        <img src="assets/img/office icon.png" alt="office icon" class="stat-icon">
       </div>
     </mat-card-content>
   </mat-card>
@@ -19,7 +19,7 @@
     <mat-card-content>
       <div class="number-img-wrapper">
         <h2>{{overviewData.payrollComplete}}</h2>
-        <img src="/assets/img/checkbox.png" alt="checkbox" class="stat-icon">
+        <img src="assets/img/checkbox.png" alt="checkbox" class="stat-icon">
       </div>
     </mat-card-content>
   </mat-card>
@@ -29,7 +29,7 @@
     <mat-card-content>
       <div class="number-img-wrapper">
         <h2>{{overviewData.inProgress}}</h2>
-        <img src="/assets/img/hourglass.png" alt="hour glass" class="stat-icon">
+        <img src="assets/img/hourglass.png" alt="hour glass" class="stat-icon">
       </div>
     </mat-card-content>
   </mat-card>
@@ -39,7 +39,7 @@
     <mat-card-content>
       <div class="number-img-wrapper">
         <h2>{{overviewData.pending}}</h2>
-        <img src="/assets/img/warning.png" alt="warning" class="stat-icon">
+        <img src="assets/img/warning.png" alt="warning" class="stat-icon">
       </div>
     </mat-card-content>
   </mat-card>
@@ -62,7 +62,7 @@
   <mat-card *ngFor="let emp of companyData" class="start-card" (click)="openPayroll(emp)">
     <div class="card-header-section">
       <div class="icon-placeholder">
-        <img src="/assets/img/building.png" />
+        <img src="assets/img/building.png" />
       </div>
       <div>
         <mat-card-title>{{ emp.companyName || 'N/A' }}</mat-card-title>
@@ -73,7 +73,7 @@
       </div>
       <button mat-icon-button class="delete-btn" (click)="$event.stopPropagation(); deleteCompany(emp)"
         aria-label="Remove company">
-        <img src="/assets/img/bin.png">
+        <img src="assets/img/bin.png">
       </button>
     </div>
     <mat-card-content>

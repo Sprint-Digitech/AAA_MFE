@@ -75,7 +75,7 @@ export class LoginComponent implements OnInit {
     hidePassword = true;
     loading = false;
     backgroundImage: string =
-        "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('/assets/img/teamless.jpg')";
+        "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/teamless.jpg')";
     submitted = false;
     returnUrl: string = '';
     error = '';
@@ -202,6 +202,9 @@ export class LoginComponent implements OnInit {
 
                                 sessionStorage.setItem('menus', JSON.stringify(processedMenus));
                                 sessionStorage.setItem('user', JSON.stringify(finalUser));
+                                if (loginResponse?.employee?.tenantSchema) {
+                                    sessionStorage.setItem('tenantSchema', loginResponse.employee.tenantSchema);
+                                }
                                 this.accountService.setUser(finalUser);
                                 this.accountService.setMenuData(processedMenus);
                                 this.callInitialSetupStatus(branchId).subscribe({

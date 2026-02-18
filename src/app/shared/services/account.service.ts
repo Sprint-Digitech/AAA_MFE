@@ -74,7 +74,7 @@ export class AccountService {
 
   environment = {
     production: false,
-    urlAddress: 'https://dev.fovestta.com/auth',
+    urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
   };
 
   public get userValue() {
@@ -176,9 +176,9 @@ export class AccountService {
     let url = this.createCompleteRoute(route, this.environment.urlAddress);
     return this.http.put(url, body);
   };
-  public post = (route: string, body: any) => {
+  public post = (route: string, body: any, headers?: HttpHeaders) => {
     let url = this.createCompleteRoute(route, this.environment.urlAddress);
-    return this.http.post(url, body);
+    return this.http.post(url, body, { headers });
   };
 
   public get = (route: string) => {
@@ -215,6 +215,7 @@ export class AccountService {
       'X-Skip-Timeout': 'true', // Skip timeout interceptor for registration (can take very long)
       'X-Skip-Deduplication': 'true', // Skip request deduplication for registration
       'X-Skip-Retry': 'true', // Skip retry logic for registration (idempotency)
+      'x-tenant-schema': 'dbo', // Use dbo as the default schema for registration
       ...customHeaders,
     };
 

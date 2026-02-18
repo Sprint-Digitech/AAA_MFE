@@ -3,7 +3,7 @@
   <div class="login-wrapper">
     <div class="left-section">
       <div class="logo-box">
-        <img src="/assets/img/fovesta1.png" alt="Fovesta Icon" class="logo-img" />
+        <img src="assets/img/fovesta1.png" alt="Fovesta Icon" class="logo-img" />
         <span class="divider-line"></span>
         <span class="label">HRMS</span>
       </div>
@@ -17,7 +17,7 @@
           processing, and enhance productivity.
         </p>
         <div class="image-wrapper">
-          <img src="/assets/img/login.png" alt="login illustration" class="illustration-img">
+          <img src="assets/img/login.png" alt="login illustration" class="illustration-img">
         </div>
       </div>
 
@@ -69,7 +69,8 @@
               <a routerLink="/forgot-password">Forgot Password?</a>
             </div>
 
-            <button mat-raised-button class="login-button" type="submit" [disabled]="loading" style="background-color: #006AFF; color:#FFFFFF; font-family: Poppins;">
+            <button mat-raised-button class="login-button" type="submit" [disabled]="loading"
+              style="background-color: #006AFF; color:#FFFFFF; font-family: Poppins;">
               {{ loading ? 'Logging in...' : 'Login' }}
             </button>
 

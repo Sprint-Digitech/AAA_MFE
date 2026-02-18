@@ -110,7 +110,7 @@ export const routes: Routes = [
             return null;
         },
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'http://localhost:4207', title: 'Employee Management' }
+        data: { mfeUrl: 'https://dev.fovestta.com/Employee/dist/', title: 'Employee Management' }
     },
     {
         matcher: (url) => {
@@ -121,7 +121,7 @@ export const routes: Routes = [
             return null;
         },
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'http://localhost:4206', title: 'Salary & Master Data' }
+        data: { mfeUrl: 'https://dev.fovestta.com/Salary/dist/', title: 'Salary & Master Data' }
     },
     {
         matcher: (url) => {
@@ -131,6 +131,6 @@ export const routes: Routes = [
             return null;
         },
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'http://localhost:4205', title: 'ALMS' }
+        data: { mfeUrl: 'https://dev.fovestta.com/ALMS/dist/', title: 'ALMS' }
     }
 ];

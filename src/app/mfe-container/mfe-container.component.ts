@@ -33,7 +33,7 @@ export class MfeContainerComponent implements OnInit {
 
   ngOnInit() {
     // Determine the configured base URL for this MFE
-    const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4204';
+    const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
     console.log('[MfeContainer] Initialized with Base URL:', mfeBaseUrl);
 
     // Subscribe to URL changes to update the iframe src dynamically
@@ -47,9 +47,20 @@ export class MfeContainerComponent implements OnInit {
     const currentSearch = window.location.search;
     let targetUrl = mfeBaseUrl;
 
-    if (currentPath && currentPath !== '/' && currentPath !== '/dashboard') {
+    // Define potential shell bases to strip
+    const shellBases = ['/Gateway/dist', '/Auth/dist'];
+    let relativePath = currentPath;
+
+    for (const base of shellBases) {
+      if (currentPath.startsWith(base)) {
+        relativePath = currentPath.substring(base.length);
+        break;
+      }
+    }
+
+    if (relativePath && relativePath !== '/' && relativePath !== '/dashboard') {
       const normalizedBase = mfeBaseUrl.endsWith('/') ? mfeBaseUrl.slice(0, -1) : mfeBaseUrl;
-      const normalizedPath = currentPath.startsWith('/') ? currentPath : '/' + currentPath;
+      const normalizedPath = relativePath.startsWith('/') ? relativePath : '/' + relativePath;
       targetUrl = normalizedBase + normalizedPath + currentSearch;
     }
 
