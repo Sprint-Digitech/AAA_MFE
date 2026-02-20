@@ -297,7 +297,7 @@ export class LoginComponent implements OnInit {
 
     private callInitialSetupStatus(branchId: string): Observable<any> {
         const params = { companyBranchId: branchId };
-        return this.accountService.step('InitialSetup/Initialstatus', params);
+        return this.accountService.step('InitialSetup/GetStatus', params);
     }
 
     processMenus(menuData: any[]): any[] {

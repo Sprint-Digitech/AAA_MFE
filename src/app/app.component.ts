@@ -251,8 +251,8 @@ onHeaderInput(value: string): void {
     // Force immediate UI update
     this.cdr.detectChanges();
 
-    // Use direct window location to ensure proper route loading
-    window.location.href = '/login';
+    // Use Router for navigation to respect base-href and avoid full page reload issues on some environments
+    this.router.navigate(['/login']);
   }
   // User details management
   private hydrateUserDetailsFromSession(): void {

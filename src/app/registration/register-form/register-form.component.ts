@@ -1086,7 +1086,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
         'X-Tenant-Schema': 'dbo',
       });
 
-      const url = `${this.accountService.environment.urlAddress}/api/Employee/GetAllRegisteredEmails`;
+      const url = `${this.accountService.environment.urlAddress}/api/Account/GetAllRegisteredEmails`;
       return this.http.get<any[]>(url, { headers }).pipe(
         map((emails: any[]) => {
           const exists = emails.some((registeredEmail: any) => {
@@ -1121,7 +1121,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       const url = `${this.accountService.environment.urlAddress
-        }/api/Company/CheckCompanyNameExists?companyName=${encodeURIComponent(
+        }/api/Account/CheckCompanyNameExists?companyName=${encodeURIComponent(
           companyName
         )}`;
       return this.http.get<{ exists: boolean }>(url, { headers }).pipe(

@@ -63,7 +63,7 @@ export class InitialSetupComponent {
   // Tracks actual completion for each step
   stepCompletion: boolean[] = [false, false, false, false, false, false, false];
 
-  constructor(private router: Router, private accountService: AccountService) {}
+  constructor(private router: Router, private accountService: AccountService) { }
 
   ngOnInit() {
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
@@ -199,7 +199,7 @@ export class InitialSetupComponent {
       isCompleted: isDataSaved,
       updatedBy: this.employeeId || null,
     };
-    this.accountService.post('api/InitialSetup/step', body).subscribe({
+    this.accountService.post('api/InitialSetup/UpdateStep', body).subscribe({
       next: (res) => {
         console.log(`Step "${step.label}" saved successfully`, res);
         this.stepCompletion[stepIndex] = true;
@@ -241,7 +241,7 @@ export class InitialSetupComponent {
       updatedBy: this.employeeId,
     };
 
-    this.accountService.post('api/InitialSetup/status', body).subscribe({
+    this.accountService.post('api/InitialSetup/UpdateStatus', body).subscribe({
       next: (res) => {
         console.log('Setup status updated successfully:', res);
       },
@@ -263,7 +263,7 @@ export class InitialSetupComponent {
       this.loginData?.branchID
     ) {
       this.accountService
-        .get(`api/InitialSetup/Initialsteps?CompanyBranchId=${branchId}`)
+        .get(`api/InitialSetup/GetSteps?companyBranchId=${branchId}`)
         .subscribe({
           next: (res: any[]) => {
             console.log('Initial steps list from API:', res);
@@ -314,7 +314,7 @@ export class InitialSetupComponent {
 
   getEmployeeIdByEmail(email: string) {
     this.accountService
-      .logindetail(`api/Account/GetEmployeeLoginDetail?email=${email}`)
+      .logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`)
       .subscribe({
         next: (res: any) => {
           if (res && res.id) {
@@ -335,7 +335,7 @@ export class InitialSetupComponent {
       });
   }
   getBranchesOfCompany() {
-    this.accountService.get('api/CompanyBranch/CompanyBranchList').subscribe({
+    this.accountService.get('api/company-branch/GetCompanyBranch').subscribe({
       next: (data) => {
         this.branches = data || [];
         console.log('Branches loaded:', this.branches);
@@ -483,7 +483,7 @@ export class InitialSetupComponent {
     // Call the same API used in branch-details component
     this.accountService
       .get(
-        `api/CompanyStatutoryIdentity/CompanyStatutoryListByCompanyBranchId?CompanyBranchId=${this.branchId}`
+        `api/company-branch/GetCompanyStatutory?companyBranchId=${this.branchId}`
       )
       .subscribe({
         next: (data: any) => {

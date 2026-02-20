@@ -262,13 +262,13 @@ export class AccountService {
 
   // Get branches of the company for given tenant
   getBranchesForTenant(tenantSchema: string): Observable<any[]> {
-    const url = `${this.environment.urlAddress}/api/AttendenceSource/GetCompanyBranch`;
+    const url = `${this.environment.urlAddress}/api/company-branch/GetCompanyBranch`;
     const headers = { 'x-tenant-schema': tenantSchema };
     return this.http.get<any[]>(url, { headers });
   }
   // Get company info for given tenant
   getCompanyInfoForTenant(tenantSchema: string): Observable<any> {
-    const url = `${this.environment.urlAddress}/api/Company/GetCompanyInfo`; // Adjust endpoint accordingly
+    const url = `${this.environment.urlAddress}/api/company-branch/GetCompany`; // Adjust endpoint accordingly
     const headers = { 'x-tenant-schema': tenantSchema };
     return this.http.get<any>(url, { headers });
   }
@@ -351,7 +351,7 @@ export class AccountService {
       request = this.getEmployeeLoginDetail(email, tenantSchema);
     } else {
       request = this.logindetail(
-        `api/Account/GetEmployeeLoginDetail?email=${encodeURIComponent(email)}`,
+        `api/Account/GetEmployeeRoleDetail?email=${encodeURIComponent(email)}`,
       );
     }
 

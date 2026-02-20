@@ -16,8 +16,8 @@ interface EmployeeCtcID {
 })
 export class EmployeeService {
   public urlAddress: string = environment.urlAddress;
-    public salaryUrlAddress: string = environment.salaryUrlAddress;
-      public reportsUrl: string = environment.reportsUrl;
+  public salaryUrlAddress: string = environment.salaryUrlAddress;
+  public reportsUrl: string = environment.reportsUrl;
   public biometricAddress: string = environment.biometricAddress;
   public EssUrlAddress: string = environment.EssUrlAddress;
   private employeeId: any;
@@ -38,11 +38,11 @@ export class EmployeeService {
     return this.sourceData;
   }
   //for ess
-   public getEssData(route: string): Observable<any[]> {
-  return this.http.get<any[]>(
-    this.createCompleteRoute(route, this.EssUrlAddress)
-  );
-}
+  public getEssData(route: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      this.createCompleteRoute(route, this.EssUrlAddress)
+    );
+  }
   public getESSSalaries = (route: string, options?: any): Observable<any[]> => {
     return this.http.get<any[]>(
       this.createCompleteRoute(route, this.EssUrlAddress),
@@ -50,15 +50,15 @@ export class EmployeeService {
     ) as unknown as Observable<any[]>;
   };
   // for reports
- public getReportData(route: string): Observable<any[]> {
-  return this.http.get<any[]>(
-    this.createCompleteRoute(route, this.reportsUrl)
-  );
-}
+  public getReportData(route: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      this.createCompleteRoute(route, this.reportsUrl)
+    );
+  }
   getDatas(): Observable<any> {
     return this.http.get(
       this.createCompleteRoute(
-        'api/CompanyBranch/CompanyBranchList',
+        'api/company-branch/GetCompanyBranch',
         this.envUrl.urlAddress
       )
     );

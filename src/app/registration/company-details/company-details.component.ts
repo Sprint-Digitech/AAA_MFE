@@ -16,7 +16,7 @@ import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta'
 class ExpandedPanelServiceService {
   expandedPanelIndex = 0;
 
-  constructor() {}
+  constructor() { }
 }
 
 @Component({
@@ -50,7 +50,7 @@ export class CompanyDetailsComponent implements OnInit {
     private router: Router,
     private expandedPanelService: ExpandedPanelServiceService,
     private location: Location,
-  ) {}
+  ) { }
   ngOnInit(): void {
     this.getDetails();
     this.getBranchDetails();
@@ -180,7 +180,7 @@ export class CompanyDetailsComponent implements OnInit {
         if (res) {
           this.reposotory
             .delete(
-              `api/CompanyBranch/DeleteCompanyBranch?GuidCompanyBranchId=${row.id}`,
+              `api/company-branch/DeleteCompanyBranch?GuidCompanyBranchId=${row.id}`,
             )
             .subscribe(() => {
               this.notificationService.showSuccess(

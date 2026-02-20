@@ -27,7 +27,7 @@ export class CompanyGroupComponent implements OnInit {
     private notificationService: NotificationService,
     private service: AccountService,
     private dialogueService: DialogService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.getCompanyGroup();
@@ -103,7 +103,7 @@ export class CompanyGroupComponent implements OnInit {
 
   deleteCompanyGroup(row: any) {
     // First, get all companies to check if this group is in use
-    this.service.get('api/Company/CompanyList').subscribe({
+    this.service.get('api/company-branch/GetCompany').subscribe({
       next: async (companies: any[]) => {
         // Check if any company is using this group
         const companyUsing = await companies.find(
