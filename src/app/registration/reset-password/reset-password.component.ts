@@ -236,7 +236,7 @@ export class ResetPasswordComponent {
 
                 this.accountService
                   .logindetail(
-                    `api/Account/GetEmployeeLoginDetail?email=${email}`,
+                    `api/Account/GetEmployeeRoleDetail?email=${email}`,
                   )
                   .pipe(first())
                   .subscribe({

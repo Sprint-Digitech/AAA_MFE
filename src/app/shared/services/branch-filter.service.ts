@@ -19,7 +19,7 @@ export interface BranchFilterOptions {
   providedIn: 'root'
 })
 export class BranchFilterService {
-  constructor(private repository: RepositoryService) {}
+  constructor(private repository: RepositoryService) { }
 
   /**
    * Get user data from sessionStorage
@@ -45,12 +45,12 @@ export class BranchFilterService {
     if (!userData || !userData.employeeRoleLoginDtos) {
       return false;
     }
-    
+
     // Check if any role is Admin
-    const roles = Array.isArray(userData.employeeRoleLoginDtos) 
-      ? userData.employeeRoleLoginDtos 
+    const roles = Array.isArray(userData.employeeRoleLoginDtos)
+      ? userData.employeeRoleLoginDtos
       : [userData.employeeRoleLoginDtos];
-    
+
     return roles.some((role: any) => role?.roleName === 'Admin');
   }
 
@@ -86,13 +86,13 @@ export class BranchFilterService {
    */
   loadBranches(companyId?: string): Observable<Branch[]> {
     const targetCompanyId = companyId || this.getUserCompanyId();
-    
+
     if (!targetCompanyId) {
       throw new Error('Company ID is required to load branches');
     }
 
     return this.repository.getBranch(
-      `api/CompanyBranch/CompanyBranchListByCompanyGuid?CompanyId=${targetCompanyId}`
+      `api/company-branch/GetCompanyBranchByCompanyId?CompanyId=${targetCompanyId}`
     ).pipe(
       map((data: any[]) => {
         // Convert branch IDs to strings for consistency
@@ -151,10 +151,10 @@ export class BranchFilterService {
     if (!userData || !userData.employeeRoleLoginDtos) {
       return null;
     }
-    
+
     // Return first role if array, or the role object itself
-    return Array.isArray(userData.employeeRoleLoginDtos) 
-      ? userData.employeeRoleLoginDtos[0] 
+    return Array.isArray(userData.employeeRoleLoginDtos)
+      ? userData.employeeRoleLoginDtos[0]
       : userData.employeeRoleLoginDtos;
   }
 }

@@ -20,14 +20,14 @@ import { MatOptionModule } from '@angular/material/core';
 })
 class SelectedTabService {
   pageSelectedTab = 0;
-  constructor() {}
+  constructor() { }
 }
 @Injectable({
   providedIn: 'root',
 })
 class ExpandedPanelServiceService {
   expandedPanelIndex = 0;
-  constructor() {}
+  constructor() { }
 }
 
 interface statutoryDto {
@@ -638,7 +638,7 @@ export class BranchDetailsComponent implements OnInit {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) { }
 
   tabChanged(event: MatTabChangeEvent) {
     this.selectedTab.pageSelectedTab = event.index;
@@ -992,13 +992,13 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!this.addressId;
     const apiCall = isUpdate
       ? this.reposotory.update(
-          'api/company-branch/UpdateCompanyBranchAddress',
-          payload,
-        )
+        'api/company-branch/UpdateCompanyBranchAddress',
+        payload,
+      )
       : this.reposotory.post(
-          'api/company-branch/CreateCompanyBranchAddress',
-          payload,
-        );
+        'api/company-branch/CreateCompanyBranchAddress',
+        payload,
+      );
 
     apiCall.subscribe({
       next: () => {
@@ -1234,13 +1234,13 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!this.overtimeId;
     const apiCall = isUpdate
       ? this.reposotory.update(
-          'api/company-branch/UpdateBranchOvertimeSetting',
-          payload,
-        )
+        'api/company-branch/UpdateBranchOvertimeSetting',
+        payload,
+      )
       : this.reposotory.post(
-          'api/company-branch/CreateBranchOvertimeSetting',
-          payload,
-        );
+        'api/company-branch/CreateBranchOvertimeSetting',
+        payload,
+      );
 
     apiCall.subscribe({
       next: () => {
@@ -1439,13 +1439,13 @@ export class BranchDetailsComponent implements OnInit {
 
   cancelChanges(section: string): void {
     const sectionMap: { [key: string]: { dataSource: any[]; index: number } } =
-      {
-        statutory: { dataSource: this.dataSource1, index: 0 },
-        contact: { dataSource: this.dataSource, index: 0 },
-        tax: { dataSource: this.dataSource2, index: 0 },
-        leaveEncashment: { dataSource: this.dataSource5, index: 0 },
-        weeklyOff: { dataSource: this.dataSource6, index: 0 },
-      };
+    {
+      statutory: { dataSource: this.dataSource1, index: 0 },
+      contact: { dataSource: this.dataSource, index: 0 },
+      tax: { dataSource: this.dataSource2, index: 0 },
+      leaveEncashment: { dataSource: this.dataSource5, index: 0 },
+      weeklyOff: { dataSource: this.dataSource6, index: 0 },
+    };
 
     const config = sectionMap[section];
     if (config) {
@@ -1544,7 +1544,7 @@ export class BranchDetailsComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.notificationService.showError(
           err.error?.message ||
-            `Error ${isUpdate ? 'updating' : 'creating'} leave encashment`,
+          `Error ${isUpdate ? 'updating' : 'creating'} leave encashment`,
         );
       },
     });
@@ -1598,13 +1598,13 @@ export class BranchDetailsComponent implements OnInit {
           const isUpdate = !!contact.id;
           const apiCall = isUpdate
             ? this.reposotory.update(
-                'api/CompanyBranch/CompanyBranchContactDetailUpdate',
-                contactPayload,
-              )
+              'api/company-branch/UpdateCompanyBranchContactDetail',
+              contactPayload,
+            )
             : this.reposotory.post(
-                'api/CompanyBranch/CreateCompanyBranchContactDetail',
-                contactPayload,
-              );
+              'api/company-branch/CreateCompanyBranchContactDetail',
+              contactPayload,
+            );
 
           apiCall.subscribe({
             next: () => {
@@ -1673,13 +1673,13 @@ export class BranchDetailsComponent implements OnInit {
           const isUpdate = !!tax.id;
           const apiCall = isUpdate
             ? this.reposotory.update(
-                'api/CompanyTaxDeductor/CompanyTaxDeductorUpdate',
-                taxPayload,
-              )
+              'api/CompanyTaxDeductor/CompanyTaxDeductorUpdate',
+              taxPayload,
+            )
             : this.reposotory.post(
-                'api/CompanyTaxDeductor/CreatCompanyTaxDeductor',
-                taxPayload,
-              );
+              'api/CompanyTaxDeductor/CreatCompanyTaxDeductor',
+              taxPayload,
+            );
 
           apiCall.subscribe({
             next: () => {
@@ -1725,13 +1725,13 @@ export class BranchDetailsComponent implements OnInit {
         const isUpdate = !!leaveEncashment.branchLeaveId;
         const apiCall = isUpdate
           ? this.reposotory.update(
-              'api/AttendenceSource/updateBranchleaveEncashment',
-              payload,
-            )
+            'api/AttendenceSource/updateBranchleaveEncashment',
+            payload,
+          )
           : this.reposotory.post(
-              'api/AttendenceSource/createBranchleaveEncashment',
-              payload,
-            );
+            'api/AttendenceSource/createBranchleaveEncashment',
+            payload,
+          );
 
         apiCall.subscribe({
           next: () => {
@@ -1797,7 +1797,7 @@ export class BranchDetailsComponent implements OnInit {
     });
 
     this.reposotory
-      .getCompany(`api/Company/CompanyById?guidCompanyId=${this.companyId}`)
+      .getCompany(`api/company-branch/GetCompany?id=${this.companyId}`)
       .subscribe({
         next: (data) => {
           this.details = data;
@@ -1976,13 +1976,13 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!id;
     const apiCall = isUpdate
       ? this.reposotory.update(
-          'api/company-branch/UpdateCompanyBranchContactDetail',
-          payload,
-        )
+        'api/company-branch/UpdateCompanyBranchContactDetail',
+        payload,
+      )
       : this.reposotory.post(
-          'api/company-branch/CreateCompanyBranchContactDetail',
-          payload,
-        );
+        'api/company-branch/CreateCompanyBranchContactDetail',
+        payload,
+      );
 
     apiCall.subscribe({
       next: () => {
@@ -2051,13 +2051,13 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!payload.id;
     const apiCall = isUpdate
       ? this.reposotory.update(
-          'api/company-branch/UpdateCompanyStatutory',
-          statutoryPayload,
-        )
+        'api/company-branch/UpdateCompanyStatutory',
+        statutoryPayload,
+      )
       : this.reposotory.post(
-          'api/company-branch/CreateCompanyStatutory',
-          statutoryPayload,
-        );
+        'api/company-branch/CreateCompanyStatutory',
+        statutoryPayload,
+      );
 
     apiCall.subscribe({
       next: () => {
@@ -2316,7 +2316,7 @@ export class BranchDetailsComponent implements OnInit {
         if (res) {
           this.reposotory
             .delete(
-              `api/CompanyStatutoryIdentity/DeleteCompanyStatutory?Id=${row.id}`,
+              `api/company-branch/DeleteCompanyStatutory?Id=${row.id}`,
             )
             .subscribe(() => {
               this.notificationService.showSuccess(
@@ -2439,9 +2439,9 @@ export class BranchDetailsComponent implements OnInit {
     return this.dataSource6;
   }
 
-  onEditLeaveEncashment(row: any) {}
+  onEditLeaveEncashment(row: any) { }
 
-  addLeaveEncashment(): void {}
+  addLeaveEncashment(): void { }
 
   addWeeklyOff(): void {
     this.router.navigate([
@@ -2474,7 +2474,7 @@ export class BranchDetailsComponent implements OnInit {
       });
   };
 
-  onEditWeeklyOff(row: any): void {}
+  onEditWeeklyOff(row: any): void { }
 
   deleteWeeklyOff = (row: any) => {
     this.dialogService

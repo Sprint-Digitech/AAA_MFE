@@ -43,7 +43,7 @@ export class CompaniesComponent implements OnInit, OnDestroy {
     private cacheService: HttpCacheService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Always call API when component initializes
@@ -78,7 +78,7 @@ export class CompaniesComponent implements OnInit, OnDestroy {
 
   private loadCompanyData(): void {
     // Invalidate cache for company list to prevent showing stale data
-    this.cacheService.invalidatePattern(/Company\/CompanyList/i);
+    this.cacheService.invalidatePattern(/company-branch\/GetCompany/i);
 
     // Clear existing data to prevent showing stale data
     this.dataSource = [];
