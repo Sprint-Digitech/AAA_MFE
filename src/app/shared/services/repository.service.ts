@@ -98,5 +98,11 @@ export class RepositoryService {
       responseType: 'text' as 'json'
     });
   }
-
+ public getCompany = (route: string, headers?: HttpHeaders) => {
+    const options = headers ? { headers } : {};
+    return this.http.get<any[]>(
+      this.createCompleteRoute(route, this.envUrl.urlAddress),
+      options
+    );
+  };
 }

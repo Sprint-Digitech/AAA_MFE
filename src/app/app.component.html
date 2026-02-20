@@ -127,9 +127,9 @@
                 </div>
             </div>
 
-            <div class="header-brand">
-                <img src="assets/img/fovesta1.png" alt="Brand" class="brand-logo">
-                <span class="brand-name">{{ user?.companyName || 'Outsmart' }}</span>
+               <div class="header-brand" *ngIf="sidebarLogo">
+                <img [src]="sidebarLogo" [alt]="sidebarLogoAlt" class="brand-logo" (error)="onImageError($event)">
+                <span class="brand-name">{{ companyName || user?.companyName || 'Company Name' }}</span>
             </div>
 
             <div class="header-right">

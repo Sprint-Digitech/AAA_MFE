@@ -2,9 +2,14 @@ import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/cor
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import {  lastValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
+import { GlobalSearchService } from './shared/services/global-search.service';
+import { EmployeeService } from './shared/services/employee.service';
+import { RepositoryService } from './shared/services/repository.service';
+
 
 @Component({
   selector: 'app-root',
@@ -22,7 +27,9 @@ export class AppComponent implements OnInit {
   menus: any[] = [];
   user: any = null;
   currentSubmenuTop = 0;
-
+ companies: string = '';
+  companyName: any;
+  readonly defaultSidebarLogo = 'assets/img/fovesta1.png';
   // Search functionality
   globalSearchTerm = '';
   isGlobalSearchOpen = false;
@@ -62,7 +69,10 @@ export class AppComponent implements OnInit {
   };
 
   constructor(private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private globalSearchService: GlobalSearchService,
+        private employeeService: EmployeeService,
+        private CompanyData: RepositoryService
   ) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -76,12 +86,14 @@ export class AppComponent implements OnInit {
       this.globalSearchTerm = '';
       this.isGlobalSearchOpen = false;
       this.globalEmployeeResults = [];
+      this.globalSearchService.emit('');
     });
   }
 
   ngOnInit() {
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
+     this.getCompanies();
   }
 
   loadUserData() {
@@ -111,70 +123,24 @@ export class AppComponent implements OnInit {
   }
 
   // Search functionality
-  async onGlobalSearch(): Promise<void> {
-    const term = this.globalSearchTerm.trim();
+ async onGlobalSearch(): Promise<void> {
+  return; // ← bas yahi rakho
+}
+onHeaderInput(value: string): void {
+  this.globalSearchTerm = value;
+  const term = value.trim();
+  this.globalSearchService.emit(term); // ← ye rehne do, filter ke liye
 
-    if (!term) {
-      this.globalEmployeeResults = [];
-      this.isGlobalSearchOpen = false;
-      this.cdr.markForCheck();
-      return;
-    }
+  // Bas itna add karo — dropdown kabhi nahi dikhega
+  this.isGlobalSearchOpen = false;
+  this.globalEmployeeResults = [];
+  this.isSearchingEmployees = false;
+  this.cdr.markForCheck();
+}
 
-    this.isSearchingEmployees = true;
-    this.globalEmployeeResults = [];
-    this.isGlobalSearchOpen = true;
-    this.cdr.markForCheck();
-
-    // Replace with your actual employee service call
-    try {
-      // const result = await lastValueFrom(
-      //   this.employeeService.getEmployee('api/Employee/EmployeeBasicDetailList', { SearchTerm: term })
-      // );
-
-      // Mock data for demonstration - replace with actual API call
-      const result = [
-        { employeeId: '1', employeeFirstName: 'John', employeeLastName: 'Doe', employeeCode: 'E001', departmentName: 'IT' },
-        { employeeId: '2', employeeFirstName: 'Jane', employeeLastName: 'Smith', employeeCode: 'E002', departmentName: 'HR' }
-      ].filter(emp =>
-        emp.employeeFirstName.toLowerCase().includes(term.toLowerCase()) ||
-        emp.employeeLastName.toLowerCase().includes(term.toLowerCase()) ||
-        emp.employeeCode.toLowerCase().includes(term.toLowerCase())
-      );
-
-      const employees = Array.isArray(result) ? result : [];
-      this.globalEmployeeResults = employees.map((employee) => this.normalizeEmployee(employee));
-      this.isGlobalSearchOpen = true;
-    } catch (error) {
-      console.error('Search error:', error);
-      this.globalEmployeeResults = [];
-      this.isGlobalSearchOpen = false;
-    } finally {
-      this.isSearchingEmployees = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onHeaderInput(value: string): void {
-    this.globalSearchTerm = value;
-    const term = value.trim();
-
-    if (!term) {
-      this.globalEmployeeResults = [];
-      this.isGlobalSearchOpen = false;
-      this.isSearchingEmployees = false;
-      this.cdr.markForCheck();
-    } else {
-      this.onGlobalSearch();
-    }
-  }
-
-  openGlobalSearchResults(): void {
-    if (this.globalEmployeeResults.length) {
-      this.isGlobalSearchOpen = true;
-      this.cdr.markForCheck();
-    }
-  }
+ openGlobalSearchResults(): void {
+  return; // ← bas yahi rakho
+}
 
   closeGlobalSearch(): void {
     this.isGlobalSearchOpen = false;
@@ -184,6 +150,7 @@ export class AppComponent implements OnInit {
     this.globalSearchTerm = '';
     this.globalEmployeeResults = [];
     this.isGlobalSearchOpen = false;
+    this.globalSearchService.emit('');
   }
 
   navigateToEmployee(employee: any): void {
@@ -201,6 +168,7 @@ export class AppComponent implements OnInit {
     this.isGlobalSearchOpen = false;
     this.globalEmployeeResults = [];
     this.globalSearchTerm = '';
+    this.globalSearchService.emit('');
     this.cdr.markForCheck();
   }
 
@@ -209,15 +177,44 @@ export class AppComponent implements OnInit {
       return {};
     }
 
+    const employeeId =
+      employee.employeeId ||
+      employee.EmployeeId ||
+      employee.id ||
+      employee.employeId ||
+      employee.employeeid ||
+      '';
+
+    const employeeCode =
+      employee.employeeCode ||
+      employee.EmployeeCode ||
+      employee.code ||
+      '';
+
+    const firstName =
+      employee.employeeFirstName || employee.firstName || employee.name || '';
+
+    const middleName =
+      employee.employeeMiddleName || employee.middleName || '';
+
+    const lastName =
+      employee.employeeLastName || employee.lastName || '';
+
+    const department =
+      employee.departmentName || employee.department || '';
+
+    const designation =
+      employee.designationName || employee.designation || '';
+
     return {
       ...employee,
-      employeeId: employee.employeeId || employee.EmployeeId || employee.id || '',
-      employeeCode: employee.employeeCode || employee.EmployeeCode || employee.code || '',
-      employeeFirstName: employee.employeeFirstName || employee.firstName || employee.name || '',
-      employeeMiddleName: employee.employeeMiddleName || employee.middleName || '',
-      employeeLastName: employee.employeeLastName || employee.lastName || '',
-      departmentName: employee.departmentName || employee.department || '',
-      designationName: employee.designationName || employee.designation || '',
+      employeeId,
+      employeeCode,
+      employeeFirstName: firstName,
+      employeeMiddleName: middleName,
+      employeeLastName: lastName,
+      departmentName: department,
+      designationName: designation,
     };
   }
 
@@ -387,5 +384,52 @@ export class AppComponent implements OnInit {
 
   getIcon(menuName: string): string {
     return this.menuIcons[menuName] || 'list';
+  }
+   // Company Logo Methods
+  get sidebarLogo(): string {
+    return this.companies || this.defaultSidebarLogo;
+  }
+
+  get sidebarLogoAlt(): string {
+    return this.companyName ? `${this.companyName} logo` : 'Fovesta Logo';
+  }
+   getCompanies = () => {
+    this.CompanyData.getCompany('api/company-branch/GetCompany').subscribe({
+      next: (data: any) => {
+        const logo = data?.[0]?.companylogo;
+        this.companies = this.resolveCompanyLogo(logo);
+        this.companyName = data?.[0]?.companyName || this.companyName;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error fetching company data:', error);
+      }
+    });
+  };
+
+  private resolveCompanyLogo(logo: string | null | undefined): string {
+    if (!logo || typeof logo !== 'string') {
+      return '';
+    }
+    const trimmed = logo.trim();
+    if (!trimmed) {
+      return '';
+    }
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('data:') || lower.startsWith('http') || lower.startsWith('/')) {
+      return trimmed;
+    }
+    return `data:image/png;base64,${trimmed}`;
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    // Prevent infinite loop by checking if already set to default
+    if (img.src && !img.src.includes('fovesta1.png')) {
+      img.src = 'assets/img/fovesta1.png';
+    } else {
+      // If default also fails, hide the image
+      img.style.display = 'none';
+    }
   }
 }
