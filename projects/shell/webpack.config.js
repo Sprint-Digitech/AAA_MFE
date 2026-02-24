@@ -15,6 +15,7 @@ module.exports = {
         alms: "alms@http://localhost:4205/remoteEntry.js",
         salary: "salary@http://localhost:4206/remoteEntry.js",
         employee: "employee@http://localhost:4207/remoteEntry.js",
+        notification: "notification@http://localhost:4208/remoteEntry.js",
       },
       shared: {
         "@angular/core": { singleton: true, strictVersion: false, requiredVersion: false },

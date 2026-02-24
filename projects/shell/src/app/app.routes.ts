@@ -85,7 +85,10 @@ export const routes: Routes = [
             if (path === 'employee') {
                 const salaryEmployeeSubPaths = [
                     'employeeannualbonus', 'employeectc', 'addemployeectc',
-                    'updateemployeectc', 'employeectcdetails', 'ctcemployee'
+                    'updateemployeectc', 'employeectcdetails', 'ctcemployee',
+                    'employeetdslist', 'employeevpf', 'addemployeevpf', 'updateemployeevpf',
+                    'employeepf', 'addemployeepf', 'updateemployeepf',
+                    'addemployeectcdetails', 'updateemployeectcdetails'
                 ];
                 if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: url };
             }
@@ -135,6 +138,17 @@ export const routes: Routes = [
         },
         component: MfeContainerComponent,
         data: { mfeUrl: 'https://dev.fovestta.com/Employee/dist/', title: 'Employee Management' }
+    },
+    {
+        // Notification MFE
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            if (path === 'notification') return { consumed: url };
+            return null;
+        },
+        component: MfeContainerComponent,
+        data: { mfeUrl: 'https://dev.fovestta.com/Notification/dist/', title: 'Notifications' }
     },
     {
         path: '**',

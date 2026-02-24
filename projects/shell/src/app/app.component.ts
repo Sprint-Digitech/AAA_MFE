@@ -3,11 +3,14 @@ import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } fro
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { filter } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
+import { GlobalSearchService } from './shared/services/global-search.service';
+import { LoaderComponent } from './loader/loader/loader.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule, FormsModule, LoaderComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -17,13 +20,20 @@ export class AppComponent implements OnInit {
   user: any = null;
   menus: any[] = [];
   currentUrl: string = '';
+  globalSearchTerm: string = '';
 
-  constructor(private router: Router, private cdr: ChangeDetectorRef) {
+  constructor(
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private globalSearchService: GlobalSearchService
+  ) {
     console.log('Shell Booting...');
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.updateState((event.urlAfterRedirects || event.url));
+      this.globalSearchTerm = '';
+      this.globalSearchService.emit('');
     });
   }
 
@@ -79,6 +89,11 @@ export class AppComponent implements OnInit {
     } catch (e) {
       console.warn('Session data parse error', e);
     }
+  }
+
+  onSearchInput(value: string) {
+    this.globalSearchTerm = value;
+    this.globalSearchService.emit(value.trim());
   }
 
   toggleSidebar() {

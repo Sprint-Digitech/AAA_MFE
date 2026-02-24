@@ -103,34 +103,74 @@ export const routes: Routes = [
         path: 'updateEsiCalculationMonthLimit/:id', loadComponent: () => import('./registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component').then(m => m.AddEsiCalculationMonthLimitComponent)
     },
     {
+        // Salary & Master Data MFE
         matcher: (url) => {
             if (url.length === 0) return null;
             const path = url[0].path.toLowerCase();
-            if (path === 'employee') return { consumed: url };
-            return null;
-        },
-        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'https://dev.fovestta.com/Employee/dist/', title: 'Employee Management' }
-    },
-    {
-        matcher: (url) => {
-            if (url.length === 0) return null;
-            const path = url[0].path.toLowerCase();
-            const salaryModules = ['bonus', 'reimbursement', 'ess', 'access', 'gratuity', 'arrear', 'salary', 'loan', 'reports', 'master', 'utility', 'attendance', 'payroll', 'settings'];
+            const subPath = url.length > 1 ? url[1].path.toLowerCase() : '';
+
+            // Paths that must go to Salary MFE
+            const salaryModules = [
+                'bonus', 'reimbursement', 'access', 'gratuity', 'arrear',
+                'salary', 'loan', 'reports', 'master', 'utility',
+                'payroll', 'settings', 'currency', 'department', 'location', 'designation'
+            ];
+
             if (salaryModules.includes(path)) return { consumed: url };
+
+            // Specific sub-paths for Salary
+            if (path === 'employee') {
+                const salaryEmployeeSubPaths = [
+                    'employeeannualbonus', 'employeectc', 'addemployeectc',
+                    'updateemployeectc', 'employeectcdetails', 'ctcemployee'
+                ];
+                if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: url };
+            }
+
+            if (path === 'attendance') {
+                const salaryAttendanceSubPaths = ['holiday-master', 'add-holiday', 'edit-holiday', 'bulk-upload-holiday'];
+                if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: url };
+            }
+
+            if (path === 'employeeselfservice' && subPath === 'salary&tax') return { consumed: url };
+
+            // Handle legacy 'ess' link if it maps to Salary
+            if (path === 'ess') return { consumed: url };
+
             return null;
         },
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
         data: { mfeUrl: 'https://dev.fovestta.com/Salary/dist/', title: 'Salary & Master Data' }
     },
     {
+        // ALMS & ESS MFE
         matcher: (url) => {
             if (url.length === 0) return null;
             const path = url[0].path.toLowerCase();
-            if (path === 'alms') return { consumed: url };
+            const subPath = url.length > 1 ? url[1].path.toLowerCase() : '';
+
+            // ALMS handles 'alms', most 'attendance', and most 'employeeselfservice'
+            if (path === 'alms' || path === 'attendance' || path === 'employeeselfservice') return { consumed: url };
+
+            // Specific employee routes for ALMS (Attendance)
+            const almsEmployeeSubPaths = ['employeeattendance', 'addemployeeattendancebysheet', 'employeebiometric'];
+            if (path === 'employee' && almsEmployeeSubPaths.includes(subPath)) return { consumed: url };
+
             return null;
         },
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'https://dev.fovestta.com/ALMS/dist/', title: 'ALMS' }
+        data: { mfeUrl: 'https://dev.fovestta.com/ALMS/dist/', title: 'ALMS & ESS' }
+    },
+    {
+        // Employee Management MFE
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            // Remaining 'employee' routes go to Employee MFE
+            if (path === 'employee') return { consumed: url };
+            return null;
+        },
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://dev.fovestta.com/Employee/dist/', title: 'Employee Management' }
     }
 ];

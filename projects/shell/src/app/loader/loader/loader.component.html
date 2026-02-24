@@ -1,0 +1,9 @@
+<!-- loader.component.html -->
+<div *ngIf="isLoading$ | async" class="loader-overlay">
+  <div class="loader-content">
+    <div class="modern-spinner">
+      <div *ngFor="let i of circles" class="dot" [ngStyle]="{'animation-delay': i * 0.15 + 's'}"></div>
+    </div>
+    <p>Loading...</p>
+  </div>
+</div>

@@ -32,12 +32,16 @@ export class MfeContainerComponent implements OnInit {
   constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
-    // Determine the configured base URL for this MFE
-    const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
-    console.log('[MfeContainer] Initialized with Base URL:', mfeBaseUrl);
+    // Subscribe to route data changes (handles MFE switches)
+    this.route.data.subscribe(data => {
+      const mfeBaseUrl = data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
+      console.log('[MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
+      this.updateIframeSrc(mfeBaseUrl);
+    });
 
-    // Subscribe to URL changes to update the iframe src dynamically
+    // Subscribe to URL changes (handles navigation within the same MFE)
     this.route.url.subscribe(() => {
+      const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
       this.updateIframeSrc(mfeBaseUrl);
     });
   }

@@ -66,6 +66,7 @@
 
     <!-- Main Content Box -->
     <div class="main-container">
+        <app-loader></app-loader>
         <!-- Header (SD Nemo Style) -->
         <header class="header" *ngIf="!isLoginPage">
             <div class="header-left">
@@ -127,7 +128,7 @@
                 </div>
             </div>
 
-               <div class="header-brand" *ngIf="sidebarLogo">
+            <div class="header-brand" *ngIf="sidebarLogo">
                 <img [src]="sidebarLogo" [alt]="sidebarLogoAlt" class="brand-logo" (error)="onImageError($event)">
                 <span class="brand-name">{{ companyName || user?.companyName || 'Company Name' }}</span>
             </div>

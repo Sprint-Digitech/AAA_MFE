@@ -44,6 +44,9 @@
             <span>Reimbursement</span></a></li>
         <li><a routerLink="/ess" [class.active]="isRouteActive('/ess')"><mat-icon>info</mat-icon> <span>ESS
               Portal</span></a></li>
+        <li><a routerLink="/notification"
+            [class.active]="isRouteActive('/notification')"><mat-icon>notifications</mat-icon>
+            <span>Notification</span></a></li>
         <li><a routerLink="/access" [class.active]="isRouteActive('/access')"><mat-icon>vpn_key</mat-icon> <span>Access
               Rights</span></a></li>
         <li><a routerLink="/gratuity" [class.active]="isRouteActive('/gratuity')"><mat-icon>account_balance</mat-icon>
@@ -71,12 +74,14 @@
 
   <!-- Main Content Box -->
   <div class="main-container">
+    <app-loader></app-loader>
     <!-- Header -->
     <header class="header" *ngIf="!isLoginPage">
       <div class="header-left">
         <div class="search-box">
           <mat-icon>search</mat-icon>
-          <input type="text" placeholder="Search">
+          <input type="text" placeholder="Search" [(ngModel)]="globalSearchTerm"
+            (input)="onSearchInput(globalSearchTerm)">
         </div>
       </div>
 

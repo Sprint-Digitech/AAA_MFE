@@ -9,17 +9,15 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class TenantInterceptor implements HttpInterceptor {
-  constructor() {}
+  constructor() { }
 
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    // Always use 'dbo' for GetAllRegisteredEmails API
-    const isGetAllRegisteredEmails = req.url.includes(
-      '/api/Employee/GetAllRegisteredEmails'
-    );
-    const tenantId = isGetAllRegisteredEmails
+    // Always use 'dbo' for GetAllRegisteredEmails/GetAllEmployeeEmails APIs
+    const isAlwaysDbo = req.url.includes('GetAllRegisteredEmails') || req.url.includes('GetAllEmployeeEmails');
+    const tenantId = isAlwaysDbo
       ? 'dbo'
       : sessionStorage.getItem('tenantSchema') || 'dbo';
     console.log('Tenant ID:', tenantId);

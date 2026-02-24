@@ -2,19 +2,36 @@ import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/cor
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import {  lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { EmployeeService } from './shared/services/employee.service';
 import { RepositoryService } from './shared/services/repository.service';
+import { LoaderComponent } from './loader/loader/loader.component';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule, ReactiveFormsModule, FormsModule, MatInputModule],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    CommonModule,
+    MatIconModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatInputModule,
+    LoaderComponent,
+    MatMenuModule,
+    MatButtonModule,
+    MatTooltipModule
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -27,7 +44,7 @@ export class AppComponent implements OnInit {
   menus: any[] = [];
   user: any = null;
   currentSubmenuTop = 0;
- companies: string = '';
+  companies: string = '';
   companyName: any;
   readonly defaultSidebarLogo = 'assets/img/fovesta1.png';
   // Search functionality
@@ -71,8 +88,8 @@ export class AppComponent implements OnInit {
   constructor(private router: Router,
     private cdr: ChangeDetectorRef,
     private globalSearchService: GlobalSearchService,
-        private employeeService: EmployeeService,
-        private CompanyData: RepositoryService
+    private employeeService: EmployeeService,
+    private CompanyData: RepositoryService
   ) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -93,7 +110,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
-     this.getCompanies();
+    this.getCompanies();
   }
 
   loadUserData() {
@@ -123,24 +140,24 @@ export class AppComponent implements OnInit {
   }
 
   // Search functionality
- async onGlobalSearch(): Promise<void> {
-  return; // ← bas yahi rakho
-}
-onHeaderInput(value: string): void {
-  this.globalSearchTerm = value;
-  const term = value.trim();
-  this.globalSearchService.emit(term); // ← ye rehne do, filter ke liye
+  async onGlobalSearch(): Promise<void> {
+    return; // ← bas yahi rakho
+  }
+  onHeaderInput(value: string): void {
+    this.globalSearchTerm = value;
+    const term = value.trim();
+    this.globalSearchService.emit(term); // ← ye rehne do, filter ke liye
 
-  // Bas itna add karo — dropdown kabhi nahi dikhega
-  this.isGlobalSearchOpen = false;
-  this.globalEmployeeResults = [];
-  this.isSearchingEmployees = false;
-  this.cdr.markForCheck();
-}
+    // Bas itna add karo — dropdown kabhi nahi dikhega
+    this.isGlobalSearchOpen = false;
+    this.globalEmployeeResults = [];
+    this.isSearchingEmployees = false;
+    this.cdr.markForCheck();
+  }
 
- openGlobalSearchResults(): void {
-  return; // ← bas yahi rakho
-}
+  openGlobalSearchResults(): void {
+    return; // ← bas yahi rakho
+  }
 
   closeGlobalSearch(): void {
     this.isGlobalSearchOpen = false;
@@ -385,7 +402,7 @@ onHeaderInput(value: string): void {
   getIcon(menuName: string): string {
     return this.menuIcons[menuName] || 'list';
   }
-   // Company Logo Methods
+  // Company Logo Methods
   get sidebarLogo(): string {
     return this.companies || this.defaultSidebarLogo;
   }
@@ -393,7 +410,7 @@ onHeaderInput(value: string): void {
   get sidebarLogoAlt(): string {
     return this.companyName ? `${this.companyName} logo` : 'Fovesta Logo';
   }
-   getCompanies = () => {
+  getCompanies = () => {
     this.CompanyData.getCompany('api/company-branch/GetCompany').subscribe({
       next: (data: any) => {
         const logo = data?.[0]?.companylogo;
