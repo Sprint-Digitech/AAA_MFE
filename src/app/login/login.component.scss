@@ -13,35 +13,34 @@
   align-items: center;
   min-height: 100vh;
   width: 100%;
-  overflow: auto;          /* ← change from hidden to auto */
+  overflow: auto;
   box-sizing: border-box;
+  padding: 20px;           /* ← ensure consistent padding all sides */
 }
+
 .main>img {
   display: none;
 }
 
 .login-wrapper {
   display: flex;
-  justify-content: center;
   align-items: stretch;
-  width: 1000px;
-  max-width: 95vw;
-  height: 650px;
-  max-height: 95vh;
+  width: 100%;
+  max-width: 900px;        /* ← reduce from 960px */
   background: #e5e5e5;
   border-radius: 15px;
-  overflow: hidden;        /* ← this clips children to the rounded border */
+  overflow: hidden;
   border: 0.5px solid #0e1b2c;
   box-sizing: border-box;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;          /* ← prevents it from shrinking */
+  max-height: calc(100vh - 40px);
 }
 
 .left-section {
   flex: 1;
-  min-width: 0;            /* ← prevents flex child from overflowing */
+  min-width: 0;
   background: #e5e5e5;
-  padding: 30px 40px;
+  padding: 30px 35px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -54,10 +53,8 @@
   align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
-  background-color: transparent;
-  padding-top: 10px;   /* ← was 50px */
-  width: fit-content;
-  margin-top: 0;       /* ← was 33px */
+  padding-top: 10px;
+  margin-top: 0;
 }
 
 .logo-img {
@@ -119,10 +116,10 @@
 
 .illustration-img {
   width: 100%;
-  max-width: 378px;
-  height: 220px;        /* ← reduce from 290px */
+  max-width: 340px;
+  height: 200px;
   object-fit: contain;
-  margin-top: 10px;     /* ← reduce from 50px */
+  margin-top: 15px;
 }
 
 
@@ -143,29 +140,25 @@
 }
 
 .right-section {
-  flex: 1;
-  min-width: 0;            /* ← prevents flex child from overflowing */
+  flex: 0 0 380px;         /* ← reduce from 420px */
   background: #154487;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 30px 20px;
 }
 
 .login-card {
-  width: 400px;
-  height: 480px;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  border: 0.5px;
-  align-items: left;
-
-  .mat-mdc-card-content:first-child {
-    padding-top: 0 !important;
-  }
+  padding: 30px 28px;
+  box-sizing: border-box;
 }
 
 .login-header {
@@ -254,7 +247,7 @@ mat-form-field input {
   border-radius: 7px;
   font-family: 'Poppins';
   color: #151D48;
-  width: 250px;
+  width: 100px;
   background-color: transparent;
 
 }
@@ -270,8 +263,8 @@ mat-form-field input {
 lib-required-nemo,
 lib-password-nemo {
   display: block !important;
-  width: 250px !important;
-  margin: 0 0 0 0 !important;
+  width: 100px !important;
+  margin: 0 !important;
   text-align: center !important;
 }
 
@@ -372,11 +365,11 @@ mat-form-field.password-field input {
 //   box-shadow: none !important;
 // }
 ::ng-deep .password-field .mat-mdc-form-field-flex {
-  background: transparent !important;
+  width: 100% !important;
+  height: 40px !important;
   border: 1px solid #8CBBA8 !important;
   border-radius: 7px !important;
-  height: 40px !important;
-  width: 250px !important;
+  background: transparent !important;
   padding: 0 6px !important;
   display: flex !important;
   align-items: center !important;
@@ -521,11 +514,11 @@ mat-form-field.password-field input {
 }
 
 ::ng-deep .user-id-field .mat-mdc-form-field-flex {
-  background: transparent !important;
+  width: 100% !important;
+  height: 38px !important;
   border: 1px solid #8CBBA8 !important;
   border-radius: 7px !important;
-  height: 38px !important;
-  width: 250px !important;
+  background: transparent !important;
   align-items: center !important;
 }
 
@@ -558,10 +551,12 @@ mat-form-field.password-field input {
   border: none !important;
 }
 
+
 /* Remove Angular Material underline completely */
 ::ng-deep .mdc-line-ripple {
   display: none !important;
 }
+
 
 // ::ng-deep body {
 //   margin: 0;
