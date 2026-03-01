@@ -18,48 +18,26 @@ export const routes: Routes = [
         component: LoginContainerComponent
     },
     {
-        path: 'welcome',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'initial-setup',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'forgot-password',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'reset',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'company',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'MenuMaster',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'userRolesAndPermissions',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'responsibility',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'esiCalculationMonthLimit',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'addEsiCalculationMonthLimit',
-        component: LoginContainerComponent
-    },
-    {
-        path: 'updateEsiCalculationMonthLimit',
-        component: LoginContainerComponent
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+            const authMfePaths = [
+                'welcome', 'initial-setup', 'forgot-password', 'reset',
+                'company', 'menumaster', 'userrolesandpermissions',
+                'responsibility', 'esicalculationmonthlimit',
+                'addesicalculationmonthlimit', 'updateesicalculationmonthlimit'
+            ];
+            if (authMfePaths.includes(path)) {
+                return { consumed: [url[0]] };
+            }
+            return null;
+        },
+        children: [
+            {
+                path: '**',
+                component: LoginContainerComponent
+            }
+        ]
     },
     {
         path: 'dashboard',
@@ -76,10 +54,12 @@ export const routes: Routes = [
             const salaryModules = [
                 'bonus', 'reimbursement', 'access', 'gratuity', 'arrear',
                 'salary', 'loan', 'reports', 'master', 'utility',
-                'payroll', 'settings', 'currency', 'department', 'location', 'designation'
+                'payroll', 'settings', 'currency', 'department', 'location',
+                'designation', 'welcome-user', 'home', 'tracing', 'tax',
+                'tds', 'perquisites', 'investment'
             ];
 
-            if (salaryModules.includes(path)) return { consumed: url };
+            if (salaryModules.includes(path)) return { consumed: [url[0]] };
 
             // Specific sub-paths for Salary
             if (path === 'employee') {
@@ -90,23 +70,27 @@ export const routes: Routes = [
                     'employeepf', 'addemployeepf', 'updateemployeepf',
                     'addemployeectcdetails', 'updateemployeectcdetails'
                 ];
-                if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: url };
+                if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
             if (path === 'attendance') {
                 const salaryAttendanceSubPaths = ['holiday-master', 'add-holiday', 'edit-holiday', 'bulk-upload-holiday'];
-                if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: url };
+                if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
-            if (path === 'employeeselfservice' && subPath === 'salary&tax') return { consumed: url };
+            if (path === 'employeeselfservice' && subPath === 'salary&tax') return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
-            if (path === 'ess') return { consumed: url };
+            if (path === 'ess') return { consumed: [url[0]] };
 
             return null;
         },
-        component: MfeContainerComponent,
-        data: { mfeUrl: 'https://dev.fovestta.com/Salary/dist/', title: 'Salary & Master Data' }
+        children: [
+            {
+                path: '**',
+                component: LoginContainerComponent
+            }
+        ]
     },
     {
         // ALMS & ESS MFE
@@ -116,39 +100,45 @@ export const routes: Routes = [
             const subPath = url.length > 1 ? url[1].path.toLowerCase() : '';
 
             // ALMS handles 'alms', most 'attendance', and most 'employeeselfservice'
-            if (path === 'alms' || path === 'attendance' || path === 'employeeselfservice') return { consumed: url };
+            if (path === 'alms' || path === 'attendance' || path === 'employeeselfservice') return { consumed: [url[0]] };
 
             // Specific employee routes for ALMS (Attendance)
             const almsEmployeeSubPaths = ['employeeattendance', 'addemployeeattendancebysheet', 'employeebiometric'];
-            if (path === 'employee' && almsEmployeeSubPaths.includes(subPath)) return { consumed: url };
+            if (path === 'employee' && almsEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
 
             return null;
         },
-        component: MfeContainerComponent,
-        data: { mfeUrl: 'https://dev.fovestta.com/ALMS/dist/', title: 'ALMS & ESS' }
+        children: [
+            {
+                path: '**',
+                component: LoginContainerComponent
+            }
+        ]
     },
     {
         // Employee Management MFE
-        matcher: (url) => {
-            if (url.length === 0) return null;
-            const path = url[0].path.toLowerCase();
-            // Remaining 'employee' routes go to Employee MFE
-            if (path === 'employee') return { consumed: url };
-            return null;
-        },
-        component: MfeContainerComponent,
-        data: { mfeUrl: 'https://dev.fovestta.com/Employee/dist/', title: 'Employee Management' }
+        path: 'employee',
+        children: [
+            {
+                path: '**',
+                component: LoginContainerComponent
+            }
+        ]
     },
     {
         // Notification MFE
         matcher: (url) => {
             if (url.length === 0) return null;
             const path = url[0].path.toLowerCase();
-            if (path === 'notification') return { consumed: url };
+            if (path === 'notification') return { consumed: [url[0]] };
             return null;
         },
-        component: MfeContainerComponent,
-        data: { mfeUrl: 'https://dev.fovestta.com/Notification/dist/', title: 'Notifications' }
+        children: [
+            {
+                path: '**',
+                component: LoginContainerComponent
+            }
+        ]
     },
     {
         path: '**',

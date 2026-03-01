@@ -43,6 +43,19 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.updateState(this.router.url);
+
+    // Listen for messages from MFEs (e.g. for logout or navigation)
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'LOGOUT') {
+        this.logout(false);
+      }
+      if (event.data && event.data.type === 'ROUTER_NAVIGATED') {
+        if (window.location.pathname !== event.data.url) {
+          // Update the parent browser URL to match the iframe's navigation exactly without reloading
+          window.history.replaceState(null, '', event.data.url);
+        }
+      }
+    });
   }
 
   updateState(rawUrl: string) {
@@ -53,28 +66,41 @@ export class AppComponent implements OnInit {
     console.log('Shell: Current URL path:', url);
 
     // Improved detection: check for common login/register paths
-    // We also check for 'gateway/dist/login' just in case the router state includes the full path
+    // A page is a login page (no shell) if it's explicitly /login, /register, or forgot/reset.
+    // 'welcome' and others have been removed because they should show the shell.
     this.isLoginPage =
       url === '/login' ||
       url === '/' ||
       url === '' ||
       url === '/register' ||
+      url === '/authentication/login' ||
       url.includes('forgot-password') ||
       url.includes('reset') ||
-      url.includes('/login') ||
-      url.endsWith('/login') ||
-      url.includes('initial-setup') ||
-      url.includes('welcome') ||
-      url.includes('company') ||
-      url.includes('MenuMaster') ||
-      url.includes('userRolesAndPermissions') ||
-      url.includes('responsibility') ||
-      url.includes('esiCalculationMonthLimit');
+      url.includes('/employee') ||
+      url.includes('/salary') ||
+      url.includes('/alms') ||
+      url.includes('/notification');
 
     console.log('Shell: isLoginPage set to:', this.isLoginPage);
 
     this.loadUserData();
     this.cdr.detectChanges();
+  }
+
+  logout(propagate: boolean = true) {
+    console.log('Shell: Logging out...');
+
+    if (propagate) {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        iframe.contentWindow?.postMessage({ type: 'LOGOUT' }, '*');
+      });
+    }
+
+    sessionStorage.clear();
+    this.user = null;
+    this.menus = [];
+    this.router.navigate(['/login']);
   }
 
   loadUserData() {

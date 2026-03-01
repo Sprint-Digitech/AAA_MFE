@@ -12,6 +12,7 @@ import { ErrorInterceptor } from './_helpers/error-interceptor';
 import { LoaderInterceptor } from './loader/loader.interceptor';
 import { TokenRefreshInterceptor } from './_helpers/token-refresh.interceptor';
 import { JwtInterceptor } from './_helpers/jwt-interceptor.interceptor';
+import { TimeoutInterceptor } from './_helpers/timeout.interceptor';
 import { SOCIAL_AUTH_CONFIG, SocialAuthServiceConfig } from '@abacritt/angularx-social-login';
 import {
   GoogleLoginProvider,
@@ -49,6 +50,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: JwtInterceptor,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: TimeoutInterceptor,
       multi: true,
     },
     {

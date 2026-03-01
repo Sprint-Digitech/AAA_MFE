@@ -4,15 +4,15 @@
 
 export const environment = {
   production: true,
-  urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
-  biometricAddress: 'https://dev.fovestta.com/Employee/sdapi',
-  ESSBaseUrl: 'https://dev.fovestta.com/Employee/sdapi',
-  cnbUrlAddress: 'https://dev.fovestta.com/Salary/sdapi',
-  salaryUrlAddress: 'https://dev.fovestta.com/Salary/sdapi',
-  reportsUrl: 'https://dev.fovestta.com/Salary/sdapi',
-  reimbursementUrl: 'https://dev.fovestta.com/Salary/sdapi',
-  EssUrlAddress: 'https://dev.fovestta.com/Employee/sdapi',
-  masterUrlAddress: 'https://dev.fovestta.com/master/sdapi',
+  urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+  biometricAddress: 'https://test.fovestta.com/Employee/sdapi',
+  ESSBaseUrl: 'https://test.fovestta.com/Employee/sdapi',
+  cnbUrlAddress: 'https://test.fovestta.com/Salary/sdapi',
+  salaryUrlAddress: 'https://test.fovestta.com/Salary/sdapi',
+  reportsUrl: 'https://test.fovestta.com/Salary/sdapi',
+  reimbursementUrl: 'https://test.fovestta.com/Salary/sdapi',
+  EssUrlAddress: 'https://test.fovestta.com/Employee/sdapi',
+  masterUrlAddress: 'https://test.fovestta.com/master/sdapi',
 };
 
 // Alternative for development with TLS issues:

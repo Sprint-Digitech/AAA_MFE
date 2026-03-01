@@ -19,7 +19,7 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
   constructor(
     private tokenRefreshService: TokenRefreshService,
     private accountService: AccountService
-  ) {}
+  ) { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Skip token refresh for authentication endpoints
@@ -45,10 +45,10 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
    */
   private isAuthEndpoint(url: string): boolean {
     const normalizedUrl = url.toLowerCase();
-    return normalizedUrl.includes('/api/Account/Login') ||
-           normalizedUrl.includes('/api/account/refreshtoken') ||
-           normalizedUrl.includes('/api/account/google-login') ||
-           normalizedUrl.includes('/api/Account/Register');
+    return normalizedUrl.includes('/api/account/login') ||
+      normalizedUrl.includes('/api/account/refreshtoken') ||
+      normalizedUrl.includes('/api/account/google-login') ||
+      normalizedUrl.includes('/api/account/register');
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -62,11 +62,11 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
             // Token refresh successful, retry the original request
             this.isRefreshing = false;
             this.refreshTokenSubject.next(token);
-            
+
             // Update the request with new token
             const tokenValue = sessionStorage.getItem('token');
             const parsedToken = tokenValue ? JSON.parse(tokenValue) : token;
-            
+
             request = request.clone({
               setHeaders: {
                 Authorization: `Bearer ${parsedToken}`
@@ -96,7 +96,7 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
         switchMap((token) => {
           const tokenValue = sessionStorage.getItem('token');
           const parsedToken = tokenValue ? JSON.parse(tokenValue) : token;
-          
+
           request = request.clone({
             setHeaders: {
               Authorization: `Bearer ${parsedToken}`

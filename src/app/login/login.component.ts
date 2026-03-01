@@ -92,7 +92,28 @@ export class LoginComponent implements OnInit {
         private _snackBar: MatSnackBar
     ) {
         if (this.accountService.userValue) {
-            this.router.navigate(['/welcome']);
+            const user = this.accountService.userValue;
+            const branchId = user.companyBranchId || user.branchID || '';
+            if (branchId) {
+                this.accountService.step('InitialSetup/GetStatus', { companyBranchId: branchId }).subscribe({
+                    next: (res: any) => {
+                        if (res && res.isSetupComplete === false) {
+                            this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                        } else {
+                            if (window !== window.parent) {
+                                window.parent.location.href = window.location.origin + '/dashboard';
+                            } else {
+                                this.router.navigate(['/dashboard'], { replaceUrl: true });
+                            }
+                        }
+                    },
+                    error: () => {
+                        this.router.navigate(['/welcome']);
+                    }
+                });
+            } else {
+                this.router.navigate(['/welcome']);
+            }
         }
         this.loginForm = this.formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
@@ -139,7 +160,27 @@ export class LoginComponent implements OnInit {
                                         this.accountService.setUser(finalUser);
                                         this.accountService.setMenuData(processedMenus);
 
-                                        this.router.navigate(['/welcome']);
+                                        const branchId = finalUser.companyBranchId || finalUser.branchID || '';
+                                        if (branchId) {
+                                            this.callInitialSetupStatus(branchId).subscribe({
+                                                next: (res: any) => {
+                                                    if (res && res.isSetupComplete === false) {
+                                                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                                                    } else {
+                                                        if (window !== window.parent) {
+                                                            window.parent.location.href = window.location.origin + '/dashboard';
+                                                        } else {
+                                                            this.router.navigate(['/dashboard'], { replaceUrl: true });
+                                                        }
+                                                    }
+                                                },
+                                                error: () => {
+                                                    this.router.navigate(['/welcome']);
+                                                }
+                                            });
+                                        } else {
+                                            this.router.navigate(['/welcome']);
+                                        }
                                     }
                                 });
                         } else {
@@ -214,9 +255,13 @@ export class LoginComponent implements OnInit {
                                                 replaceUrl: true,
                                             });
                                         } else {
-                                            this.router.navigate(['/welcome'], {
-                                                replaceUrl: true,
-                                            });
+                                            if (window !== window.parent) {
+                                                window.parent.location.href = window.location.origin + '/dashboard';
+                                            } else {
+                                                this.router.navigate(['/dashboard'], {
+                                                    replaceUrl: true,
+                                                });
+                                            }
                                         }
                                         this.loading = false;
                                     },
@@ -263,6 +308,10 @@ export class LoginComponent implements OnInit {
         fallback: string = 'An error occurred'
     ): string {
         try {
+            if (err?.status === 401) {
+                return 'Invalid User ID or Password';
+            }
+
             if (err instanceof HttpErrorResponse) {
                 if (err.status === 0 || !err.status) {
                     return 'Server is down. Please contact support.';

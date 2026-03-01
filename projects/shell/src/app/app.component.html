@@ -90,7 +90,7 @@
           <img src="assets/img/fovesta1.png" alt="Company" class="company-logo">
           <span class="company-name">{{ user.companyName || 'Core Tech Pvt Ltd' }}</span>
         </div>
-        <div class="user-profile">
+        <div class="user-profile" (click)="logout()" title="Logout" style="cursor: pointer;">
           <div class="avatar">{{ user?.firstName?.charAt(0) || 'N' }}{{ user?.lastName?.charAt(0) || 'P' }}</div>
         </div>
       </div>

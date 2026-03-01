@@ -74,7 +74,7 @@ export class AccountService {
 
   environment = {
     production: false,
-    urlAddress: 'https://dev.fovestta.com/Auth/sdapi',
+    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
   };
 
   public get userValue() {
@@ -680,6 +680,12 @@ export class AccountService {
     this.clearMenus();
     this.clearUser();
     this.loginSubject$.next(null);
+
+    // Ensure Shell knows we logged out
+    if (window !== window.parent) {
+      window.parent.postMessage({ type: 'LOGOUT' }, '*');
+    }
+
     this.router.navigate(['/login']);
   }
 }

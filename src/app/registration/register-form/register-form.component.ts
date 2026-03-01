@@ -65,6 +65,7 @@ import {
   FvPasswordFieldComponent,
   FvPhoneFieldComponent,
 } from '@fovestta2/web-angular';
+import { ValidationSchema } from '@fovestta2/validation-engine';
 
 @Component({
   selector: 'app-register-form',
@@ -101,6 +102,7 @@ import {
     FvPasswordFieldComponent,
     FvDropdownComponent,
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './register-form.component.html',
   styleUrl: './register-form.component.scss',
 })
@@ -113,6 +115,40 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
   isCompleted = false;
   currentStep = 1;
   userEmail: any;
+  dropdownSchema: ValidationSchema = {
+    controlType: 'Dropdown',
+    errorPriority: ['required'],
+    rules: [{ name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' }]
+  };
+
+  textBoxSchema: ValidationSchema = {
+    controlType: 'Text',
+    errorPriority: ['required'],
+    rules: [{ name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' }]
+  };
+
+  emailSchema: ValidationSchema = {
+    controlType: 'Text',
+    errorPriority: ['required', 'email'],
+    rules: [
+      { name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' },
+      { name: 'email', params: { enabled: true }, errorKey: 'ERR_REGEX_MISMATCH' }
+    ]
+  };
+
+  phoneSchema: ValidationSchema = {
+    controlType: 'Text',
+    errorPriority: ['required', 'pattern'],
+    rules: [
+      { name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' }
+    ]
+  };
+
+  passwordSchema: ValidationSchema = {
+    controlType: 'Text',
+    errorPriority: ['required'],
+    rules: [{ name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' }]
+  };
 
   // Variables to control password visibility
   showPassword = false;

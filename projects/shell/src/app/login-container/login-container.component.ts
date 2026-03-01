@@ -23,7 +23,7 @@ import { ActivatedRoute } from '@angular/router';
 export class LoginContainerComponent implements OnInit {
   safeUrl: SafeResourceUrl | null = null;
   mfeUrl: string = '';
-  baseUrl = 'https://dev.fovestta.com/Auth/dist';
+  baseUrl = 'http://localhost:4204';
 
   constructor(
     private sanitizer: DomSanitizer,

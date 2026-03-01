@@ -98,6 +98,11 @@ export class AppComponent implements OnInit {
       console.log('AppComponent: URL Changed to', url);
       this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password');
       console.log('AppComponent: isLoginPage =', this.isLoginPage);
+
+      // Keep shell URL perfectly in sync to fix refresh redirects
+      if (window !== window.parent) {
+        window.parent.postMessage({ type: 'ROUTER_NAVIGATED', url: url }, '*');
+      }
       this.loadUserData();
 
       this.globalSearchTerm = '';
@@ -111,6 +116,12 @@ export class AppComponent implements OnInit {
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
     this.getCompanies();
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'LOGOUT') {
+        this.logout(false);
+      }
+    });
   }
 
   loadUserData() {
@@ -246,7 +257,7 @@ export class AppComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  logout(): void {
+  logout(propagate: boolean = true): void {
     console.log('Logout requested');
 
     // Close the dropdown first
@@ -267,6 +278,10 @@ export class AppComponent implements OnInit {
 
     // Force immediate UI update
     this.cdr.detectChanges();
+
+    if (propagate && window !== window.parent) {
+      window.parent.postMessage({ type: 'LOGOUT' }, '*');
+    }
 
     // Use Router for navigation to respect base-href and avoid full page reload issues on some environments
     this.router.navigate(['/login']);

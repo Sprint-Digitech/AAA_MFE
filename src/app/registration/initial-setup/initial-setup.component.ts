@@ -244,6 +244,12 @@ export class InitialSetupComponent {
     this.accountService.post('api/InitialSetup/UpdateStatus', body).subscribe({
       next: (res) => {
         console.log('Setup status updated successfully:', res);
+        alert('Initial setup completed successfully!');
+        if (window !== window.parent) {
+          window.parent.location.href = window.location.origin + '/dashboard';
+        } else {
+          this.router.navigate(['/dashboard'], { replaceUrl: true });
+        }
       },
       error: (err) => {
         console.error('Error saving Status', err);

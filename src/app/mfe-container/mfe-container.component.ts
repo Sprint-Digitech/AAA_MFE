@@ -34,14 +34,14 @@ export class MfeContainerComponent implements OnInit {
   ngOnInit() {
     // Subscribe to route data changes (handles MFE switches)
     this.route.data.subscribe(data => {
-      const mfeBaseUrl = data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
+      const mfeBaseUrl = data['mfeUrl'] || 'https://test.fovestta.com/Auth/dist';
       console.log('[MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
       this.updateIframeSrc(mfeBaseUrl);
     });
 
     // Subscribe to URL changes (handles navigation within the same MFE)
     this.route.url.subscribe(() => {
-      const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://dev.fovestta.com/Auth/dist';
+      const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://test.fovestta.com/Auth/dist';
       this.updateIframeSrc(mfeBaseUrl);
     });
   }
