@@ -615,6 +615,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
       timeformat: ['12-hour'],
       timezone: ['IST (Indian Standard Time, UTC+5:30)'],
       displayFormat: ['Hours:Minutes:Seconds'],
+      service: ['All', Validators.required],
     });
 
     this.packageFormGroup = this._formBuilder.group({
@@ -686,6 +687,18 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   get displayFormatControl() {
     return this.companyFormGroup.get('displayFormat') as FormControl;
+  }
+  get serviceControl() {
+    return this.companyFormGroup.get('service') as FormControl;
+  }
+
+  get serviceOptionsForDropdown() {
+    return [
+      { label: 'All', value: 'All' },
+      { label: 'Employee', value: 'Employee' },
+      { label: 'ALMS', value: 'ALMS' },
+      { label: 'Salary', value: 'Salary' },
+    ];
   }
 
   // Step 3: Review getters
@@ -1019,6 +1032,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
         email: this.accountFormGroup.value.email,
         password: this.accountFormGroup.value.password,
         confirmPassword: this.accountFormGroup.value.confirmPassword,
+        service: this.companyFormGroup.value.service,
       };
 
       // if groupTenant available, add it and call groupTenant API
