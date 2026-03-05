@@ -1,68 +1,62 @@
+// ─── RESET ────────────────────────────────────────────────
 ::ng-deep body {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  background: #c8d0dc;
 }
 
+// ─── PAGE WRAPPER ─────────────────────────────────────────
 .main {
-  position: relative;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  width: 100%;
-  overflow: auto;
-  box-sizing: border-box;
-  padding: 20px;
-  /* ← ensure consistent padding all sides */
+  justify-content: center;
+  background: #c8d0dc;
 }
 
-.main>img {
-  display: none;
-}
-
+// ─── OUTER CARD ───────────────────────────────────────────
 .login-wrapper {
   display: flex;
   align-items: stretch;
-  width: 100%;
-  max-width: 800px;
-  /* ← reduce from 960px */
-  background: #e5e5e5;
-  border-radius: 15px;
+  width: 1080px;
+  max-width: 98vw;
+  height: 660px;
+  max-height: 96vh;
+  border-radius: 18px;
   overflow: hidden;
-  border: 0.5px solid #0e1b2c;
-  box-sizing: border-box;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  max-height: calc(100vh - 40px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
+// ════════════════════════════════════════════════════════
+//   LEFT — white panel: logo + form + footer
+// ════════════════════════════════════════════════════════
 .left-section {
-  flex: 1;
-  min-width: 0;
-  background: #e5e5e5;
-  padding: 15px 25px;
-  /* ← reduce top padding from 30px to 25px */
+  flex: 0 0 50%;
+  background: #f5f5f5;
+  padding: 2px 34px 10px 37px;
+  // padding: 14px 48px 26px 48px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  overflow-y: auto;
   position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  padding-bottom: 15px;
+  z-index: 2;
 }
+
 
 .logo-box {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
-  padding-top: 0;
-  /* ← remove top padding */
+  padding-top: 0px;
+  // padding-top: 10px;
   margin-top: 0;
-  /* ← remove top margin */
-  width: fit-content;
+  margin-left: -14px;
 }
 
 .logo-img {
@@ -73,14 +67,14 @@
   mix-blend-mode: multiply;
   border: none;
   display: block;
-  transform: translateY(6px);
+  // transform: translateY(6px);
 }
 
 .divider-line {
   width: 1px;
   height: 28px;
   background-color: #606060;
-  transform: translateY(2px);
+  // transform: translateY(2px);
 }
 
 .label {
@@ -88,13 +82,14 @@
   font-size: 24px;
   font-weight: 500;
   font-family: 'Poppins';
-  display: flex;
-  align-items: center;
-  transform: translateY(2px);
+  // display: flex;
+  // align-items: center;
+  // transform: translateY(2px);
 }
 
 .text-section {
-  margin-top: 10px;
+  // margin-top: 20px;
+  margin-top: 9px;
 }
 
 .text-section h1 {
@@ -126,10 +121,10 @@
 
 .illustration-img {
   width: 100%;
-  max-width: 280px;
-  /* ← reduce from 340px */
-  height: 160px;
-  /* ← reduce from 200px */
+  max-width: 400px;
+  height: 295px;
+  // max-width: 340px;
+  // height: 200px;
   object-fit: contain;
   margin-top: 5px;
   /* ← reduce from 15px */
@@ -142,9 +137,11 @@
   /* ← match left-section padding */
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  /* ← reduce from 12px */
+  gap: 24px;
+  font-size: 12px;
+  line-height: 100%;
+  letter-spacing: 0%;
+  font-style: 'regular';
   font-weight: 400;
   font-family: 'Poppins';
   color: #0E1B2C;
@@ -152,7 +149,9 @@
 }
 
 .right-section {
-  flex: 0 0 330px;
+  flex: 0 0 50%;
+  position: relative;
+  overflow: hidden;
   background: #154487;
   display: flex;
   justify-content: center;
@@ -165,8 +164,9 @@
 
 .login-card {
   width: 100%;
-  max-width: 295px;
-  height: auto;
+  max-width: 410px;
+  // max-width: 340px;
+  height: 100%;
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -569,278 +569,3 @@ mat-form-field.password-field input {
 ::ng-deep .mdc-line-ripple {
   display: none !important;
 }
-
-
-// ::ng-deep body {
-//   margin: 0;
-//   padding: 0;
-//   width: 100vw;
-//   height: 100vh;
-//   overflow-x: hidden;
-// }
-
-// .main {
-//   position: relative;
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   width: 100vw;
-//   height: 100vh;
-//   gap: 0;
-//   border-radius: 0;
-//   overflow: hidden;
-//   box-sizing: border-box;
-//   margin: 0;
-//   padding: 0;
-// }
-
-// .login-wrapper {
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   width: 1000px;
-//   height: 650px;
-//   background: #e5e5e5;
-//   gap: 0;
-//   border-radius: 15px;
-//   overflow: hidden;
-//   border: 0.5px solid #0e1b2c;
-//   box-sizing: border-box;
-//   margin: 0;
-//   padding: 0;
-//   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-// }
-
-// .left-section {
-//   flex: 1;
-//   background: #e5e5e5;
-//   padding: 40px;
-//   display: flex;
-//   flex-direction: column;
-//   justify-content: flex-start;
-//   position: relative;
-//   height: 100%;
-// }
-
-// .logo-box {
-//   display: flex;
-//   align-items: center;
-//   justify-content: flex-start;
-//   gap: 12px;
-//   background-color: transparent;
-//   margin-bottom: 30px;
-// }
-
-// .logo-img {
-//   width: 140px;
-//   height: auto;
-//   object-fit: contain;
-// }
-
-// .divider-line {
-//   width: 1px;
-//   height: 28px;
-//   background-color: #606060;
-// }
-
-// .label {
-//   color: #606060;
-//   font-size: 24px;
-//   font-weight: 500;
-//   font-family: 'Poppins';
-// }
-
-// .text-section {
-//   h1 {
-//     font-size: 40px;
-//     font-weight: 700;
-//     color: #0E1B2C;
-//     font-family: 'Poppins';
-//     margin-bottom: 10px;
-//     line-height: 100%;
-//   }
-
-//   p {
-//     color: #303030;
-//     line-height: 1.6;
-//     font-size: 15px;
-//     max-width: 440px;
-//     font-weight: 400;
-//     font-family: 'Poppins';
-//     text-align: left;
-//     margin-bottom: 30px;
-//   }
-// }
-
-// .illustration-img {
-//   width: 100%;
-//   max-width: 380px;
-//   height: auto;
-//   object-fit: contain;
-// }
-
-// .footer {
-//   position: absolute;
-//   bottom: 20px;
-//   left: 40px;
-//   display: flex;
-//   align-items: center;
-//   gap: 10px;
-//   font-size: 11px;
-//   font-weight: 500;
-//   color: #0E1B2C;
-//   font-family: 'Poppins';
-
-//   .footer-divider {
-//     width: 1px;
-//     height: 12px;
-//     background: #0E1B2C;
-//   }
-// }
-
-// .right-section {
-//   flex: 1;
-//   background: #154487;
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   height: 100%;
-//   padding: 0 40px;
-// }
-
-// .login-card {
-//   width: 100%;
-//   max-width: 400px;
-//   border-radius: 12px;
-//   background: #ffffff;
-//   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-//   padding: 30px;
-//   border: none;
-
-//   .mat-mdc-card-content:first-child {
-//     padding-top: 0 !important;
-//   }
-// }
-
-// .login-header {
-//   margin-bottom: 24px;
-
-//   h1 {
-//     font-family: 'Poppins';
-//     font-weight: 600;
-//     font-size: 32px;
-//     color: #151D48;
-//     margin: 0;
-//   }
-// }
-
-// .form-group {
-//   margin-bottom: 16px;
-
-//   label {
-//     display: block;
-//     font-size: 14px;
-//     font-weight: 600;
-//     color: #151D48;
-//     font-family: 'Poppins';
-//     margin-bottom: 8px;
-//   }
-
-//   mat-form-field {
-//     width: 100%;
-//   }
-// }
-
-// ::ng-deep {
-//   .mat-mdc-form-field-subscript-wrapper {
-//     display: none !important;
-//   }
-
-//   .mat-mdc-text-field-wrapper {
-//     background-color: transparent !important;
-//     border-radius: 8px !important;
-//   }
-
-//   .mdc-notched-outline__leading,
-//   .mdc-notched-outline__notch,
-//   .mdc-notched-outline__trailing {
-//     border-color: #8CBBA8 !important;
-//   }
-
-//   .mat-focused .mdc-notched-outline__leading,
-//   .mat-focused .mdc-notched-outline__notch,
-//   .mat-focused .mdc-notched-outline__trailing {
-//     border-color: #006AFF !important;
-//   }
-// }
-
-// .form-options {
-//   display: flex;
-//   justify-content: space-between;
-//   align-items: center;
-//   margin-bottom: 24px;
-
-//   mat-checkbox {
-//     font-size: 13px;
-//     color: #151D48;
-//     font-family: 'Poppins';
-//   }
-
-//   a {
-//     font-size: 13px;
-//     color: #006AFF;
-//     text-decoration: none;
-//     font-weight: 600;
-//     font-family: 'Poppins';
-
-//     &:hover {
-//       text-decoration: underline;
-//     }
-//   }
-// }
-
-// .login-button {
-//   width: 100%;
-//   height: 44px;
-//   border-radius: 8px;
-//   background-color: #006AFF !important;
-//   color: white !important;
-//   font-size: 15px;
-//   font-weight: 600;
-//   margin-bottom: 16px;
-//   font-family: 'Poppins';
-
-//   &:disabled {
-//     opacity: 0.7;
-//   }
-// }
-
-// .create-account {
-//   text-align: center;
-//   font-size: 14px;
-//   font-family: 'Poppins';
-
-//   .or-text {
-//     color: #151D48;
-//   }
-
-//   a {
-//     color: #D700FF;
-//     text-decoration: none;
-//     font-weight: 600;
-
-//     &:hover {
-//       text-decoration: underline;
-//     }
-//   }
-// }
-
-// .alert-danger {
-//   padding: 10px;
-//   border-radius: 6px;
-//   background-color: #fff5f5;
-//   color: #c53030;
-//   font-size: 12px;
-//   border: 1px solid #fed7d7;
-//   text-align: center;
-// }

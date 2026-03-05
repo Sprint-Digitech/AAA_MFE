@@ -78,7 +78,10 @@
 					"defaultConfiguration": "development",
 					"options": {
 						"port": 4204,
-						"publicHost": "http://localhost:4204"
+						"publicHost": "http://localhost:4204",
+						"headers": {
+							"Access-Control-Allow-Origin": "*"
+						}
 					}
 				},
 				"extract-i18n": {
@@ -204,7 +207,10 @@
 					"defaultConfiguration": "development",
 					"options": {
 						"port": 4200,
-						"publicHost": "http://localhost:4200"
+						"publicHost": "http://localhost:4200",
+						"headers": {
+							"Access-Control-Allow-Origin": "*"
+						}
 					}
 				},
 				"extract-i18n": {

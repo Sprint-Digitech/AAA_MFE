@@ -117,6 +117,24 @@ export class AppComponent implements OnInit {
       url.includes('company');
 
     this.isLoginPage = (authOnlyPaths.some(p => url.includes(p)) || url === '/' || url === '' || url.endsWith('/dist') || url.endsWith('/dist/')) && !isFunctionalAuthPath;
+    console.log('Shell: Current URL path:', url);
+
+    // Improved detection: check for common login/register paths
+    // A page is a login page (no shell) if it's explicitly /login, /register, or forgot/reset.
+    // 'welcome' and others have been removed because they should show the shell.
+    this.isLoginPage =
+      url === '/login' ||
+      url === '/' ||
+      url === '' ||
+      url === '/register' ||
+      url === '/authentication/login' ||
+      url.includes('forgot-password') ||
+      url.includes('reset') ||
+      url.includes('/employee') ||
+      url.includes('/salary') ||
+      url.includes('/alms') ||
+      url.includes('/notification') ||
+      url.includes('login-inventory');
 
     console.log(`[Shell] URL: ${url}, isLoginPage: ${this.isLoginPage}`);
 
