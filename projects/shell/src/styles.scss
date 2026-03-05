@@ -33,3 +33,38 @@ li {
     padding: 0;
     list-style: none;
 }
+
+/* ============================================
+   Snackbar / Notification Styles
+   Matching SD_Nemo_Front reference styles
+   ============================================ */
+.mat-mdc-snack-bar-container {
+    &.green-snackbar {
+        --mdc-snackbar-container-color: #47ce2f;
+        --mat-mdc-snack-bar-button-color: #fff;
+        --mdc-snackbar-supporting-text-color: #fff;
+        margin-bottom: 75px;
+    }
+
+    &.red-snackbar {
+        --mdc-snackbar-container-color: #e53935;
+        --mat-mdc-snack-bar-button-color: white;
+        --mdc-snackbar-supporting-text-color: #fff;
+        --mdc-button__label-color: white;
+        margin-bottom: 75px;
+    }
+
+    &.blue-snackbar {
+        --mdc-snackbar-container-color: #1976d2;
+        --mat-mdc-snack-bar-button-color: #fff;
+        --mdc-snackbar-supporting-text-color: #fff;
+        margin-bottom: 75px;
+    }
+
+    &.yellow-snackbar {
+        --mdc-snackbar-container-color: #f9a825;
+        --mat-mdc-snack-bar-button-color: #333;
+        --mdc-snackbar-supporting-text-color: #333;
+        margin-bottom: 75px;
+    }
+}

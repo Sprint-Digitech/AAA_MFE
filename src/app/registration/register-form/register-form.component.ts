@@ -502,13 +502,41 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
   phoneNumberValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
-        return null;
+        return null; // 'required' validator handles empty case
       }
+      // Exactly 10 digits — matches SD_Nemo_Front mobileValidator pattern
       const phoneRegex = /^[0-9]{10}$/;
-      const valid = phoneRegex.test(control.value);
-      return valid ? null : { invalidPhone: true };
+      return phoneRegex.test(control.value) ? null : { invalidPhone: true };
     };
   }
+
+  /** Strip non-digits on paste / autocomplete */
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '').slice(0, 10);
+    if (input.value !== cleaned) {
+      input.value = cleaned;
+      this.phoneNumberControl.setValue(cleaned, { emitEvent: true });
+    }
+  }
+
+  /** Block non-digit keystrokes in real time */
+  onPhoneKeyPress(event: KeyboardEvent): boolean {
+    const charCode = event.which ?? event.keyCode;
+    // Allow digits 0–9 only
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+      return false;
+    }
+    // Block if already at 10 digits
+    const current = (event.target as HTMLInputElement).value;
+    if (current.length >= 10) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
   passwordStrengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value || '';

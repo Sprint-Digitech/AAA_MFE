@@ -124,7 +124,9 @@ export const routes: Routes = [
             if (path === 'employee') {
                 const salaryEmployeeSubPaths = [
                     'employeeannualbonus', 'employeectc', 'addemployeectc',
-                    'updateemployeectc', 'employeectcdetails', 'ctcemployee'
+                    'updateemployeectc', 'employeectcdetails', 'ctcemployee',
+                    'employeeattendance', 'addemployeeattendancebysheet',
+                    'appraisel-letter'
                 ];
                 if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
@@ -134,7 +136,7 @@ export const routes: Routes = [
                 if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
-            if (path === 'employeeselfservice' && subPath === 'salary&tax') return { consumed: [url[0], url[1]] };
+            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds')) return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
             if (path === 'ess') return { consumed: [url[0]] };
@@ -160,7 +162,7 @@ export const routes: Routes = [
             if (path === 'alms' || path === 'attendance' || path === 'employeeselfservice') return { consumed: [url[0]] };
 
             // Specific employee routes for ALMS (Attendance)
-            const almsEmployeeSubPaths = ['employeeattendance', 'addemployeeattendancebysheet', 'employeebiometric'];
+            const almsEmployeeSubPaths = ['employeebiometric'];
             if (path === 'employee' && almsEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
 
             return null;
@@ -184,4 +186,6 @@ export const routes: Routes = [
             }
         ]
     }
+
+
 ];

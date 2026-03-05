@@ -96,8 +96,13 @@ export class AppComponent implements OnInit {
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects || event.url;
       console.log('AppComponent: URL Changed to', url);
-      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password');
-      console.log('AppComponent: isLoginPage =', this.isLoginPage);
+      const authPaths = ['/login', '/register', '/forgot-password', '/reset', '/welcome', '/authentication'];
+      const isAuthRoute = authPaths.some(p => url.includes(p)) || url === '/' || url === '';
+
+      // Hide internal nav if it's a login page OR if we are inside the Shell iframe
+      this.isLoginPage = isAuthRoute || (window !== window.parent);
+
+      console.log('AppComponent: isLoginPage =', this.isLoginPage, '(Auth Route:', isAuthRoute, 'Inside Iframe:', window !== window.parent, ')');
 
       // Keep shell URL perfectly in sync to fix refresh redirects
       if (window !== window.parent) {
@@ -113,6 +118,46 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Listen for messages from parent shell (sync token/user)
+    window.addEventListener('message', (event) => {
+      if (!event.data) return;
+
+      if (event.data.type === 'SET_TOKEN') {
+        const { token, user, tenantSchema } = event.data;
+        if (token) {
+          console.log('[LOGIN_MFE] Received token from parent shell');
+          sessionStorage.setItem('token', typeof token === 'string' ? token : JSON.stringify(token));
+        }
+        if (user) {
+          sessionStorage.setItem('user', typeof user === 'string' ? user : JSON.stringify(user));
+        }
+        if (tenantSchema) {
+          sessionStorage.setItem('tenantSchema', tenantSchema);
+        }
+        this.loadUserData();
+        this.cdr.detectChanges();
+      }
+
+      if (event.data.type === 'DOCUMENT_CLICKED') {
+        console.log('[LOGIN_MFE] Received DOCUMENT_CLICKED from iframe');
+        this.closeSubmenus();
+        this.showUserDropdown = false;
+        this.isGlobalSearchOpen = false;
+        this.cdr.detectChanges();
+      }
+
+      if (event.data.type === 'GLOBAL_SEARCH') {
+        console.log('[LOGIN_MFE] Received GLOBAL_SEARCH:', event.data.term);
+        this.globalSearchService.emit(event.data.term);
+        this.cdr.detectChanges();
+      }
+    });
+
+    // Request token from parent on load if in an iframe
+    if (window !== window.parent) {
+      window.parent.postMessage({ type: 'REQUEST_TOKEN' }, '*');
+    }
+
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
     this.getCompanies();
@@ -123,6 +168,7 @@ export class AppComponent implements OnInit {
       }
     });
   }
+
 
   loadUserData() {
     const storedMenus = sessionStorage.getItem('menus');
@@ -258,7 +304,7 @@ export class AppComponent implements OnInit {
   }
 
   logout(propagate: boolean = true): void {
-    console.log('Logout requested');
+    console.log('Login MFE: Logout requested');
 
     // Close the dropdown first
     this.showUserDropdown = false;
@@ -274,7 +320,7 @@ export class AppComponent implements OnInit {
     this.globalSearchTerm = '';
     this.isGlobalSearchOpen = false;
     this.globalEmployeeResults = [];
-    this.isLoginPage = true; // Important: Set this to true
+    this.isLoginPage = true;
 
     // Force immediate UI update
     this.cdr.detectChanges();
@@ -283,7 +329,7 @@ export class AppComponent implements OnInit {
       window.parent.postMessage({ type: 'LOGOUT' }, '*');
     }
 
-    // Use Router for navigation to respect base-href and avoid full page reload issues on some environments
+    // Always navigate to login locally as well
     this.router.navigate(['/login']);
   }
   // User details management

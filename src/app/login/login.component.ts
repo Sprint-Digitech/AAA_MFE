@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AccountService } from '../shared/services/account.service';
 import { NotificationService } from '../shared/services/notification.service';
 import { BehaviorSubject, first, forkJoin, Observable } from 'rxjs';
+import { LoaderService } from '../loader/loader.service';
 import { Login } from '../shared/services/account.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
@@ -89,7 +90,8 @@ export class LoginComponent implements OnInit {
         private authService: SocialAuthService,
         private notificationService: NotificationService,
         private http: HttpClient,
-        private _snackBar: MatSnackBar
+        private _snackBar: MatSnackBar,
+        private loaderService: LoaderService
     ) {
         if (this.accountService.userValue) {
             const user = this.accountService.userValue;
@@ -100,24 +102,22 @@ export class LoginComponent implements OnInit {
                         if (res && res.isSetupComplete === false) {
                             this.router.navigate(['/initial-setup'], { replaceUrl: true });
                         } else {
-                            if (window !== window.parent) {
-                                window.parent.location.href = window.location.origin + '/dashboard';
-                            } else {
-                                this.router.navigate(['/dashboard'], { replaceUrl: true });
-                            }
+                            // Land on initial-setup as requested by user ("as before")
+                            this.router.navigate(['/initial-setup'], { replaceUrl: true });
                         }
                     },
                     error: () => {
-                        this.router.navigate(['/welcome']);
+                        console.error('InitialSetup status check failed - defaulting to initial-setup');
+                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
                     }
                 });
             } else {
-                this.router.navigate(['/welcome']);
+                this.router.navigate(['/login']);
             }
         }
         this.loginForm = this.formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
-            password: [''],
+            password: ['', [Validators.required]],
             rememberMe: [false],
         });
     }
@@ -127,6 +127,7 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.loaderService.forceHide(); // Ensure no blocking overlay
         this.authService.authState.subscribe((user) => {
             if (user && user.idToken) {
                 this.accountService.GoogleLogin(user.idToken).subscribe(
@@ -167,19 +168,15 @@ export class LoginComponent implements OnInit {
                                                     if (res && res.isSetupComplete === false) {
                                                         this.router.navigate(['/initial-setup'], { replaceUrl: true });
                                                     } else {
-                                                        if (window !== window.parent) {
-                                                            window.parent.location.href = window.location.origin + '/dashboard';
-                                                        } else {
-                                                            this.router.navigate(['/dashboard'], { replaceUrl: true });
-                                                        }
+                                                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
                                                     }
                                                 },
                                                 error: () => {
-                                                    this.router.navigate(['/welcome']);
+                                                    this.router.navigate(['/login']);
                                                 }
                                             });
                                         } else {
-                                            this.router.navigate(['/welcome']);
+                                            this.router.navigate(['/login']);
                                         }
                                     }
                                 });
@@ -200,9 +197,16 @@ export class LoginComponent implements OnInit {
     }
 
     submit(): void {
+        console.log('--- LOGIN SUBMIT CALLED ---');
+        console.log('--- Form Values:', this.loginForm.value);
+        console.log('--- Form Valid:', this.loginForm.valid);
+        console.log('--- Loading Status:', this.loading);
+
+        this.loaderService.forceHide(); // Safety check
         this.submitted = true;
         this.error = '';
         if (this.loginForm.invalid) {
+            console.warn('--- Login Form is INVALID ---');
             this.notificationService.showError('Please fill all required fields.');
             return;
         }
@@ -255,21 +259,21 @@ export class LoginComponent implements OnInit {
                                                 replaceUrl: true,
                                             });
                                         } else {
-                                            if (window !== window.parent) {
-                                                window.parent.location.href = window.location.origin + '/dashboard';
-                                            } else {
-                                                this.router.navigate(['/dashboard'], {
-                                                    replaceUrl: true,
-                                                });
-                                            }
+                                            this.router.navigate(['/initial-setup'], {
+                                                replaceUrl: true,
+                                            });
                                         }
                                         this.loading = false;
                                     },
                                     error: () => {
-                                        console.error('Error fetching setup status');
-                                        this.router.navigate(['/welcome'], {
-                                            replaceUrl: true,
-                                        });
+                                        console.error('Error fetching setup status - defaulting to dashboard');
+                                        if (window !== window.parent) {
+                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/dashboard';
+                                        } else {
+                                            this.router.navigate(['/dashboard'], {
+                                                replaceUrl: true,
+                                            });
+                                        }
                                         this.loading = false;
                                     },
                                 });

@@ -4,14 +4,14 @@
 
 export const environment = {
   production: true,
-  urlAddress: 'https://test.fovestta.com/Auth/sdapi',
-  biometricAddress: 'https://test.fovestta.com/Employee/sdapi',
-  ESSBaseUrl: 'https://test.fovestta.com/Employee/sdapi',
-  cnbUrlAddress: 'https://test.fovestta.com/Salary/sdapi',
-  salaryUrlAddress: 'https://test.fovestta.com/Salary/sdapi',
-  reportsUrl: 'https://test.fovestta.com/Salary/sdapi',
-  reimbursementUrl: 'https://test.fovestta.com/Salary/sdapi',
-  EssUrlAddress: 'https://test.fovestta.com/Employee/sdapi',
+  urlAddress: 'https://test.fovestta.com/auth/sdapi',
+  biometricAddress: 'https://test.fovestta.com/employee/sdapi',
+  ESSBaseUrl: 'https://test.fovestta.com/employee/sdapi',
+  cnbUrlAddress: 'https://test.fovestta.com/salary/sdapi',
+  salaryUrlAddress: 'https://test.fovestta.com/salary/sdapi',
+  reportsUrl: 'https://test.fovestta.com/salary/sdapi',
+  reimbursementUrl: 'https://test.fovestta.com/salary/sdapi',
+  EssUrlAddress: 'https://test.fovestta.com/employee/sdapi',
   masterUrlAddress: 'https://test.fovestta.com/master/sdapi',
 };
 

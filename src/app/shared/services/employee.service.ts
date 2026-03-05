@@ -71,7 +71,10 @@ export class EmployeeService {
     return this.employeeId;
   }
   private createCompleteRoute = (route: string, envAddress: string) => {
-    return `${envAddress}/${route}`;
+    const effectiveBase = (envAddress === this.envUrl.urlAddress || envAddress === this.salaryUrlAddress)
+      ? this.envUrl.getBaseUrl(route)
+      : envAddress;
+    return `${effectiveBase}/${route}`;
   };
 
   public getData = (route: string) => {

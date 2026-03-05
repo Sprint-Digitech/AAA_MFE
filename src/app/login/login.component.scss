@@ -15,7 +15,8 @@
   width: 100%;
   overflow: auto;
   box-sizing: border-box;
-  padding: 20px;           /* ← ensure consistent padding all sides */
+  padding: 20px;
+  /* ← ensure consistent padding all sides */
 }
 
 .main>img {
@@ -26,7 +27,8 @@
   display: flex;
   align-items: stretch;
   width: 100%;
-  max-width: 900px;        /* ← reduce from 960px */
+  max-width: 800px;
+  /* ← reduce from 960px */
   background: #e5e5e5;
   border-radius: 15px;
   overflow: hidden;
@@ -40,21 +42,27 @@
   flex: 1;
   min-width: 0;
   background: #e5e5e5;
-  padding: 30px 35px;
+  padding: 15px 25px;
+  /* ← reduce top padding from 30px to 25px */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  padding-bottom: 15px;
 }
+
 .logo-box {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
-  padding-top: 10px;
+  padding-top: 0;
+  /* ← remove top padding */
   margin-top: 0;
+  /* ← remove top margin */
+  width: fit-content;
 }
 
 .logo-img {
@@ -86,78 +94,83 @@
 }
 
 .text-section {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .text-section h1 {
-  font-size: 40px;
+  font-size: 32px;
+  /* ← reduce from 40px to fit wrapper */
   font-weight: 700;
   color: #0E1B2C;
   font-family: 'Poppins';
-  margin-bottom: 10px;
-  font-style: 'bold';
+  margin-bottom: 8px;
   line-height: 100%;
-  letter-spacing: 0%;
 }
 
 .text-section p {
   color: #303030;
-  line-height: 175%;
-  font-size: 15px;
-  max-width: 440px;
+  line-height: 160%;
+  font-size: 13px;
+  /* ← reduce from 15px */
   font-weight: 400;
   font-family: 'Poppins';
   text-align: left;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .image-wrapper {
-  margin-top: 0px;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .illustration-img {
   width: 100%;
-  max-width: 340px;
-  height: 200px;
+  max-width: 280px;
+  /* ← reduce from 340px */
+  height: 160px;
+  /* ← reduce from 200px */
   object-fit: contain;
-  margin-top: 15px;
+  margin-top: 5px;
+  /* ← reduce from 15px */
 }
 
-
 .footer {
-  position: absolute;
-  bottom: 10px;
-  left: 60px;
+  position: static;
+  bottom: 8px;
+  left: 25px;
+  /* ← match left-section padding */
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  line-height: 100%;
-  letter-spacing: 0%;
-  font-style: 'regular';
+  gap: 8px;
+  font-size: 11px;
+  /* ← reduce from 12px */
   font-weight: 400;
   font-family: 'Poppins';
   color: #0E1B2C;
+  margin-top: auto;
 }
 
 .right-section {
-  flex: 0 0 380px;         /* ← reduce from 420px */
+  flex: 0 0 330px;
   background: #154487;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 30px 20px;
+  padding: 20px 15px;
+  /* ← match left section top padding */
 }
 
 .login-card {
   width: 100%;
-  max-width: 340px;
+  max-width: 295px;
   height: auto;
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: 30px 28px;
+  padding: 25px 20px;
   box-sizing: border-box;
 }
 
@@ -243,13 +256,11 @@ mat-form-field input {
   font-size: 14px;
   padding: 4px !important;
   height: 32px !important;
-  border: 0.5px solid #8CBBA8;
-  border-radius: 7px;
   font-family: 'Poppins';
   color: #151D48;
-  width: 100px;
+  width: 100%;
+  /* ← was 100px — this is why inputs look small! */
   background-color: transparent;
-
 }
 
 ::ng-deep .error {
@@ -262,10 +273,7 @@ mat-form-field input {
 
 lib-required-nemo,
 lib-password-nemo {
-  display: block !important;
-  width: 100px !important;
-  margin: 0 !important;
-  text-align: center !important;
+  display: none !important;
 }
 
 ::ng-deep .mat-mdc-form-field,
@@ -493,6 +501,11 @@ mat-form-field.password-field input {
   height: 40px;
   border-radius: 7px;
   margin-top: 10px;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 99999 !important;
+  /* Nuclear z-index */
+  pointer-events: auto !important;
 }
 
 /* Create account link */

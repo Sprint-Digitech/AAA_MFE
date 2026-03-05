@@ -41,7 +41,8 @@ export const routes: Routes = [
     },
     {
         path: 'dashboard',
-        component: DashboardComponent
+        redirectTo: 'initial-setup',
+        pathMatch: 'full'
     },
     {
         // Salary & Master Data MFE
@@ -68,7 +69,8 @@ export const routes: Routes = [
                     'updateemployeectc', 'employeectcdetails', 'ctcemployee',
                     'employeetdslist', 'employeevpf', 'addemployeevpf', 'updateemployeevpf',
                     'employeepf', 'addemployeepf', 'updateemployeepf',
-                    'addemployeectcdetails', 'updateemployeectcdetails'
+                    'addemployeectcdetails', 'updateemployeectcdetails', 'appraisel-letter',
+                    'employeeattendance', 'addemployeeattendancebysheet'
                 ];
                 if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
@@ -79,6 +81,7 @@ export const routes: Routes = [
             }
 
             if (path === 'employeeselfservice' && subPath === 'salary&tax') return { consumed: [url[0], url[1]] };
+            if (path === 'employeeselfservice' && subPath === 'tds') return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
             if (path === 'ess') return { consumed: [url[0]] };
@@ -88,7 +91,7 @@ export const routes: Routes = [
         children: [
             {
                 path: '**',
-                component: LoginContainerComponent
+                component: MfeContainerComponent
             }
         ]
     },
@@ -103,7 +106,7 @@ export const routes: Routes = [
             if (path === 'alms' || path === 'attendance' || path === 'employeeselfservice') return { consumed: [url[0]] };
 
             // Specific employee routes for ALMS (Attendance)
-            const almsEmployeeSubPaths = ['employeeattendance', 'addemployeeattendancebysheet', 'employeebiometric'];
+            const almsEmployeeSubPaths = ['employeebiometric'];
             if (path === 'employee' && almsEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
 
             return null;
@@ -111,7 +114,7 @@ export const routes: Routes = [
         children: [
             {
                 path: '**',
-                component: LoginContainerComponent
+                component: MfeContainerComponent
             }
         ]
     },
@@ -121,7 +124,7 @@ export const routes: Routes = [
         children: [
             {
                 path: '**',
-                component: LoginContainerComponent
+                component: MfeContainerComponent
             }
         ]
     },
@@ -136,7 +139,7 @@ export const routes: Routes = [
         children: [
             {
                 path: '**',
-                component: LoginContainerComponent
+                component: MfeContainerComponent
             }
         ]
     },
