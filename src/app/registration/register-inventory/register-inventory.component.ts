@@ -99,9 +99,6 @@ import { ValidationSchema } from '@fovestta2/validation-engine';
     // Library form components
     FvEntryFieldComponent,
     FvEmailFieldComponent,
-    FvPhoneFieldComponent,
-    FvPasswordFieldComponent,
-    FvDropdownComponent,
   ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './register-inventory.component.html',
@@ -499,6 +496,33 @@ export class RegisterInventoryComponent {
       return valid ? null : { invalidPhone: true };
     };
   }
+  /** Strip non-digits on paste / autocomplete */
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '').slice(0, 10);
+    if (input.value !== cleaned) {
+      input.value = cleaned;
+      this.phoneNumberControl.setValue(cleaned, { emitEvent: true });
+    }
+  }
+
+  /** Block non-digit keystrokes in real time */
+  onPhoneKeyPress(event: KeyboardEvent): boolean {
+    const charCode = event.which ?? event.keyCode;
+    // Allow digits 0–9 only
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+      return false;
+    }
+    // Block if already at 10 digits
+    const current = (event.target as HTMLInputElement).value;
+    if (current.length >= 10) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
   passwordStrengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value || '';
