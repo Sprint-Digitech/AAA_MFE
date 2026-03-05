@@ -296,6 +296,18 @@
                     </option>
                   </select>
                 </div>
+
+                <!-- Service -->
+                <div class="form-field">
+                  <label class="field-label">Service <span class="required-asterisk">*</span></label>
+                  <select [formControl]="serviceControl" class="native-select"
+                    [class.select-error]="serviceControl.invalid && serviceControl.touched">
+                    <option value="" disabled>Select service</option>
+                    <option *ngFor="let opt of serviceOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
+                  <span class="field-error-msg" *ngIf="serviceControl.invalid && serviceControl.touched">This field is
+                    required</span>
+                </div>
               </div>
 
               <div class="button-divider"></div>
