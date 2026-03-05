@@ -105,9 +105,21 @@
               <!-- Phone Number -->
               <div class="form-field">
                 <label class="field-label">Phone Number <span class="required-asterisk">*</span></label>
-                <fv-entry-field [control]="phoneNumberControl" label="" [schema]="phoneSchema"
-                  placeholder="Enter 10-digit phone number">
-                </fv-entry-field>
+                <div class="phone-input-wrapper"
+                  [class.phone-input-error]="phoneNumberControl.invalid && phoneNumberControl.touched">
+                  <span class="phone-country-code">+91</span>
+                  <input type="tel" class="phone-input" [formControl]="phoneNumberControl"
+                    placeholder="10-digit mobile number" maxlength="10" (input)="onPhoneInput($event)"
+                    (keypress)="onPhoneKeyPress($event)" />
+                </div>
+                <span class="field-error-msg"
+                  *ngIf="phoneNumberControl.touched && phoneNumberControl.hasError('required')">
+                  Phone number is required
+                </span>
+                <span class="field-error-msg"
+                  *ngIf="phoneNumberControl.touched && phoneNumberControl.hasError('invalidPhone')">
+                  Must be a valid 10-digit mobile number
+                </span>
               </div>
 
               <!-- Company Name -->
@@ -128,9 +140,13 @@
               <!-- Employee Count -->
               <div class="form-field">
                 <label class="field-label">Employee Count <span class="required-asterisk">*</span></label>
-                <fv-dropdown [control]="employeesControl" label="" [options]="employeeCountOptionsForDropdown"
-                  placeholder="Select employee count" [schema]="dropdownSchema">
-                </fv-dropdown>
+                <select [formControl]="employeesControl" class="native-select"
+                  [class.select-error]="employeesControl.invalid && employeesControl.touched">
+                  <option value="" disabled selected>Select employee count</option>
+                  <option *ngFor="let opt of employeeCountOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                </select>
+                <span class="field-error-msg" *ngIf="employeesControl.invalid && employeesControl.touched">This field is
+                  required</span>
               </div>
 
               <!-- Designation -->
@@ -142,38 +158,45 @@
               </div>
 
               <!-- Password -->
-              <div class="form-field password-field-container">
+              <div class="form-field">
                 <label class="field-label">Password <span class="required-asterisk">*</span></label>
-                <div class="input-with-eye">
-                  <fv-entry-field [control]="passwordControl" label="" [schema]="passwordSchema"
-                    [type]="showPassword ? 'text' : 'password'" placeholder="Enter password">
-                  </fv-entry-field>
-                  <button type="button" class="eye-button" (click)="togglePasswordVisibility('current')">
+                <div class="pw-input-wrapper"
+                  [class.pw-input-error]="passwordControl.invalid && passwordControl.touched">
+                  <input [type]="showPassword ? 'text' : 'password'" class="pw-input" [formControl]="passwordControl"
+                    placeholder="Enter password" autocomplete="new-password" />
+                  <button type="button" class="pw-eye-btn" (click)="togglePasswordVisibility('current')" tabindex="-1">
                     <i class="material-icons">{{ showPassword ? 'visibility' : 'visibility_off' }}</i>
                   </button>
                 </div>
-                <mat-error *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="custom-error">
+                <span class="field-error-msg" *ngIf="passwordControl.touched && passwordControl.hasError('required')">
+                  Password is required
+                </span>
+                <span class="field-error-msg"
+                  *ngIf="passwordControl.touched && !passwordControl.hasError('required') && passwordControl.invalid">
                   {{ getPasswordErrorMessage() }}
-                </mat-error>
+                </span>
               </div>
 
               <!-- Confirm Password -->
-              <div class="form-field password-field-container">
+              <div class="form-field">
                 <label class="field-label">Confirm Password <span class="required-asterisk">*</span></label>
-                <div class="input-with-eye">
-                  <fv-entry-field [control]="confirmPasswordControl" label="" [schema]="passwordSchema"
-                    [type]="showConfirmPassword ? 'text' : 'password'" placeholder="Confirm your password"
-                    (paste)="disablePaste($event)">
-                  </fv-entry-field>
-                  <button type="button" class="eye-button" (click)="togglePasswordVisibility('confirm')">
+                <div class="pw-input-wrapper"
+                  [class.pw-input-error]="confirmPasswordControl.invalid && confirmPasswordControl.touched">
+                  <input [type]="showConfirmPassword ? 'text' : 'password'" class="pw-input"
+                    [formControl]="confirmPasswordControl" placeholder="Confirm your password"
+                    autocomplete="new-password" (paste)="disablePaste($event)" />
+                  <button type="button" class="pw-eye-btn" (click)="togglePasswordVisibility('confirm')" tabindex="-1">
                     <i class="material-icons">{{ showConfirmPassword ? 'visibility' : 'visibility_off' }}</i>
                   </button>
                 </div>
-                <mat-error
-                  *ngIf="accountFormGroup.hasError('passwordMismatch') && accountFormGroup.get('confirmPassword')?.touched"
-                  class="custom-error">
+                <span class="field-error-msg"
+                  *ngIf="confirmPasswordControl.touched && confirmPasswordControl.hasError('required')">
+                  Please confirm your password
+                </span>
+                <span class="field-error-msg"
+                  *ngIf="confirmPasswordControl.touched && accountFormGroup.hasError('passwordMismatch') && !confirmPasswordControl.hasError('required')">
                   Passwords do not match
-                </mat-error>
+                </span>
               </div>
             </div>
             <div class="button-divider"></div>
@@ -200,9 +223,13 @@
                 <!-- Industry -->
                 <div class="form-field">
                   <label class="field-label">Industry <span class="required-asterisk">*</span></label>
-                  <fv-dropdown [control]="industryControl" label="" [options]="industryOptionsForDropdown"
-                    placeholder="Select industry" [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <select [formControl]="industryControl" class="native-select"
+                    [class.select-error]="industryControl.invalid && industryControl.touched">
+                    <option value="" disabled selected>Select industry</option>
+                    <option *ngFor="let opt of industryOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
+                  <span class="field-error-msg" *ngIf="industryControl.invalid && industryControl.touched">This field is
+                    required</span>
                 </div>
 
                 <!-- Website -->
@@ -225,39 +252,49 @@
 
                 <!-- Date Format -->
                 <div class="form-field">
-                  <fv-dropdown [control]="dateFormatControl" label="Date Format"
-                    [options]="dateFormatOptionsForDropdown" placeholder="Select date format" [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <label class="field-label">Date Format</label>
+                  <select [formControl]="dateFormatControl" class="native-select">
+                    <option value="" disabled>Select date format</option>
+                    <option *ngFor="let opt of dateFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
                 </div>
 
                 <!-- Date Field Separator -->
                 <div class="form-field">
-                  <fv-dropdown [control]="dateSeparatorControl" label="Date Field Separator"
-                    [options]="dateSeparatorOptionsForDropdown" placeholder="Select separator"
-                    [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <label class="field-label">Date Field Separator</label>
+                  <select [formControl]="dateSeparatorControl" class="native-select">
+                    <option value="" disabled>Select separator</option>
+                    <option *ngFor="let opt of dateSeparatorOptionsForDropdown" [value]="opt.value">{{opt.label}}
+                    </option>
+                  </select>
                 </div>
 
                 <!-- Time Format -->
                 <div class="form-field">
-                  <fv-dropdown [control]="timeFormatControl" label="Time Format"
-                    [options]="timeFormatOptionsForDropdown" placeholder="Select time format" [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <label class="field-label">Time Format</label>
+                  <select [formControl]="timeFormatControl" class="native-select">
+                    <option value="" disabled>Select time format</option>
+                    <option *ngFor="let opt of timeFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
                 </div>
 
                 <!-- Timezone -->
                 <div class="form-field">
-                  <fv-dropdown [control]="timezoneControl" label="Timezone" [options]="timezoneOptionsForDropdown"
-                    placeholder="Select timezone" [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <label class="field-label">Timezone</label>
+                  <select [formControl]="timezoneControl" class="native-select">
+                    <option value="" disabled>Select timezone</option>
+                    <option *ngFor="let opt of timezoneOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
                 </div>
 
                 <!-- Display Format -->
                 <div class="form-field">
-                  <fv-dropdown [control]="displayFormatControl" label="Display Format"
-                    [options]="displayFormatOptionsForDropdown" placeholder="Select display format"
-                    [schema]="dropdownSchema">
-                  </fv-dropdown>
+                  <label class="field-label">Display Format</label>
+                  <select [formControl]="displayFormatControl" class="native-select">
+                    <option value="" disabled>Select display format</option>
+                    <option *ngFor="let opt of displayFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}
+                    </option>
+                  </select>
                 </div>
               </div>
 

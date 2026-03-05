@@ -1,97 +1,118 @@
-<div class="shell-wrapper" [ngClass]="{'no-shell': isLoginPage, 'sidebar-collapsed': isSidebarCollapsed}">
+<div class="shell-wrapper" [ngClass]="{'no-shell': isLoginPage, 'sidebar-collapsed': !isExpanded}">
   <!-- Sidebar -->
-  <aside class="sidebar" *ngIf="!isLoginPage">
-    <div class="sidebar-header">
-      <div class="logo-group">
-        <img src="assets/img/fovesta1.png" alt="Logo" class="sidebar-logo">
-        <span class="divider"></span>
-        <span class="brand-text">HRMS</span>
+  <aside class="sidebar" [class.expanded]="isExpanded" *ngIf="!isLoginPage">
+    <div class="menu-items">
+      <div class="menu-header">
+        <ng-container *ngIf="!isExpanded; else expandedHeader">
+          <button class="logo-toggle" type="button" (click)="toggleSidebar()">
+            <div class="logo-box">
+              <img src="assets/img/fovesta1.png" alt="Logo" class="logo-img">
+            </div>
+          </button>
+        </ng-container>
+        <ng-template #expandedHeader>
+          <div class="logo-wrapper">
+            <div class="logo-box">
+              <img src="assets/img/fovesta1.png" alt="Logo" class="logo-img">
+              <span class="divider-line"></span>
+              <span class="hamburger-icon" (click)="toggleSidebar()"
+                style="cursor: pointer; display: flex; align-items: center; color: #154487;">
+                <mat-icon style="font-size: 20px; width: 20px; height: 20px;">menu</mat-icon>
+              </span>
+              <span class="label">HRMS</span>
+            </div>
+          </div>
+        </ng-template>
       </div>
-      <button class="toggle-btn" (click)="toggleSidebar()">
-        <mat-icon>menu</mat-icon>
-      </button>
+
+      <nav class="sidebar-nav">
+        <div class="menu-item" *ngFor="let item of menus" [class.active]="isSubmenuOpen(item.menuDisplayName)">
+          <div class="menu-item-content" (click)="onMenuClick($event, item)"
+            [routerLink]="!hasSubmenu(item) ? item.menuPath : null" routerLinkActive="active">
+            <span class="icon">
+              <mat-icon>{{ getIcon(item.menuDisplayName) }}</mat-icon>
+            </span>
+            <span class="label" *ngIf="isExpanded">{{ item.menuDisplayName }}</span>
+          </div>
+
+          <!-- Flyout Submenu -->
+          <div class="submenu" *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName) && isExpanded"
+            [style.top.px]="currentSubmenuTop" [style.left.px]="isExpanded ? 180 : 60"
+            (click)="$event.stopPropagation()">
+            <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
+              routerLinkActive="active-submenu" (click)="closeSubmenus()">
+              {{ sub.menuDisplayName }}
+            </a>
+          </div>
+        </div>
+      </nav>
     </div>
 
-    <nav class="sidebar-nav">
-      <ul>
-        <!-- Static Demo Items based on screenshot -->
-        <li><a routerLink="/master" [class.active]="isRouteActive('/master')"><mat-icon>grid_view</mat-icon>
-            <span>Master</span></a>
-        </li>
-        <li><a routerLink="/settings" [class.active]="isRouteActive('/settings')"><mat-icon>settings</mat-icon>
-            <span>Settings</span></a>
-        </li>
-        <li><a routerLink="/employee/employeesList"
-            [class.active]="isRouteActive('/employee')"><mat-icon>badge</mat-icon>
-            <span>Employee</span></a>
-        </li>
-        <li><a routerLink="/alms" [class.active]="isRouteActive('/alms')"><mat-icon>calendar_today</mat-icon>
-            <span>ALMS</span></a>
-        </li>
-        <li><a routerLink="/salary/salaryreport"
-            [class.active]="isRouteActive('/salary')"><mat-icon>currency_rupee</mat-icon>
-            <span>Salary</span></a></li>
-        <li><a routerLink="/loan" [class.active]="isRouteActive('/loan')"><mat-icon>account_balance_wallet</mat-icon>
-            <span>Loan</span></a></li>
-        <li><a routerLink="/reports" [class.active]="isRouteActive('/reports')"><mat-icon>assessment</mat-icon>
-            <span>Reports</span></a>
-        </li>
-        <li><a routerLink="/bonus" [class.active]="isRouteActive('/bonus')"><mat-icon>emoji_events</mat-icon>
-            <span>Bonus</span></a>
-        </li>
-        <li><a routerLink="/reimbursement"
-            [class.active]="isRouteActive('/reimbursement')"><mat-icon>payments</mat-icon>
-            <span>Reimbursement</span></a></li>
-        <li><a routerLink="/ess" [class.active]="isRouteActive('/ess')"><mat-icon>info</mat-icon> <span>ESS
-              Portal</span></a></li>
-        <li><a routerLink="/notification"
-            [class.active]="isRouteActive('/notification')"><mat-icon>notifications</mat-icon>
-            <span>Notification</span></a></li>
-        <li><a routerLink="/access" [class.active]="isRouteActive('/access')"><mat-icon>vpn_key</mat-icon> <span>Access
-              Rights</span></a></li>
-        <li><a routerLink="/gratuity" [class.active]="isRouteActive('/gratuity')"><mat-icon>account_balance</mat-icon>
-            <span>Gratuity</span></a></li>
-        <li><a routerLink="/arrear" [class.active]="isRouteActive('/arrear')"><mat-icon>history</mat-icon>
-            <span>Arrear</span></a></li>
-
-
-        <!-- Dynamic Items if any (filtered) -->
-        <ng-container *ngFor="let menu of menus">
-          <li *ngIf="!['Master', 'Settings', 'Employee', 'ALMS', 'Salary'].includes(menu.menuDisplayName)">
-            <a [routerLink]="menu.menuPath" routerLinkActive="active">
-              <mat-icon>list</mat-icon> <span>{{ menu.menuDisplayName }}</span>
-            </a>
-          </li>
-        </ng-container>
-      </ul>
-    </nav>
-
     <div class="sidebar-footer">
-      <p>Copyright © 2024</p>
-      <p>Outsmart Technology</p>
+      <p>Copyright © 2024 Outsmart Technology</p>
     </div>
   </aside>
 
-  <!-- Main Content Box -->
-  <div class="main-container">
+  <!-- Main Container -->
+  <div class="main-container" (click)="closeSubmenus()">
     <app-loader></app-loader>
+
     <!-- Header -->
     <header class="header" *ngIf="!isLoginPage">
       <div class="header-left">
         <div class="search-box">
           <mat-icon>search</mat-icon>
-          <input type="text" placeholder="Search" [(ngModel)]="globalSearchTerm"
+          <input type="text" placeholder="Search..." [(ngModel)]="globalSearchTerm"
             (input)="onSearchInput(globalSearchTerm)">
         </div>
       </div>
 
       <div class="header-right">
-        <div class="company-badge" *ngIf="user">
-          <img src="assets/img/fovesta1.png" alt="Company" class="company-logo">
-          <span class="company-name">{{ user.companyName || 'Core Tech Pvt Ltd' }}</span>
+        <div class="header-brand" *ngIf="user">
+          <img src="assets/img/fovesta1.png" alt="Logo" class="brand-logo">
+          <span class="brand-name">{{ user.companyName || 'Company Name' }}</span>
         </div>
-        <div class="user-profile" (click)="logout()" title="Logout" style="cursor: pointer;">
-          <div class="avatar">{{ user?.firstName?.charAt(0) || 'N' }}{{ user?.lastName?.charAt(0) || 'P' }}</div>
+        <div class="user-profile-container">
+          <button type="button" class="user-profile" (click)="onUserClick($event)" title="User Profile">
+            <div class="avatar">{{ userInitials }}</div>
+          </button>
+
+          <!-- User Dropdown Menu -->
+          <div class="user-profile-dropdown" *ngIf="showUserDropdown">
+            <div class="user-menu__content">
+              <div class="user-menu__card">
+                <div class="user-menu__profile">
+                  <div class="user-menu__avatar">{{ userInitials }}</div>
+                  <div class="user-menu__info">
+                    <div class="user-menu__name">{{ userDetails.name || 'User' }}</div>
+                    <div class="user-menu__email" *ngIf="userDetails.email">{{ userDetails.email }}</div>
+                  </div>
+                </div>
+
+                <div class="user-menu__list"
+                  *ngIf="userDetails.role || userDetails.department || userDetails.designation">
+                  <div class="user-menu__row" *ngIf="userDetails.role">
+                    <span class="user-menu__label">Role</span>
+                    <span class="user-menu__value">{{ userDetails.role }}</span>
+                  </div>
+                  <div class="user-menu__row" *ngIf="userDetails.department">
+                    <span class="user-menu__label">Department</span>
+                    <span class="user-menu__value">{{ userDetails.department }}</span>
+                  </div>
+                  <div class="user-menu__row" *ngIf="userDetails.designation">
+                    <span class="user-menu__label">Designation</span>
+                    <span class="user-menu__value">{{ userDetails.designation }}</span>
+                  </div>
+                </div>
+
+                <button type="button" class="user-menu__signout" (click)="logout(); $event.stopPropagation()"
+                  (mouseenter)="onSignoutHover(true)" (mouseleave)="onSignoutHover(false)">
+                  <mat-icon>logout</mat-icon>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </header>

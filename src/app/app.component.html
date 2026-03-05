@@ -59,13 +59,12 @@
 
         <!-- Sidebar Footer (SD Nemo Style) -->
         <div class="sidebar-footer">
-            <p>Copyright © 2024</p>
-            <p>Outsmart Technology</p>
+            <p>Copyright © 2024 Outsmart Technology</p>
         </div>
     </aside>
 
     <!-- Main Content Box -->
-    <div class="main-container">
+    <div class="main-container" (click)="closeSubmenus(); showUserDropdown = false">
         <app-loader></app-loader>
         <!-- Header (SD Nemo Style) -->
         <header class="header" *ngIf="!isLoginPage">
@@ -180,7 +179,7 @@
         </header>
 
         <!-- Content Area -->
-        <main class="content-area" [ngClass]="{'full-page': isLoginPage}">
+        <main class="content-area" [ngClass]="{'full-page': isLoginPage}" (click)="closeSubmenus()">
             <router-outlet></router-outlet>
         </main>
     </div>

@@ -44,7 +44,7 @@ export class MfeContainerComponent implements OnInit {
       }
 
       console.log('[Shell][MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
-      this.updateIframeSrc(mfeBaseUrl);
+      this.updateIframeSrc();
     });
 
     // Subscribe to URL changes (handles navigation within the same MFE)
@@ -56,7 +56,7 @@ export class MfeContainerComponent implements OnInit {
       if (isExternalApp) return;
 
       const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
-      this.updateIframeSrc(mfeBaseUrl);
+      this.updateIframeSrc();
     });
   }
 
@@ -103,28 +103,106 @@ export class MfeContainerComponent implements OnInit {
   //   });
   // }
 
-  private updateIframeSrc(mfeBaseUrl: string) {
+  // private updateIframeSrc(mfeBaseUrl: string) {
+  //   this.route.url.subscribe(() => {
+  //     this.updateIframeSrc();
+  //   });
+  // }
+
+  private updateIframeSrc() {
+    const isLocal = window.location.hostname === 'localhost';
     const shellBase = '/Gateway/dist';
     const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
     const currentSearch = window.location.search;
-    let targetUrl = mfeBaseUrl;
 
-    // Remove shell base from the current path
-    let relativePath = currentPath;
-    if (currentPath.startsWith(shellBase)) {
+    const authMfeBasePath = isLocal ? 'http://localhost:4204' : 'https://test.fovestta.com/Auth/dist';
+    const salaryMfeBasePath = isLocal ? 'http://localhost:4206' : 'https://test.fovestta.com/Salary/dist';
+    const almsMfeBasePath = isLocal ? 'http://localhost:4205' : 'https://test.fovestta.com/ALMS/dist';
+    const employeeMfeBasePath = isLocal ? 'http://localhost:4207' : 'https://test.fovestta.com/Employee/dist';
+    const notificationMfeBasePath = isLocal ? 'http://localhost:4208' : 'https://test.fovestta.com/Notification/dist';
+
+    let relativePath = '';
+    // Priority 1: Check hash for route (this is what is changed during nav)
+    if (currentHash.startsWith('#/')) {
+      relativePath = currentHash.substring(1).split('?')[0];
+    } else if (currentPath.startsWith(shellBase)) {
       relativePath = currentPath.substring(shellBase.length);
     }
 
-    // Only append path if we are NOT at shell root or dashboard
-    if (relativePath && relativePath !== '/' && relativePath !== '/dashboard') {
-      const normalizedBase = mfeBaseUrl.endsWith('/') ? mfeBaseUrl.slice(0, -1) : mfeBaseUrl;
-      const normalizedPath = relativePath.startsWith('/') ? relativePath : '/' + relativePath;
-      targetUrl = normalizedBase + normalizedPath + currentSearch;
+    const path = relativePath.toLowerCase();
+    let mfeBaseUrl = '';
+
+    const segments = relativePath.split('/').filter(s => s);
+    const primaryPath = segments.length > 0 ? segments[0].split('?')[0].toLowerCase() : '';
+    const secondaryPath = segments.length > 1 ? segments[1].split('?')[0].toLowerCase() : '';
+
+    const salaryModules = [
+      'bonus', 'reimbursement', 'access', 'gratuity', 'arrear',
+      'salary', 'loan', 'reports', 'master', 'utility',
+      'payroll', 'settings', 'currency', 'department', 'location',
+      'designation', 'welcome-user', 'home', 'tracing', 'tax',
+      'tds', 'perquisites', 'investment'
+    ];
+    const salaryEmployeeSubPaths = [
+      'employeeannualbonus', 'employeectc', 'addemployeectc',
+      'updateemployeectc', 'employeectcdetails', 'ctcemployee',
+      'employeetdslist', 'employeevpf', 'addemployeevpf', 'updateemployeevpf',
+      'employeepf', 'addemployeepf', 'updateemployeepf',
+      'addemployeectcdetails', 'updateemployeectcdetails', 'appraisel-letter',
+      'employeeattendance', 'addemployeeattendancebysheet'
+    ];
+    const salaryAttendanceSubPaths = ['holiday-master', 'add-holiday', 'edit-holiday', 'bulk-upload-holiday'];
+
+    const almsModules = ['alms', 'ess', 'attendance', 'employeeselfservice'];
+    const almsEmployeeSubPaths = ['employeebiometric'];
+
+    // Route Mapping Logic
+    if (
+      salaryModules.includes(primaryPath) ||
+      (primaryPath === 'employee' && salaryEmployeeSubPaths.includes(secondaryPath)) ||
+      (primaryPath === 'attendance' && salaryAttendanceSubPaths.includes(secondaryPath)) ||
+      (primaryPath === 'employeeselfservice' && secondaryPath === 'salary&tax') ||
+      (primaryPath === 'employeeselfservice' && secondaryPath === 'tds')
+    ) {
+      mfeBaseUrl = salaryMfeBasePath;
+    } else if (
+      almsModules.includes(primaryPath) ||
+      (primaryPath === 'employee' && almsEmployeeSubPaths.includes(secondaryPath))
+    ) {
+      mfeBaseUrl = almsMfeBasePath;
+    } else if (primaryPath === 'notification') {
+      mfeBaseUrl = notificationMfeBasePath;
+    } else if (primaryPath === 'employee') {
+      mfeBaseUrl = employeeMfeBasePath;
+    } else {
+      mfeBaseUrl = authMfeBasePath;
     }
+
+    const normalizedBase = mfeBaseUrl.endsWith('/') ? mfeBaseUrl.slice(0, -1) : mfeBaseUrl;
+
+    let cleanPath = relativePath;
+    const pathLower = cleanPath.toLowerCase();
+
+    // Strip redundant folder segments from the path before appending to MFE base
+    const folderSegments = ['/auth/dist', '/salary/dist', '/employee/dist', '/alms/dist', '/notification/dist'];
+
+    for (const segment of folderSegments) {
+      if (pathLower.startsWith(segment)) {
+        cleanPath = cleanPath.substring(segment.length);
+        break;
+      }
+    }
+
+    if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+
+    // If we have a path, append it to the hash to maintain MFE internal routing
+    const targetUrl = isLocal
+      ? `${normalizedBase}/${cleanPath}${currentSearch}`
+      : (cleanPath ? `${normalizedBase}/#/${cleanPath}${currentSearch}` : `${normalizedBase}/${currentSearch}`);
 
     console.log('[Shell][MfeContainer] Updating Iframe Src to:', targetUrl);
 
-    // Only update if changed to prevent unnecessary reloads
     if (this.mfeUrl !== targetUrl) {
       this.mfeUrl = targetUrl;
       this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(targetUrl);
