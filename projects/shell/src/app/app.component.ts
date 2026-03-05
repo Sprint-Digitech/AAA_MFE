@@ -79,7 +79,8 @@ export class AppComponent implements OnInit {
       url.includes('/employee') ||
       url.includes('/salary') ||
       url.includes('/alms') ||
-      url.includes('/notification');
+      url.includes('/notification') ||
+      url.includes('login-inventory');
 
     console.log('Shell: isLoginPage set to:', this.isLoginPage);
 

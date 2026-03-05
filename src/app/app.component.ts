@@ -96,7 +96,15 @@ export class AppComponent implements OnInit {
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects || event.url;
       console.log('AppComponent: URL Changed to', url);
-      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password');
+      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password') || url.includes('login-inventory') || url === '/register-inventory'|| url.includes('sku-management') ||
+  url.includes('product-master') ||
+  url.includes('bin-management') ||
+  url.includes('grn') ||
+  url.includes('pick-pack') ||
+  url.includes('returns') ||
+  url.includes('marketplace-mapping') ||
+  url.includes('inventory-dashboard') ||
+  url.includes('reports') || url.includes('settings');
       console.log('AppComponent: isLoginPage =', this.isLoginPage);
 
       // Keep shell URL perfectly in sync to fix refresh redirects

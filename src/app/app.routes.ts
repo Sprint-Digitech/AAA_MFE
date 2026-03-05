@@ -12,10 +12,21 @@ export const routes: Routes = [
             import('./login/login.component').then((m) => m.LoginComponent),
     },
     {
+        path:'login-inventory',
+        loadComponent: ()=> import('./login-inventory/login-inventory.component').then((m)=>m.LoginInventoryComponent)
+    },
+    {
         path: 'register',
         loadComponent: () =>
             import('./registration/register-form/register-form.component').then(
                 (m) => m.RegisterFormComponent
+            ),
+    },
+    {
+        path: 'register-inventory',
+        loadComponent: () =>
+            import('./registration/register-inventory/register-inventory.component').then(
+                (m) => m.RegisterInventoryComponent
             ),
     },
     {
@@ -183,5 +194,41 @@ export const routes: Routes = [
                 data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Employee Management' }
             }
         ]
-    }
+    },
+  // ✅ INVENTORY — Bas yeh add karo
+    {
+        matcher: (url) => {
+            if (url.length === 0) return null;
+            const path = url[0].path.toLowerCase();
+
+            const inventoryModules = [
+                'sku-management',
+                'product-master',
+                'bin-management',
+                'grn',
+                'pick-pack',
+                'returns',
+                'marketplace-mapping',
+                'reports',
+                'inventory-dashboard',
+                'settings'
+            ];
+
+            if (inventoryModules.includes(path)) return { consumed: [url[0]] };
+            return null;
+        },
+        children: [
+            {
+                path: '**',
+                loadComponent: () => import('./mfe-container/mfe-container.component')
+                    .then(m => m.MfeContainerComponent),
+                data: { 
+                    mfeUrl: 'http://localhost:3000/',  // Local
+                    // mfeUrl: 'https://inventory.company.com/', // Production
+                    title: 'Inventory',
+                    isExternalApp: true  // flag — Next.js hai
+                }
+            }
+        ]
+    },
 ];

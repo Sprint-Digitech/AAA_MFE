@@ -35,16 +35,73 @@ export class MfeContainerComponent implements OnInit {
     // Subscribe to route data changes (handles MFE switches)
     this.route.data.subscribe(data => {
       const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
+      const isExternalApp = data['isExternalApp'] || false;
+
+      // ✅ Inventory (Next.js) — iframe nahi, seedha redirect
+      if (isExternalApp) {
+        this.redirectToExternalApp(mfeBaseUrl);
+        return;
+      }
+
       console.log('[Shell][MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
       this.updateIframeSrc(mfeBaseUrl);
     });
 
     // Subscribe to URL changes (handles navigation within the same MFE)
     this.route.url.subscribe(() => {
-      const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4200';
+      const data = this.route.snapshot.data;
+      const isExternalApp = data['isExternalApp'] || false;
+
+      // ✅ Inventory ke liye URL change subscribe skip karo
+      if (isExternalApp) return;
+
+      const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
       this.updateIframeSrc(mfeBaseUrl);
     });
   }
+
+  // ✅ Inventory Next.js app ke liye — seedha window redirect
+  private redirectToExternalApp(mfeBaseUrl: string) {
+    const shellBase = '/Gateway/dist';
+    const currentPath = window.location.pathname;
+    const currentSearch = window.location.search;
+
+    // Shell base path hata do
+    let relativePath = currentPath;
+    if (currentPath.startsWith(shellBase)) {
+      relativePath = currentPath.substring(shellBase.length);
+    }
+
+    const normalizedBase = mfeBaseUrl.endsWith('/')
+      ? mfeBaseUrl.slice(0, -1)
+      : mfeBaseUrl;
+
+    const normalizedPath = relativePath.startsWith('/')
+      ? relativePath
+      : '/' + relativePath;
+
+    const targetUrl = normalizedBase + normalizedPath + currentSearch;
+
+    console.log('[Shell][MfeContainer] Redirecting to External App:', targetUrl);
+
+    // Seedha redirect — iframe nahi
+    window.location.href = targetUrl;
+  }
+
+  // ngOnInit() {
+  //   // Subscribe to route data changes (handles MFE switches)
+  //   this.route.data.subscribe(data => {
+  //     const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
+  //     console.log('[Shell][MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
+  //     this.updateIframeSrc(mfeBaseUrl);
+  //   });
+
+  //   // Subscribe to URL changes (handles navigation within the same MFE)
+  //   this.route.url.subscribe(() => {
+  //     const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4200';
+  //     this.updateIframeSrc(mfeBaseUrl);
+  //   });
+  // }
 
   private updateIframeSrc(mfeBaseUrl: string) {
     const shellBase = '/Gateway/dist';
