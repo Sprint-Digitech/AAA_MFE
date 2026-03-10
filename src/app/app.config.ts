@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withHashLocation } from '@angular/router';
 import {
   HTTP_INTERCEPTORS,
@@ -6,6 +6,8 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { TenantInterceptor } from './_helpers/tenant-interceptor';
 import { ErrorInterceptor } from './_helpers/error-interceptor';
@@ -26,6 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withHashLocation()),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
+    importProvidersFrom(MatSnackBarModule, MatDialogModule),
 
     {
       provide: HTTP_INTERCEPTORS,

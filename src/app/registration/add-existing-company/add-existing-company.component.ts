@@ -28,7 +28,7 @@ export class AddExistingCompanyComponent implements OnInit {
     private router: Router,
     private notificationService: NotificationService,
     private location: Location,
-  ) {}
+  ) { }
 
   ngOnInit() {
     // 1. Session and Role Validation
@@ -38,7 +38,8 @@ export class AddExistingCompanyComponent implements OnInit {
       return;
     }
     const user = JSON.parse(userData);
-    const isAdmin = user.employeeRoleLoginDtos?.some(
+    const roles = user.employeeRoleLoginDtos || (user.employee && user.employee.employeeRoleLoginDtos);
+    const isAdmin = roles?.some(
       (role: any) => role.roleName === 'Admin',
     );
     if (!isAdmin) {
@@ -96,14 +97,15 @@ export class AddExistingCompanyComponent implements OnInit {
   submit(data: any) {
     this.error = '';
     const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
-    const tenantSchema = userData.tenantSchema;
+    const tenantSchema = userData.tenantSchema || (userData.employee && userData.employee.tenantSchema) || sessionStorage.getItem('tenantSchema');
 
     if (!tenantSchema) {
-      this.error = 'Tenant information not found in session storage.';
+      this.error = 'Tenant information not found. Please log in again.';
       return;
     }
 
-    const isAdmin = userData.employeeRoleLoginDtos?.some(
+    const roles = userData.employeeRoleLoginDtos || (userData.employee && userData.employee.employeeRoleLoginDtos);
+    const isAdmin = roles?.some(
       (r: any) => r.roleName === 'Admin',
     );
     if (!isAdmin) {

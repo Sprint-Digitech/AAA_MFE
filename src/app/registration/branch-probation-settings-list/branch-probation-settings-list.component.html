@@ -1,6 +1,7 @@
 <div class="container" style="margin-top: 55px;">
-    <lib-nemo-reusable-tbl [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'"
-        (editAction)="onEditRow($event)" [showDeleteOption]="deletePayhead" [showDetailsOption]="false"
-        [searchResultTitle]="'List of Branch Probation Settings'" [showAddButton]="true" (onAdd)="addBranch()">
+    <lib-nemo-reusable-tbl appGlobalTableSearch [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20"
+        [tableWidth]="'100%'" (editAction)="onEditRow($event)" [showDeleteOption]="deletePayhead"
+        [showDetailsOption]="false" [searchResultTitle]="'List of Branch Probation Settings'" [showAddButton]="true"
+        (onAdd)="addBranch()">
     </lib-nemo-reusable-tbl>
 </div>

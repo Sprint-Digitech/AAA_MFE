@@ -1,7 +1,8 @@
-<div style="margin-top: 55px;" >
-<lib-nemo-reusable-tbl   appGlobalSearch [searchResultTitle]="'ESI Rule - Exit Month'" [showAddButton]="true"  [addButtonLabel]="'Add ESI Calculation Month Limit'" (onAdd)="addEsiCalculationMonthLimit()" [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'"
- (editAction)="onEditRow($event)" [showEditOption]="true"
- [showDeleteOption]="false" [showDetailsOption]="DetailsEsiCalculationMonthLimit" [showSearch]="false">
-</lib-nemo-reusable-tbl>
+<div style="margin-top: 55px;">
+    <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'ESI Rule - Exit Month'" [showAddButton]="true"
+        [addButtonLabel]="'Add ESI Calculation Month Limit'" (onAdd)="addEsiCalculationMonthLimit()" [columns]="columns"
+        [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'" (editAction)="onEditRow($event)"
+        [showEditOption]="true" [showDeleteOption]="false" [showDetailsOption]="DetailsEsiCalculationMonthLimit"
+        [showSearch]="false">
+    </lib-nemo-reusable-tbl>
 </div>
-

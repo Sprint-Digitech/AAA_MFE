@@ -96,15 +96,15 @@ export class AppComponent implements OnInit {
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects || event.url;
       console.log('AppComponent: URL Changed to', url);
-      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password') || url.includes('login-inventory') || url === '/register-inventory'|| url.includes('sku-management') ||
-  url.includes('product-master') ||
-  url.includes('bin-management') ||
-  url.includes('grn') ||
-  url.includes('pick-pack') ||
-  url.includes('returns') ||
-  url.includes('marketplace-mapping') ||
-  url.includes('inventory-dashboard') ||
-  url.includes('reports') || url.includes('settings');
+      this.isLoginPage = url === '/login' || url === '/' || url === '' || url === '/register' || url.includes('forgot-password') || url.includes('login-inventory') || url === '/register-inventory' || url.includes('sku-management') ||
+        url.includes('product-master') ||
+        url.includes('bin-management') ||
+        url.includes('grn') ||
+        url.includes('pick-pack') ||
+        url.includes('returns') ||
+        url.includes('marketplace-mapping') ||
+        url.includes('inventory-dashboard') ||
+        url.includes('reports') || url.includes('settings');
       console.log('AppComponent: isLoginPage =', this.isLoginPage);
       const authPaths = ['/login', '/register', '/forgot-password', '/reset', '/welcome', '/authentication'];
       const isAuthRoute = authPaths.some(p => url.includes(p)) || url === '/' || url === '';
@@ -171,6 +171,10 @@ export class AppComponent implements OnInit {
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
     this.getCompanies();
+
+    if (window !== window.parent) {
+      document.body.classList.add('is-iframe');
+    }
 
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'LOGOUT') {

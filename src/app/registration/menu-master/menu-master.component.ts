@@ -6,10 +6,12 @@ import { Router } from '@angular/router';
 import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 
 @Component({
+  standalone: true,
   selector: 'app-menu-master',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './menu-master.component.html',
   styleUrls: ['./menu-master.component.scss'],
 })
@@ -34,7 +36,7 @@ export class MenuMasterComponent {
     private dialogueService: DialogService,
     private router: Router,
     private accountService: AccountService,
-  ) {}
+  ) { }
   ngOnInit(): void {
     this.getMenuMaster();
     this.menuMasterDetails = false;

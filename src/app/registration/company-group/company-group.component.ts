@@ -7,9 +7,12 @@ import { NotificationService } from '../../shared/services/notification.service'
 import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+
 @Component({
+  standalone: true,
   selector: 'app-company-group',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './company-group.component.html',
   styleUrls: ['./company-group.component.scss'],
 })

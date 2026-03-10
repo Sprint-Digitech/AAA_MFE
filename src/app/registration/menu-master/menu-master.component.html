@@ -11,8 +11,8 @@
 
 
 
-<lib-nemo-reusable-tbl [searchResultTitle]="'Menu Master List'" [showAddButton]="true"  [addButtonLabel]="'Add Menu Master'" (onAdd)="addMenuMaster()"
-[columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'"
-  (editAction)="onEditRow($event)" (deleteAction)="deleteManu($event)" [showDeleteOption]="deleteMaster" [showDetailsOption]="menuMasterDetails"
-  [showSearch]="true">
-</lib-nemo-reusable-tbl>
+  <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Menu Master List'" [showAddButton]="true"
+    [addButtonLabel]="'Add Menu Master'" (onAdd)="addMenuMaster()" [columns]="columns" [dataSource]="dataArray"
+    [rowsPerPage]="20" [tableWidth]="'100%'" (editAction)="onEditRow($event)" (deleteAction)="deleteManu($event)"
+    [showDeleteOption]="deleteMaster" [showDetailsOption]="menuMasterDetails" [showSearch]="true">
+  </lib-nemo-reusable-tbl>

@@ -6,10 +6,12 @@ import { Router } from '@angular/router';
 import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 
 @Component({
+  standalone: true,
   selector: 'app-roles',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './roles.component.html',
   styleUrls: ['./roles.component.scss'],
 })
@@ -31,7 +33,7 @@ export class RolesComponent implements OnInit {
     private service: AccountService,
     private dialogueService: DialogService,
     private router: Router,
-  ) {}
+  ) { }
   ngOnInit(): void {
     this.getAllRoleList();
     this.detailsRow = false;

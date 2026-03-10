@@ -8,12 +8,14 @@ import { HttpCacheService } from '../../shared/services/http-cache.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { AccountService } from '../../shared/services/account.service';
 @Component({
+  standalone: true,
   selector: 'app-companies',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './companies.component.html',
   styleUrls: ['./companies.component.scss'],
 })

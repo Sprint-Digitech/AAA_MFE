@@ -1,9 +1,9 @@
-import { Component, Injectable, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, Injectable, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTabChangeEvent } from '@angular/material/tabs';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormConfig, AddUpdateFormComponent } from '@fovestta2/web-angular';
 import { AccountService } from '../../shared/services/account.service';
@@ -11,7 +11,7 @@ import { DialogService } from '../../shared/services/dialog.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { UtilityService } from '../../shared/services/utility.service';
 import { CommonModule } from '@angular/common';
-import { FormGroup, FormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOptionModule } from '@angular/material/core';
 
@@ -101,12 +101,15 @@ interface EmployeeContact {
 
 @Component({
   selector: 'app-branch-details',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     AddUpdateFormComponent,
     MatFormFieldModule,
     MatOptionModule,
+    MatDialogModule,
+    ReactiveFormsModule,
   ],
   templateUrl: './branch-details.component.html',
   styleUrls: ['./branch-details.component.scss'],
@@ -115,395 +118,490 @@ export class BranchDetailsComponent implements OnInit {
   public branchDetails: any;
   public companyBranchId: any;
   public branchContact: any;
+  // Form Configurations
+  statutoryFormConfig!: FormConfig;
+  taxDeductorFormConfig!: FormConfig;
   addressFormConfig!: FormConfig;
-  addressDataLoaded: boolean = false;
-  addressId: string | null = null;
-  contactDataLoaded: boolean = false;
   overtimeFormConfig!: FormConfig;
-  overtimeDataLoaded: boolean = false;
-  overtimeId: string | null = null;
-  statutoryFormConfig: FormConfig = {
-    formTitle: '', // Hide title if we want to seamlessly integrate, or set 'Statutory Details'
-    maxColsPerRow: 4,
-    sections: [
-      {
-        fields: [
-          {
-            name: 'companyPanNo',
-            label: 'PAN No.',
-            placeholder: 'e.g. ABCDE1234F',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              { type: 'required', message: 'PAN No. is required' },
-              {
-                type: 'pattern',
-                value: '^[A-Z]{5}[0-9]{4}[A-Z]{1}$',
-                message: 'Invalid PAN format (ABCDE1234F)',
-              },
-            ],
-          },
-          {
-            name: 'companyCinNo',
-            label: 'CIN No.',
-            placeholder: 'e.g. L12345AB2023PLC123456',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$',
-                message: 'Invalid CIN format',
-              },
-            ],
-          },
-          {
-            name: 'companyPfNo',
-            label: 'PF No.',
-            placeholder: 'e.g. AA/BBB/12345/123/1234567',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z]{2}\/[A-Z]{3}\/[0-9]{5}\/[0-9]{3}\/[0-9]{1,7}$',
-                message: 'Invalid PF format (AA/BBB/12345/123/1234567)',
-              },
-            ],
-          },
-          {
-            name: 'companyEsiNo',
-            label: 'ESI No.',
-            placeholder: 'e.g. 17 digits',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[0-9]{17}$',
-                message: 'ESI must be 17 digits',
-              },
-            ],
-          },
-          {
-            name: 'companyTanNo',
-            label: 'TAN No.',
-            placeholder: 'e.g. AAAA99999A',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z]{4}[0-9]{5}[A-Z]{1}$',
-                message: 'Invalid TAN format (AAAA99999A)',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        fields: [
-          {
-            name: 'pfCalculation',
-            label: 'PF Calculate On',
-            type: 'radio',
-            layout: 'horizontal',
-            options: [
-              { label: 'Max Limit as per Act', value: 'Max Limit as per Act' },
-              { label: 'Full', value: 'Full' },
-            ],
-            colSpan: 2,
-          },
-          {
-            name: 'pfOverridableEmployee',
-            label: 'Is PF Overridable at Emp Level',
-            type: 'radio',
-            layout: 'horizontal',
-            options: [
-              { label: 'Yes', value: 'Yes' },
-              { label: 'No', value: 'No' },
-            ],
-            colSpan: 1,
-          },
-          {
-            name: 'isPfExpensesIncludeInCTC',
-            label: 'Is PF Expenses include in CTC',
-            type: 'radio',
-            layout: 'horizontal',
-            options: [
-              { label: 'Yes', value: 'Yes' },
-              { label: 'No', value: 'No' },
-            ],
-            colSpan: 1,
-          },
-          {
-            name: 'isPfExpensesOverridableAtEmployeeLevel',
-            label: 'Is PF Expense Overridable at Emp level',
-            type: 'radio',
-            layout: 'horizontal',
-            options: [
-              { label: 'Yes', value: 'Yes' },
-              { label: 'No', value: 'No' },
-            ],
-            colSpan: 1,
-          },
-        ],
-      },
-      {
-        fields: [
-          {
-            name: 'companyAoCode',
-            label: 'AO Code',
-            placeholder: 'e.g. DEL W 72 1',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z]{3}\\s[A-Z]\\s[0-9]{1,3}\\s[0-9]{1,3}$',
-                message: 'Invalid AO Code format (DEL W 72 1)',
-              },
-            ],
-          },
-          {
-            name: 'tradeNumber',
-            label: 'Trade No.',
-            placeholder: 'e.g. 5-20 alphanumeric',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z0-9]{5,20}$',
-                message: 'Trade No must be 5-20 alphanumeric',
-              },
-            ],
-          },
-          {
-            name: 'eidNumber',
-            label: 'EID No.',
-            placeholder: 'e.g. 6-20 alphanumeric',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z0-9]{6,20}$',
-                message: 'Invalid EID format',
-              },
-            ],
-          },
-          {
-            name: 'companyTdsCircle',
-            label: 'TDS Circle',
-            placeholder: 'e.g. 3-20 characters',
-            type: 'text',
-            colSpan: 1,
-            validations: [
-              {
-                type: 'pattern',
-                value: '^[A-Z0-9 ()]{3,20}$',
-                message: 'Invalid TDS Circle format',
-              },
-            ],
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'radio',
-            layout: 'horizontal',
-            options: [
-              { label: 'Active', value: 1 },
-              { label: 'Inactive', value: 0 },
-            ],
-            colSpan: 2,
-          },
-        ],
-      },
-    ],
-    submitLabel: 'Submit',
-    cancelLabel: 'Cancel',
-    onSubmit: (data) => this.onStatutorySubmit(data),
-    onCancel: () => this.cancelChanges('statutory'),
-  };
+  contactFormConfig!: FormConfig;
+  leaveEncashmentFormConfig!: FormConfig;
 
-  public updatedStatutoryFormConfig: boolean = false; // Flag to force refresh if needed or just use object mutation
+  // Manual Data Tracking for Fallback (Internal use)
+  manualContactData: any = {};
+  manualStatutoryData: any = {};
+  manualTaxData: any = {};
+  manualAddressData: any = {};
+  manualOvertimeData: any = {};
+  manualLeaveData: any = {};
+
+  addressId: string | undefined;
+  contactId: string | undefined;
+  statutoryId: string | undefined;
+  taxId: string | undefined;
+  overtimeId: string | undefined;
+  leaveId: string | undefined;
+
+  addressDataLoaded: boolean = false;
+  contactDataLoaded: boolean = false;
+  overtimeDataLoaded: boolean = false;
+  statutoryDataLoaded: boolean = false;
+  taxDataLoaded: boolean = false;
+  leaveDataLoaded: boolean = false;
+
+  initializeStatutoryConfig(initialValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeStatutoryConfig - v22.4', initialValues);
+    this.manualStatutoryData = { ...initialValues };
+    const statutoryId = initialValues?.id || initialValues?.Id || initialValues?.companyBranchStatutoryIdentityId;
+    this.statutoryId = statutoryId;
+    const isUpdate = !!statutoryId;
+
+    this.statutoryFormConfig = {
+      formTitle: isUpdate ? 'Update Statutory Details' : 'New Statutory Details',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
+      maxColsPerRow: 4,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onStatutorySubmit(data, this.statutoryId);
+      },
+      onCancel: () => {
+        this.cancelChanges('statutory');
+        this.getBranchStatutory();
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name: 'companyPanNo',
+              label: 'PAN No.',
+              placeholder: 'e.g. ABCDE1234F',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.companyPanNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.companyPanNo = val),
+              validations: [
+                { type: 'required', message: 'Required' },
+                {
+                  type: 'pattern',
+                  value: '^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$',
+                  message: 'Invalid PAN',
+                },
+              ],
+            },
+            {
+              name: 'companyCinNo',
+              label: 'CIN No.',
+              placeholder: 'e.g. 21 digit CIN',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.companyCinNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.companyCinNo = val),
+              validations: [],
+            },
+            {
+              name: 'companyPfNo',
+              label: 'PF No.',
+              placeholder: 'e.g. AA/BBB/12345/123/1234567',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.companyPfNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.companyPfNo = val),
+              validations: [],
+            },
+            {
+              name: 'companyEsiNo',
+              label: 'ESI No.',
+              placeholder: 'e.g. 17 digits',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.companyEsiNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.companyEsiNo = val),
+              validations: [],
+            },
+            {
+              name: 'companyTanNo',
+              label: 'TAN No.',
+              placeholder: 'e.g. AAAA99999A',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.companyTanNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.companyTanNo = val),
+              validations: [],
+            },
+            {
+              name: 'lwfNo',
+              label: 'LWF No.',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.lwfNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.lwfNo = val),
+              validations: [],
+            },
+            {
+              name: 'tradeNo',
+              label: 'Trade/Other No.',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.tradeNo || '',
+              onChange: (val: any) => (this.manualStatutoryData.tradeNo = val),
+              validations: [],
+            },
+            {
+              name: 'pfCalculation',
+              label: 'PF Calculate On',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Max Limit as per Act', value: 'Max Limit as per Act' },
+                { label: 'Full', value: 'Full' },
+              ],
+              value: initialValues?.pfCalculation || 'Max Limit as per Act',
+              onChange: (val: any) => (this.manualStatutoryData.pfCalculation = val),
+              colSpan: 2,
+            },
+            {
+              name: 'pfOverridableEmployee',
+              label: 'Is PF Overridable at Emp Level',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.pfOverridableEmployee || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.pfOverridableEmployee = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isPfExpensesIncludeInCTC',
+              label: 'Is PF Expenses include in CTC',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isPfExpensesIncludeInCTC || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.isPfExpensesIncludeInCTC = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isPfExpensesOverridableAtEmployeeLevel',
+              label: 'Is PF Expense Overridable at Emp level',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value:
+                initialValues?.isPfExpensesOverridableAtEmployeeLevel || 'Yes',
+              onChange: (val: any) =>
+              (this.manualStatutoryData.isPfExpensesOverridableAtEmployeeLevel =
+                val),
+              colSpan: 2,
+            },
+            {
+              name: 'isEsiIncludeInCTC',
+              label: 'Is ESI Include In CTC',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isEsiIncludeInCTC || 'Yes',
+              onChange: (val: any) => (this.manualStatutoryData.isEsiIncludeInCTC = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isEsiOverridableAtEmployeeLevel',
+              label: 'Is ESI Overridable at Emp level',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isEsiOverridableAtEmployeeLevel || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.isEsiOverridableAtEmployeeLevel = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isLwfIncludeInCTC',
+              label: 'Is LWF include in CTC',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isLwfIncludeInCTC || 'Yes',
+              onChange: (val: any) => (this.manualStatutoryData.isLwfIncludeInCTC = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isLwfOverridableAtEmployeeLevel',
+              label: 'Is LWF Overridable at Emp Level',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isLwfOverridableAtEmployeeLevel || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.isLwfOverridableAtEmployeeLevel = val),
+              colSpan: 2,
+            },
+            {
+              name: 'isGratuityIncludeInCTC',
+              label: 'Is Gratuity Include in CTC',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isGratuityIncludeInCTC || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.isGratuityIncludeInCTC = val),
+              colSpan: 1,
+            },
+            {
+              name: 'isAdminChargesIncludeInCTC',
+              label: 'Is Admin Charge Include in CTC',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.isAdminChargesIncludeInCTC || 'Yes',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.isAdminChargesIncludeInCTC = val),
+              colSpan: 1,
+            },
+            {
+              name: 'status',
+              label: 'Status',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Active', value: 1 },
+                { label: 'Inactive', value: 0 },
+              ],
+              value:
+                initialValues?.status !== undefined
+                  ? UtilityService.normalizeStatus(initialValues.status)
+                  : 1,
+              onChange: (val: any) => (this.manualStatutoryData.status = val),
+              colSpan: 2,
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+
+  public updatedStatutoryFormConfig: boolean = false;
 
   // Tax Deductor FormConfig
-  taxDeductorFormConfig: FormConfig = {
-    formTitle: '',
-    maxColsPerRow: 5,
-    sections: [
-      {
-        fields: [
-          {
-            name: 'taxDeductorName',
-            label: 'Tax Deductor Name',
-            type: 'text',
-            allowAlphabetsOnly: true,
-            maxLength: 50,
-            colSpan: 1,
-            placeholder: 'Enter tax deductor name',
-            validations: [
-              { type: 'required', message: 'Tax Deductor Name is required' },
-              { type: 'maxLength', value: 50, message: 'Max 50 characters' },
-            ],
-          },
-          {
-            name: 'taxDeductorFatherName',
-            label: 'Father Name',
-            type: 'text',
-            allowAlphabetsOnly: true,
-            maxLength: 50,
-            colSpan: 1,
-            placeholder: 'Enter father name',
-            validations: [
-              { type: 'maxLength', value: 50, message: 'Max 50 characters' },
-            ],
-          },
-          {
-            name: 'taxDeductorDesignation',
-            label: 'Designation',
-            type: 'text',
-            colSpan: 1,
-            placeholder: 'Enter designation',
-            validations: [
-              { type: 'maxLength', value: 100, message: 'Max 100 characters' },
-              {
-                type: 'pattern',
-                value: '^[a-zA-Z\\s\\-]*$',
-                message: 'Only alphabets and hyphen allowed',
-              },
-            ],
-          },
-          {
-            name: 'taxDeductorMobileNo',
-            label: 'Mobile No.',
-            type: 'phone',
-            colSpan: 1,
-            placeholder: '10 digit mobile number',
-            validations: [
-              { type: 'required', message: 'Mobile No. is required' },
-              {
-                type: 'pattern',
-                value: '^\\d{10}$',
-                message: 'Enter valid 10 digit phone number',
-              },
-            ],
-          },
-          {
-            name: 'taxDeductorEmailId',
-            label: 'Email',
-            type: 'email',
-            colSpan: 1,
-            placeholder: 'Enter email address',
-            validations: [
-              { type: 'required', message: 'Email is required' },
-              { type: 'email', message: 'Enter a valid email' },
-            ],
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'radio',
-            layout: 'horizontal',
-            colSpan: 2,
-            options: [
-              { label: 'Active', value: 1 },
-              { label: 'Inactive', value: 0 },
-            ],
-          },
-        ],
+  initializeTaxFormConfig(initialValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeTaxFormConfig - v22.4', initialValues);
+    this.manualTaxData = { ...initialValues };
+    const taxId = initialValues?.id || initialValues?.Id || initialValues?.companyTaxDeductorDetailId;
+    this.taxId = taxId;
+    const isUpdate = !!taxId;
+
+    this.taxDeductorFormConfig = {
+      formTitle: isUpdate ? 'Update Tax Deductor' : 'New Tax Deductor',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
+      maxColsPerRow: 2,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onTaxDeductorSubmit(data, this.taxId);
       },
-    ],
-    submitLabel: 'Submit',
-    cancelLabel: 'Cancel',
-    onSubmit: (data) => this.onTaxDeductorSubmit(data),
-    onCancel: () => this.cancelChanges('tax'),
-  };
+      onCancel: () => {
+        this.getTaxDeductor();
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name: 'taxDeductorName',
+              label: 'Tax Deductor Name',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.taxDeductorName || '',
+              onChange: (val: any) => (this.manualTaxData.taxDeductorName = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'fatherName',
+              label: 'Father Name',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.fatherName || '',
+              onChange: (val: any) => (this.manualTaxData.fatherName = val),
+              validations: [],
+            },
+            {
+              name: 'designation',
+              label: 'Designation',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.designation || '',
+              onChange: (val: any) => (this.manualTaxData.designation = val),
+              validations: [],
+            },
+            {
+              name: 'aoCode',
+              label: 'AO Code',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.aoCode || '',
+              onChange: (val: any) => (this.manualTaxData.aoCode = val),
+              validations: [],
+            },
+            {
+              name: 'tdsCircle',
+              label: 'TDS Circle',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.tdsCircle || '',
+              onChange: (val: any) => (this.manualTaxData.tdsCircle = val),
+              validations: [],
+            },
+            {
+              name: 'taxDeductorMobileNo',
+              label: 'Mobile No.',
+              type: 'text',
+              colSpan: 1,
+              value: initialValues?.taxDeductorMobileNo || '',
+              onChange: (val: any) =>
+                (this.manualTaxData.taxDeductorMobileNo = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'taxDeductorEmailId',
+              label: 'Email',
+              type: 'email',
+              colSpan: 1,
+              value: initialValues?.taxDeductorEmailId || '',
+              onChange: (val: any) => (this.manualTaxData.taxDeductorEmailId = val),
+              validations: [],
+            },
+            {
+              name: 'status',
+              label: 'Status',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Active', value: 1 },
+                { label: 'Inactive', value: 0 },
+              ],
+              value:
+                initialValues?.status !== undefined
+                  ? UtilityService.normalizeStatus(initialValues.status)
+                  : 1,
+              onChange: (val: any) => (this.manualTaxData.status = val),
+              colSpan: 2,
+            },
+          ],
+        },
+      ],
+    };
+  }
+
 
   // Leave Encashment FormConfig
-  leaveEncashmentFormConfig: FormConfig = {
-    formTitle: '',
-    maxColsPerRow: 5,
-    sections: [
-      {
-        fields: [
-          {
-            name: 'maxEncashmentDays',
-            label: 'Max Encash Days/Year',
-            type: 'number',
-            // @ts-ignore
-            allowNumbersOnly: true,
-            colSpan: 1,
-            placeholder: 'Enter days',
-            validations: [
-              { type: 'required', message: 'Max Encash Days is required' },
-            ],
-          },
-          {
-            name: 'minLeaveBalance',
-            label: 'Min Bal After Encash',
-            type: 'number',
-            // @ts-ignore
-            allowNumbersOnly: true,
-            colSpan: 1,
-            placeholder: 'Enter min balance',
-            validations: [
-              { type: 'required', message: 'Min Bal After Encash is required' },
-            ],
-          },
-          {
-            name: 'taxExemptionLimit',
-            label: 'Tax Exemption Limit',
-            type: 'number',
-            // @ts-ignore
-            allowNumbersOnly: true,
-            colSpan: 1,
-            placeholder: 'Enter limit',
-            validations: [
-              { type: 'required', message: 'Tax Exemption Limit is required' },
-            ],
-          },
-          {
-            name: 'tdsRate',
-            label: 'TDS Rate(%)',
-            type: 'number',
-            // @ts-ignore
-            allowNumbersOnly: true,
-            colSpan: 1,
-            placeholder: 'Enter rate',
-            validations: [
-              { type: 'required', message: 'TDS Rate is required' },
-            ],
-          },
-          {
-            name: 'remark',
-            label: 'Remarks',
-            type: 'textarea',
-            colSpan: 5,
-            placeholder: 'Enter remarks',
-            validations: [{ type: 'required', message: 'Remarks is required' }],
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'radio',
-            layout: 'horizontal',
-            colSpan: 5,
-            options: [
-              { label: 'Active', value: 1 },
-              { label: 'Inactive', value: 0 },
-            ],
-          },
-        ],
+
+
+  initializeLeaveFormConfig(initialValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeLeaveFormConfig - v22.4', initialValues);
+    this.manualLeaveData = { ...initialValues };
+    const leaveId = initialValues?.id || initialValues?.Id || initialValues?.branchLeaveId;
+    this.leaveId = leaveId;
+    const isUpdate = !!leaveId;
+
+    this.leaveEncashmentFormConfig = {
+      formTitle: isUpdate ? 'Update Leave Encashment' : 'New Leave Encashment',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
+      maxColsPerRow: 2,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onLeaveEncashmentSubmit(data, this.leaveId);
       },
-    ],
-    submitLabel: 'Submit',
-    cancelLabel: 'Cancel',
-    onSubmit: (data) => this.onLeaveEncashmentSubmit(data),
-    onCancel: () => this.cancelChanges('leaveEncashment'),
-  };
+      onCancel: () => {
+        this.getLeaveEncashment();
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name: 'maxEncashmentDays',
+              label: 'Max Encashment Days',
+              type: 'number',
+              colSpan: 1,
+              value: initialValues?.maxEncashmentDays || '',
+              onChange: (val: any) => (this.manualLeaveData.maxEncashmentDays = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'minLeaveBalance',
+              label: 'Min Leave Balance',
+              type: 'number',
+              colSpan: 1,
+              value: initialValues?.minLeaveBalance || '',
+              onChange: (val: any) => (this.manualLeaveData.minLeaveBalance = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'taxExemptionLimit',
+              label: 'Tax Exemption Limit',
+              type: 'number',
+              colSpan: 1,
+              value: initialValues?.taxExemptionLimit || '',
+              onChange: (val: any) => (this.manualLeaveData.taxExemptionLimit = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'tdsRate',
+              label: 'TDS Rate (%)',
+              type: 'number',
+              colSpan: 1,
+              value: initialValues?.tdsRate || '',
+              onChange: (val: any) => (this.manualLeaveData.tdsRate = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'status',
+              label: 'Status',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Active', value: 1 },
+                { label: 'Inactive', value: 0 },
+              ],
+              value:
+                initialValues?.status !== undefined
+                  ? UtilityService.normalizeStatus(initialValues.status)
+                  : 1,
+              onChange: (val: any) => (this.manualLeaveData.status = val),
+              colSpan: 2,
+            },
+          ],
+        },
+      ],
+    };
+  }
 
   // Helper method to safely convert value to string and trim
   safeTrim(value: any): string {
@@ -606,7 +704,7 @@ export class BranchDetailsComponent implements OnInit {
   public branchLeaveEncashmentList: any[] = [];
   public branchWeeklyOffList: any[] = [];
   showContactForm: boolean = false;
-  contactFormConfig!: FormConfig;
+
   @ViewChild('paginatorBranchContact') paginatorBranchContact!: MatPaginator;
   @ViewChild('paginatorBranchStatutory')
   paginatorBranchStatutory!: MatPaginator;
@@ -629,7 +727,7 @@ export class BranchDetailsComponent implements OnInit {
   public employeeList: any[] = [];
 
   constructor(
-    private activeRoute: ActivatedRoute,
+
     private reposotory: AccountService,
     private dialogService: DialogService,
     public selectedTab: SelectedTabService,
@@ -638,6 +736,7 @@ export class BranchDetailsComponent implements OnInit {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   tabChanged(event: MatTabChangeEvent) {
@@ -649,8 +748,14 @@ export class BranchDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       this.companyId = params['companyId'];
-      this.companyBranchId = params['companyBranchId'];
+      this.companyBranchId = params['id']; // The branch ID is passed as 'id' in the route
+      this.id = params['id'];
       this.branchAddressId = params['id'];
+    });
+    console.log('[BRANCH_DETAILS] ngOnInit - Version 2026-03-06.5 - Params:', {
+      companyId: this.companyId,
+      companyBranchId: this.companyBranchId,
+      id: this.id
     });
 
     this.onBranchContactDelete = true;
@@ -671,22 +776,28 @@ export class BranchDetailsComponent implements OnInit {
     }
   }
 
+
+
+
   initializeAddressConfig(initialValues?: any) {
-    const isUpdate = !!initialValues?.id;
-    this.addressId = initialValues?.id || null;
+    console.log('[BRANCH_DETAILS] initializeAddressConfig - v22.4', initialValues);
+    const addressId = initialValues?.id || initialValues?.Id || initialValues?.addressID;
+    this.addressId = addressId;
+    const isUpdate = !!addressId;
 
-    // Prepare initial options (Countries are already loaded in ngOnInit)
-    const countryOptions = this.countries.map((c) => ({
-      label: c.locationName,
-      value: c.id,
-    }));
-
-    // Initial State/City options will be empty initially and populated dynamically
-    // unless we pre-load them (handled in getBranchAddress)
-
+    this.manualAddressData = { ...initialValues };
     this.addressFormConfig = {
-      formTitle: isUpdate ? 'Update Address' : 'Add Branch Address',
-      maxColsPerRow: 3, // Adjust layout for address fields
+      formTitle: isUpdate ? 'Update Address' : 'New Address',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
+      maxColsPerRow: 2,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onAddressFormSubmit(data, this.addressId);
+      },
+      onCancel: () => {
+        this.getBranchAddress();
+      },
       sections: [
         {
           fields: [
@@ -695,46 +806,48 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Country',
               type: 'select',
               colSpan: 1,
-              options: countryOptions,
+              options: this.countries.map((c: any) => ({
+                label: c.locationName,
+                value: c.id,
+              })),
               value: initialValues?.countryId || '',
-              validations: [
-                { type: 'required', message: 'Country is required' },
-              ],
-              // Trigger State Load on Change
-              onChange: (val: any, form: FormGroup) =>
-                this.onCountryChangeLib(val, form),
+              onChange: (val: any, form: FormGroup) => {
+                this.manualAddressData.countryId = val;
+                this.onCountryChangeLib(val, form);
+              },
+              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'stateId',
               label: 'State',
               type: 'select',
               colSpan: 1,
-              options: [], // Populated dynamically
+              options: [],
               value: initialValues?.stateId || '',
-              validations: [{ type: 'required', message: 'State is required' }],
-              // Trigger City Load on Change
-              onChange: (val: any, form: FormGroup) =>
-                this.onStateChangeLib(val, form),
+              onChange: (val: any, form: FormGroup) => {
+                this.manualAddressData.stateId = val;
+                this.onStateChangeLib(val, form);
+              },
+              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'cityId',
               label: 'City',
               type: 'select',
               colSpan: 1,
-              options: [], // Populated dynamically
+              options: [],
               value: initialValues?.cityId || '',
-              validations: [{ type: 'required', message: 'City is required' }],
-              onChange: (val: any) => this.updateConfigValue('cityId', val),
+              onChange: (val: any) => (this.manualAddressData.cityId = val),
+              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'addressLine',
-              label: 'Address Line',
+              label: 'AddressLine',
               type: 'text',
-              colSpan: 2, // Span wider for address text
+              colSpan: 2,
               value: initialValues?.addressLine || '',
-              validations: [
-                { type: 'required', message: 'Address is required' },
-              ],
+              onChange: (val: any) => (this.manualAddressData.addressLine = val),
+              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'pinCode',
@@ -742,21 +855,14 @@ export class BranchDetailsComponent implements OnInit {
               type: 'number',
               colSpan: 1,
               value: initialValues?.pinCode || '',
-              validations: [
-                { type: 'required', message: 'Pincode is required' },
-                {
-                  type: 'pattern',
-                  value: '^[0-9]{6}$',
-                  message: 'Enter 6 digit pincode',
-                },
-              ],
+              onChange: (val: any) => (this.manualAddressData.pinCode = val),
+              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'status',
               label: 'Status',
               type: 'radio',
               layout: 'horizontal',
-              colSpan: 3,
               options: [
                 { label: 'Active', value: 1 },
                 { label: 'Inactive', value: 0 },
@@ -765,14 +871,12 @@ export class BranchDetailsComponent implements OnInit {
                 initialValues?.status !== undefined
                   ? UtilityService.normalizeStatus(initialValues.status)
                   : 1,
+              onChange: (val: any) => (this.manualAddressData.status = val),
+              colSpan: 2,
             },
           ],
         },
       ],
-      submitLabel: isUpdate ? 'Update Address' : 'Save Address',
-      cancelLabel: 'Reset',
-      onSubmit: (data) => this.onAddressFormSubmit(data),
-      onCancel: () => this.getBranchAddress(), // Reload original data
     };
   }
 
@@ -976,20 +1080,21 @@ export class BranchDetailsComponent implements OnInit {
   // 3. SUBMIT LOGIC
   // ---------------------------------------------------------
 
-  onAddressFormSubmit(data: any) {
-    console.log(data);
+  onAddressFormSubmit(data: any, id?: any) {
+    console.log('[BRANCH_DETAILS] onAddressFormSubmit started. ID:', id, 'Data:', data);
     const payload: any = {
-      companyBranchId: this.companyBranchId,
-      id: this.addressId || undefined,
-      countryId: data.countryId,
-      stateId: data.stateId,
-      cityId: data.cityId,
-      addressLine: String(data.addressLine || '').trim(),
-      pinCode: String(data.pinCode || '').trim(),
-      status: UtilityService.normalizeStatus(data.status),
+      CompanyBranchId: this.companyBranchId,
+      Id: id || this.addressId || undefined,
+      CountryId: data.countryId,
+      StateId: data.stateId,
+      CityId: data.cityId,
+      AddressLine: String(data.addressLine || '').trim(),
+      PinCode: String(data.pinCode || '').trim(),
+      Status: UtilityService.normalizeStatus(data.status),
     };
 
-    const isUpdate = !!this.addressId;
+    const isUpdate = !!payload.Id;
+    console.log('[BRANCH_DETAILS] Address Payload (PascalCase):', payload);
     const apiCall = isUpdate
       ? this.reposotory.update(
         'api/company-branch/UpdateCompanyBranchAddress',
@@ -1001,13 +1106,15 @@ export class BranchDetailsComponent implements OnInit {
       );
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] API Success:', res);
         this.notificationService.showSuccess(
           `Address ${isUpdate ? 'updated' : 'saved'} successfully`,
         );
         this.getBranchAddress(); // Refresh
       },
       error: (err: HttpErrorResponse) => {
+        console.error('[BRANCH_DETAILS] API Error:', err);
         this.notificationService.showError(
           err.error?.message || 'Error saving address',
         );
@@ -1016,20 +1123,27 @@ export class BranchDetailsComponent implements OnInit {
   }
 
   initializeOvertimeConfig(initialValues?: any) {
-    const isUpdate = !!initialValues?.branchOvertimeSettingID;
-    this.overtimeId = initialValues?.branchOvertimeSettingID || null;
+    console.log('[BRANCH_DETAILS] initializeOvertimeConfig - Raw Data:', initialValues);
+    const otId = initialValues?.branchOvertimeSettingID || initialValues?.BranchOvertimeSettingID || initialValues?.id || initialValues?.Id;
+    this.overtimeId = otId || null;
+    this.manualOvertimeData = { ...initialValues };
+    const isUpdate = !!otId;
 
-    // Convert status string ('Active'/'Not Active') to 1/0 for the radio button
-    const currentStatus =
-      initialValues?.status === 'Active'
-        ? 1
-        : initialValues?.status === 'Not Active'
-          ? 0
-          : 1;
+    // Use normalizeStatus for reliable 1/0 mapping
+    const currentStatus = UtilityService.normalizeStatus(initialValues?.status);
+    console.log('[BRANCH_DETAILS] Overtime ID:', otId, 'isUpdate:', isUpdate, 'Normalized Status:', currentStatus);
 
     this.overtimeFormConfig = {
-      formTitle: isUpdate ? 'Update Overtime Config' : 'Add Overtime Config',
+      formTitle: isUpdate ? 'Update Overtime' : 'New Overtime',
       maxColsPerRow: 4,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onOvertimeFormSubmit(data, this.overtimeId);
+      },
+      onCancel: () => {
+        this.getBranchOT();
+      },
       sections: [
         {
           title: 'Overtime Limits (Hours)',
@@ -1079,7 +1193,6 @@ export class BranchDetailsComponent implements OnInit {
               value: initialValues?.otQuarterlyLimit || '',
               validations: [
                 { type: 'required', message: 'Required' },
-                { type: 'max', value: 2000, message: 'Max 2000 hrs' },
               ],
             },
             {
@@ -1091,7 +1204,6 @@ export class BranchDetailsComponent implements OnInit {
               value: initialValues?.otAnuualyLimit || '',
               validations: [
                 { type: 'required', message: 'Required' },
-                { type: 'max', value: 8000, message: 'Max 8000 hrs' },
               ],
             },
             {
@@ -1110,7 +1222,7 @@ export class BranchDetailsComponent implements OnInit {
           fields: [
             {
               name: 'normalOTRate',
-              label: 'Weekday Rate',
+              label: 'Normal Rate Multiplier',
               type: 'number',
               colSpan: 2,
               value: initialValues?.normalOTRate || '',
@@ -1119,7 +1231,7 @@ export class BranchDetailsComponent implements OnInit {
             },
             {
               name: 'holidayOTRate',
-              label: 'Holiday Rate',
+              label: 'Holiday Rate Multiplier',
               type: 'number',
               colSpan: 2,
               value: initialValues?.holidayOTRate || '',
@@ -1154,18 +1266,14 @@ export class BranchDetailsComponent implements OnInit {
               layout: 'horizontal',
               colSpan: 2,
               options: [
-                { label: 'Active', value: 1 },
-                { label: 'Inactive', value: 0 },
+                { label: 'Active', value: '1' },
+                { label: 'Inactive', value: '0' },
               ],
-              value: currentStatus,
+              value: String(currentStatus),
             },
           ],
         },
       ],
-      submitLabel: isUpdate ? 'Update Overtime' : 'Save Overtime',
-      cancelLabel: 'Reset',
-      onSubmit: (data) => this.onOvertimeFormSubmit(data),
-      onCancel: () => this.getBranchOT(), // Reset to fetched data
     };
   }
 
@@ -1211,27 +1319,32 @@ export class BranchDetailsComponent implements OnInit {
   // 3. SUBMIT LOGIC
   // ---------------------------------------------------------
 
-  onOvertimeFormSubmit(data: any) {
+  onOvertimeFormSubmit(data: any, id?: any) {
+    const finalId = id || this.overtimeId;
+    console.log('[BRANCH_DETAILS] onOvertimeFormSubmit started. ID:', finalId, 'Data:', data);
+
+    // Create PascalCase payload for backend DTO - MUST match casing exactly!
     const payload: any = {
-      companyBranchId: this.companyBranchId,
-      branchOvertimeSettingID: this.overtimeId || UtilityService.generateGuid(),
-      otDailyLimit: String(data.otDailyLimit),
-      otWeeklyLimit: String(data.otWeeklyLimit),
-      otMonthlyLimit: String(data.otMonthlyLimit),
-      otQuarterlyLimit: String(data.otQuarterlyLimit),
-      otAnuualyLimit: String(data.otAnuualyLimit),
-      overTimeWorkingDay: String(data.overTimeWorkingDay),
-      normalOTRateMultiplierBase: 'Normal Wage', // Hardcoded base as per old logic
-      normalOTRate: parseFloat(data.normalOTRate) || 0,
-      holidayOTRateMultiplierBase: 'Normal Wage', // Hardcoded base
-      holidayOTRate: parseFloat(data.holidayOTRate) || 0,
-      bookKeeping: '',
-      branchOTHoursRule: String(data.overtimeConfiguration), // Map back to API name
-      workkingHours: String(data.workkingHours),
-      status: data.status,
+      CompanyBranchId: this.companyBranchId,
+      BranchOvertimeSettingID: finalId || undefined,
+      OTDailyLimit: parseFloat(String(data.otDailyLimit || 0)) || 0,
+      OTWeeklyLimit: parseFloat(String(data.otWeeklyLimit || 0)) || 0,
+      OTMonthlyLimit: parseFloat(String(data.otMonthlyLimit || 0)) || 0,
+      OTQuarterlyLimit: parseFloat(String(data.otQuarterlyLimit || 0)) || 0,
+      OTAnuualyLimit: parseFloat(String(data.otAnuualyLimit || 0)) || 0,
+      OverTimeWorkingDay: parseFloat(String(data.overTimeWorkingDay || 0)) || 0,
+      NormalOTRateMultiplierBase: 'Normal Wage',
+      NormalOTRate: parseFloat(data.normalOTRate) || 1.0,
+      HolidayOTRateMultiplierBase: 'Normal Wage',
+      HolidayOTRate: parseFloat(data.holidayOTRate) || 1.0,
+      BookKeeping: '',
+      BranchOTHoursRule: parseFloat(String(data.overtimeConfiguration || 0)) || 0,
+      WorkkingHours: parseFloat(String(data.workkingHours || 0)) || 0,
+      Status: UtilityService.normalizeStatus(data.status),
     };
 
     const isUpdate = !!this.overtimeId;
+    console.log('[BRANCH_DETAILS] Overtime Payload (PascalCase):', payload);
     const apiCall = isUpdate
       ? this.reposotory.update(
         'api/company-branch/UpdateBranchOvertimeSetting',
@@ -1243,13 +1356,15 @@ export class BranchDetailsComponent implements OnInit {
       );
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] Overtime API Success:', res);
         this.notificationService.showSuccess(
           `Overtime ${isUpdate ? 'updated' : 'saved'} successfully`,
         );
         this.getBranchOT(); // Refresh data
       },
       error: (err: HttpErrorResponse) => {
+        console.error('[BRANCH_DETAILS] Overtime API Error:', err);
         this.notificationService.showError(
           err.error?.message || 'Error saving overtime',
         );
@@ -1340,25 +1455,9 @@ export class BranchDetailsComponent implements OnInit {
       // Populate FormConfig with existing data
       if (this.dataSource2.length > 0) {
         const taxData = this.dataSource2[0];
-        const fields = this.taxDeductorFormConfig.sections[0].fields;
-
-        fields.find((f) => f.name === 'taxDeductorName')!.value =
-          taxData.taxDeductorName || '';
-        fields.find((f) => f.name === 'taxDeductorFatherName')!.value =
-          taxData.taxDeductorFatherName || '';
-        fields.find((f) => f.name === 'taxDeductorDesignation')!.value =
-          taxData.taxDeductorDesignation || '';
-        fields.find((f) => f.name === 'taxDeductorMobileNo')!.value =
-          taxData.taxDeductorMobileNo || '';
-        fields.find((f) => f.name === 'taxDeductorEmailId')!.value =
-          taxData.taxDeductorEmailId || '';
-        fields.find((f) => f.name === 'status')!.value =
-          UtilityService.normalizeStatus(taxData.status);
-
-        // Hide status field if no ID (new record)
-        if (!taxData.id) {
-          fields.find((f) => f.name === 'status')!.hidden = true;
-        }
+        this.initializeTaxFormConfig(taxData);
+      } else {
+        this.initializeTaxFormConfig(null);
       }
 
       this.originalData[section] = UtilityService.deepClone(this.dataSource2);
@@ -1380,24 +1479,9 @@ export class BranchDetailsComponent implements OnInit {
       // Populate FormConfig with existing data
       if (this.dataSource5.length > 0) {
         const leaveData = this.dataSource5[0];
-        const fields = this.leaveEncashmentFormConfig.sections[0].fields;
-
-        fields.find((f) => f.name === 'maxEncashmentDays')!.value =
-          leaveData.maxEncashmentDays || '';
-        fields.find((f) => f.name === 'minLeaveBalance')!.value =
-          leaveData.minLeaveBalance || '';
-        fields.find((f) => f.name === 'taxExemptionLimit')!.value =
-          leaveData.taxExemptionLimit || '';
-        fields.find((f) => f.name === 'tdsRate')!.value =
-          leaveData.tdsRate || '';
-        fields.find((f) => f.name === 'remark')!.value = leaveData.remark || '';
-        fields.find((f) => f.name === 'status')!.value =
-          UtilityService.normalizeStatus(leaveData.status);
-
-        // Hide status field if no ID (new record)
-        if (!leaveData.branchLeaveId) {
-          fields.find((f) => f.name === 'status')!.hidden = true;
-        }
+        this.initializeLeaveFormConfig(leaveData);
+      } else {
+        this.initializeLeaveFormConfig(null);
       }
 
       this.originalData[section] = UtilityService.deepClone(
@@ -1418,17 +1502,32 @@ export class BranchDetailsComponent implements OnInit {
       }
       this.originalData[section] = UtilityService.deepClone(this.dataSource6);
       this.isFormDirty[section] = false;
+    } else if (section === 'contact') {
+      if (!this.dataSource || this.dataSource.length === 0) {
+        this.dataSource = [
+          {
+            contactPerson: '',
+            primaryEmailId: '',
+            secondaryEmailId: '',
+            primaryMobileNo: '',
+            secondaryMobileNo: '',
+            status: 1,
+          },
+        ];
+      }
+      this.originalData[section] = UtilityService.deepClone(this.dataSource[0]);
+      this.isFormDirty[section] = false;
     }
   }
 
   onFieldChange(section: string): void {
     this.isFormDirty[section] = false;
     if (section === 'tax') {
-      this.mobileErrors.tax = this.dataArray2.map((tax) => ({
+      this.mobileErrors.tax = this.dataSource2.map((tax) => ({
         mobile: this.validateMobile(tax.taxDeductorMobileNo),
       }));
 
-      this.emailErrors.tax = this.dataArray2.map((tax) =>
+      this.emailErrors.tax = this.dataSource2.map((tax) =>
         this.validateEmail(tax.taxDeductorEmailId),
       );
     }
@@ -1470,38 +1569,52 @@ export class BranchDetailsComponent implements OnInit {
     }
   }
 
-  onTaxDeductorSubmit(data: any): void {
-    // Prepare payload
-    const taxDeductor: companyTaxDeductorDto = {
-      id: this.dataSource2[0]?.id || UtilityService.generateGuid(),
-      companyBranchId: this.companyBranchId,
-      taxDeductorName: String(data.taxDeductorName || '').trim(),
-      taxDeductorFatherName: String(data.taxDeductorFatherName || '').trim(),
-      taxDeductorDesignation: String(data.taxDeductorDesignation || '').trim(),
-      taxDeductorMobileNo: String(data.taxDeductorMobileNo || '').trim(),
-      taxDeductorEmailId: String(data.taxDeductorEmailId || '').trim(),
-      status: UtilityService.normalizeStatus(data.status),
+  onTaxDeductorSubmit(data: any, id?: any): void {
+    console.log('[BRANCH_DETAILS] onTaxDeductorSubmit started. Data:', data);
+    const taxId = id || this.taxId || (this.dataSource2 && this.dataSource2[0]?.id) || (this.dataSource2 && this.dataSource2[0]?.Id);
+    console.log('[BRANCH_DETAILS] id/taxId check:', { dataSourceId: this.dataSource2[0]?.id, taxId });
+
+    // Handle phone object
+    const mobileNo =
+      typeof data.taxDeductorMobileNo === 'object'
+        ? data.taxDeductorMobileNo?.number || ''
+        : data.taxDeductorMobileNo;
+
+    const payload: any = {
+      Id: taxId || undefined,
+      CompanyBranchId: this.companyBranchId,
+      TaxDeductorName: String(data.taxDeductorName || '').trim(),
+      TaxDeductorFatherName: String(data.fatherName || '').trim(), // Changed from taxDeductorFatherName
+      TaxDeductorDesignation: String(data.designation || '').trim(), // Changed from taxDeductorDesignation
+      TaxDeductorMobileNo: String(mobileNo || '').trim(),
+      TaxDeductorEmailId: String(data.taxDeductorEmailId || '').trim(),
+      CompanyAoCode: String(data.aoCode || '').trim(), // New field
+      CompanyTdsCircle: String(data.tdsCircle || '').trim(), // New field
+      Status: UtilityService.normalizeStatus(data.status),
     };
 
-    const isUpdate = !!this.dataSource2[0]?.id;
+    const isUpdate = !!taxId;
+    console.log('[BRANCH_DETAILS] Tax Deductor Payload (PascalCase):', payload);
     const apiUrl = isUpdate
       ? 'api/company-branch/UpdateCompanyTaxDeductor'
       : 'api/company-branch/CreateCompanyTaxDeductor';
 
     const apiCall = isUpdate
-      ? this.reposotory.update(apiUrl, taxDeductor) // Uses PUT
-      : this.reposotory.post(apiUrl, taxDeductor); // Uses POST
+      ? this.reposotory.update(apiUrl, payload)
+      : this.reposotory.post(apiUrl, payload);
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] Tax Deductor API Success:', res);
         this.notificationService.showSuccess(
           isUpdate
             ? 'Tax Deductor updated successfully'
             : 'Tax Deductor saved successfully',
         );
-        this.getTaxDeductor(); // Reload data
+        this.getTaxDeductor();
       },
       error: (error: HttpErrorResponse) => {
+        console.error('[BRANCH_DETAILS] Tax Deductor API Error:', error);
         this.notificationService.showError(
           error?.error?.message || 'Error saving Tax Deductor',
         );
@@ -1509,23 +1622,28 @@ export class BranchDetailsComponent implements OnInit {
     });
   }
 
-  onLeaveEncashmentSubmit(data: any): void {
+  onLeaveEncashmentSubmit(data: any, id?: any): void {
+    console.log('[BRANCH_DETAILS] onLeaveEncashmentSubmit started. Data:', data);
+    const leaveId = id || this.leaveId || this.dataSource5[0]?.branchLeaveId || this.dataSource5[0]?.Id || this.dataSource5[0]?.id;
     const statusValue = UtilityService.normalizeStatus(data.status);
+
+    // Matching BranchLeaveEncashmentSettingsDto.cs exactly
     const payload: any = {
-      companyBranchId: String(this.companyBranchId || ''),
-      maxEncashmentDays: parseInt(String(data.maxEncashmentDays || '0')) || 0,
-      minLeaveBalance: parseInt(String(data.minLeaveBalance || '0')) || 0,
-      taxExemptionLimit: parseFloat(String(data.taxExemptionLimit || '0')) || 0,
-      tdsRate: parseFloat(String(data.tdsRate || '0')) || 0,
-      remark: String(data.remark || ''),
-      status: String(statusValue),
+      CompanyBranchId: this.companyBranchId,
+      MaxEncashmentDays: parseInt(String(data.maxEncashmentDays || '0')) || 0,
+      MinLeaveBalance: parseInt(String(data.minLeaveBalance || '0')) || 0,
+      TaxExemptionLimit: parseFloat(String(data.taxExemptionLimit || '0')) || 0,
+      TDSRate: parseFloat(String(data.tdsRate || '0')) || 0, // Caps TDS
+      Remark: String(data.remark || ''),
+      Status: String(statusValue), // Backend expects string? based on DTO
     };
 
-    if (this.dataSource5[0]?.branchLeaveId) {
-      payload.branchLeaveId = String(this.dataSource5[0].branchLeaveId);
+    if (leaveId) {
+      payload.BranchLeaveId = String(leaveId);
     }
 
-    const isUpdate = !!payload.branchLeaveId;
+    const isUpdate = !!leaveId;
+    console.log('[BRANCH_DETAILS] Leave Encashment Payload (PascalCase):', payload);
     const apiEndpoint = isUpdate
       ? 'api/company-branch/UpdateBranchLeaveEncashment'
       : 'api/company-branch/CreateBranchLeaveEncashment';
@@ -1535,13 +1653,15 @@ export class BranchDetailsComponent implements OnInit {
       : this.reposotory.post(apiEndpoint, payload);
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] Leave Encashment API Success:', res);
         this.notificationService.showSuccess(
-          `Leave Encashment ${isUpdate ? 'updated' : 'created'} successfully`,
+          `Leave Encashment ${isUpdate ? 'updated' : 'saved'} successfully`,
         );
         this.getLeaveEncashment();
       },
       error: (err: HttpErrorResponse) => {
+        console.error('[BRANCH_DETAILS] Leave Encashment API Error:', err);
         this.notificationService.showError(
           err.error?.message ||
           `Error ${isUpdate ? 'updating' : 'creating'} leave encashment`,
@@ -1628,7 +1748,7 @@ export class BranchDetailsComponent implements OnInit {
                 this.reposotory
                   .update(
                     'api/Employee/EmployeeContactDetailUpdate',
-                    employeePayload,
+                    { dto: employeePayload },
                   )
                   .subscribe({
                     error: (err) =>
@@ -1791,30 +1911,25 @@ export class BranchDetailsComponent implements OnInit {
   }
 
   public getDetails = () => {
-    this.route.params.subscribe((params) => {
-      this.companyId = params['companyId'];
-      this.companyBranchId = params['id'];
-    });
+    if (!this.companyId) return;
 
     this.reposotory
       .getCompany(`api/company-branch/GetCompany?id=${this.companyId}`)
       .subscribe({
         next: (data) => {
-          this.details = data;
+          this.details = Array.isArray(data) ? data[0] : data;
         },
       });
   };
 
   public getBranchDetails = () => {
-    this.route.params.subscribe((params) => {
-      this.companyBranchId = params['companyBranchId'];
-      this.id = params['id'];
-    });
+    if (!this.id) return;
+
     this.reposotory
       .get(`api/company-branch/GetCompanyBranch?branchId=${this.id}`)
       .subscribe({
         next: (data) => {
-          this.branchDetails = data[0];
+          this.branchDetails = Array.isArray(data) ? data[0] : data;
         },
         error: (err: HttpErrorResponse) => {
           const errorMessage =
@@ -1831,42 +1946,67 @@ export class BranchDetailsComponent implements OnInit {
       this.id = this.route.snapshot.params['id'];
     }
 
+    console.log('[BRANCH_DETAILS] Fetching Contact for Branch ID:', this.id);
     this.reposotory
       .get(
-        `api/company-branch/GetCompanyBranchContactDetail?companyBranchId=${this.id}`,
+        `api/company-branch/GetCompanyBranchContactDetail/?companyBranchId=${this.id}`,
       )
       .subscribe({
         next: (data) => {
-          // Check if we have at least one contact
+          console.log('[BRANCH_DETAILS] Contact raw data received:', data);
+          this.contactDataLoaded = false;
+          this.cdr.detectChanges(); // Use CDR instead of just setTimeout flickers
+
           if (data && data.length > 0) {
-            // Found existing contact -> Initialize in UPDATE mode
-            // We take the first one since requirements say "only one contact person"
+            const firstRecord = data[0];
             const existingContact = {
-              ...data[0],
-              status: UtilityService.normalizeStatus(data[0].status),
+              ...firstRecord,
+              id: firstRecord.id || firstRecord.Id || firstRecord.companyBranchContactDetailId,
+              status: UtilityService.normalizeStatus(firstRecord.status),
             };
             this.initializeContactConfig(existingContact);
           } else {
-            // No contact found -> Initialize in ADD mode
             this.initializeContactConfig(null);
           }
-          this.contactDataLoaded = true;
+
+          setTimeout(() => {
+            this.contactDataLoaded = true;
+            this.cdr.detectChanges();
+            console.log('[BRANCH_DETAILS] contactDataLoaded set to true (via CDR)');
+          }, 50);
         },
         error: (err: HttpErrorResponse) => {
-          this.notificationService.showError('Error loading contact info');
-          // Fallback to empty form on error so user can try adding
+          console.error('[BRANCH_DETAILS] Error loading contact info:', err);
           this.initializeContactConfig(null);
           this.contactDataLoaded = true;
+          this.cdr.detectChanges();
         },
       });
   };
 
+  // Manual Data Tracking for Fallback (Internal use for now)
+
+
+
   initializeContactConfig(initialValues?: any) {
-    const isUpdate = !!initialValues?.id;
+    console.log('[BRANCH_DETAILS] initializeContactConfig - v22.4', initialValues);
+    this.manualContactData = { ...initialValues };
+    const contactId = initialValues?.id || initialValues?.Id || initialValues?.companyBranchContactDetailId;
+    this.contactId = contactId;
+    const isUpdate = !!contactId;
 
     this.contactFormConfig = {
-      formTitle: '', // Empty title to blend in, or use 'Branch Contact Details'
+      formTitle: isUpdate ? 'Update Branch Contact' : 'New Branch Contact',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 2,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onContactFormSubmit(data, this.contactId);
+      },
+      onCancel: () => {
+        this.getBranchContact();
+      },
       sections: [
         {
           fields: [
@@ -1877,13 +2017,10 @@ export class BranchDetailsComponent implements OnInit {
               colSpan: 1,
               value: initialValues?.contactPerson || '',
               placeholder: 'Enter contact name',
+              onChange: (val: any) => (this.manualContactData.contactPerson = val),
               validations: [
-                { type: 'required', message: 'Contact Person is required' },
-                {
-                  type: 'maxLength',
-                  value: 100,
-                  message: 'Max 100 characters',
-                },
+                { type: 'required', message: 'Required' },
+                { type: 'maxLength', value: 100, message: 'Max 100 characters' },
               ],
             },
             {
@@ -1892,9 +2029,14 @@ export class BranchDetailsComponent implements OnInit {
               type: 'email',
               colSpan: 1,
               value: initialValues?.primaryEmailId || '',
+              onChange: (val: any) => (this.manualContactData.primaryEmailId = val),
               validations: [
-                { type: 'required', message: 'Primary Email is required' },
-                { type: 'email', message: 'Enter a valid email' },
+                { type: 'required', message: 'Required' },
+                {
+                  type: 'pattern',
+                  value: '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$',
+                  message: 'Invalid email',
+                },
               ],
             },
             {
@@ -1903,36 +2045,33 @@ export class BranchDetailsComponent implements OnInit {
               type: 'email',
               colSpan: 1,
               value: initialValues?.secondaryEmailId || '',
-              validations: [{ type: 'email', message: 'Enter a valid email' }],
+              onChange: (val: any) => (this.manualContactData.secondaryEmailId = val),
+              validations: [],
             },
             {
               name: 'primaryMobileNo',
               label: 'Primary Mobile',
-              type: 'phone',
+              type: 'text',
               colSpan: 1,
               value: initialValues?.primaryMobileNo || '',
+              onChange: (val: any) => (this.manualContactData.primaryMobileNo = val),
               validations: [
-                { type: 'required', message: 'Primary Mobile is required' },
+                { type: 'required', message: 'Required' },
                 {
                   type: 'pattern',
-                  value: '^[0-9]{10}$',
-                  message: 'Enter 10 digit number',
+                  value: '^[0-9]{10,15}$',
+                  message: 'Enter valid mobile',
                 },
               ],
             },
             {
               name: 'secondaryMobileNo',
               label: 'Secondary Mobile',
-              type: 'phone',
+              type: 'text',
               colSpan: 1,
               value: initialValues?.secondaryMobileNo || '',
-              validations: [
-                {
-                  type: 'pattern',
-                  value: '^[0-9]{10}$',
-                  message: 'Enter 10 digit number',
-                },
-              ],
+              onChange: (val: any) => (this.manualContactData.secondaryMobileNo = val),
+              validations: [],
             },
             {
               name: 'status',
@@ -1943,37 +2082,52 @@ export class BranchDetailsComponent implements OnInit {
                 { label: 'Active', value: 1 },
                 { label: 'Inactive', value: 0 },
               ],
-              // Default to 1 (Active) if new, otherwise use existing
               value:
-                initialValues?.status !== undefined ? initialValues.status : 1,
-              colSpan: 2,
+                initialValues?.status !== undefined
+                  ? UtilityService.normalizeStatus(initialValues.status)
+                  : 1,
+              onChange: (val: any) => (this.manualContactData.status = val),
+              colSpan: 1,
             },
           ],
         },
       ],
-      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
-      cancelLabel: 'Reset', // Since there is no table to go back to, Cancel acts as Reset
-      onSubmit: (data) => this.onContactFormSubmit(data, initialValues?.id),
-      onCancel: () => {
-        // Reset form to its initial state (fetched from API)
-        this.initializeContactConfig(initialValues);
-      },
     };
   }
 
   onContactFormSubmit(data: any, id?: string) {
+    console.warn('!!! [BRANCH_DETAILS] onContactFormSubmit Fired - v22.3 !!!');
+    const finalId = id || this.contactId;
+    console.log('[BRANCH_DETAILS] ID:', finalId, 'Data Received:', data);
+
+    if (!data) {
+      console.error('[BRANCH_DETAILS] Error: No data received in submit');
+      return;
+    }
+
+    // Some phone controls return an object instead of a string
+    const primaryMobile =
+      typeof data.primaryMobileNo === 'object'
+        ? data.primaryMobileNo?.number || ''
+        : data.primaryMobileNo || '';
+    const secondaryMobile =
+      typeof data.secondaryMobileNo === 'object'
+        ? data.secondaryMobileNo?.number || ''
+        : data.secondaryMobileNo || '';
+
     const payload: any = {
-      companyBranchId: this.companyBranchId,
-      id: id || undefined,
-      contactPerson: String(data.contactPerson || '').trim(),
-      primaryEmailId: String(data.primaryEmailId || '').trim(),
-      secondaryEmailId: String(data.secondaryEmailId || '').trim(),
-      primaryMobileNo: String(data.primaryMobileNo || '').trim(),
-      secondaryMobileNo: String(data.secondaryMobileNo || '').trim(),
-      status: UtilityService.normalizeStatus(data.status),
+      Id: finalId || undefined,
+      CompanyBranchId: this.companyBranchId,
+      ContactPerson: String(data.contactPerson || '').trim(),
+      PrimaryEmailId: String(data.primaryEmailId || '').trim(),
+      SecondaryEmailId: String(data.secondaryEmailId || '').trim(),
+      PrimaryMobileNo: String(primaryMobile).trim(),
+      SecondaryMobileNo: String(secondaryMobile).trim(),
+      Status: UtilityService.normalizeStatus(data.status),
     };
 
-    const isUpdate = !!id;
+    const isUpdate = !!finalId;
+    console.log('[BRANCH_DETAILS] Final Payload to API:', payload);
     const apiCall = isUpdate
       ? this.reposotory.update(
         'api/company-branch/UpdateCompanyBranchContactDetail',
@@ -1985,14 +2139,15 @@ export class BranchDetailsComponent implements OnInit {
       );
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] API Success:', res);
         this.notificationService.showSuccess(
           `Contact details ${isUpdate ? 'updated' : 'saved'} successfully`,
         );
-        // Refresh data to ensure ID is captured if we just created a new one
         this.getBranchContact();
       },
       error: (err: HttpErrorResponse) => {
+        console.error('[BRANCH_DETAILS] API Error:', err);
         this.notificationService.showError(
           err.error?.message || 'Error saving contact',
         );
@@ -2017,50 +2172,57 @@ export class BranchDetailsComponent implements OnInit {
     }
   }
 
-  onStatutorySubmit(data: any) {
-    const statusValue = Number(data.status);
+  onStatutorySubmit(data: any, id?: any) {
+    console.log('[BRANCH_DETAILS] onStatutorySubmit started. Data:', data);
+    const statutoryId = id || this.statutoryId || this.dataSource1[0]?.id || this.dataSource1[0]?.Id || this.dataSource1[0]?.companyStatutoryIdentityId;
+    const statusValue = UtilityService.normalizeStatus(data.status);
 
     const payload: any = {
-      companyBranchId: this.id,
-      companyPanNo: data.companyPanNo || '',
-      companyCinNo: data.companyCinNo || '',
-      companyPfNo: data.companyPfNo || '',
-      companyEsiNo: data.companyEsiNo || '',
-      companyTanNo: data.companyTanNo || '',
-      companyTdsCircle: data.companyTdsCircle || '',
-      companyAoCode: data.companyAoCode || '',
-      tradeNumber: data.tradeNumber || '',
-      eidNumber: data.eidNumber || '',
-      pfCalculation:
+      CompanyBranchId: this.companyBranchId,
+      CompanyPanNo: data.companyPanNo || '',
+      CompanyCinNo: data.companyCinNo || '',
+      CompanyPfNo: data.companyPfNo || '',
+      CompanyEsiNo: data.companyEsiNo || '',
+      CompanyTanNo: data.companyTanNo || '',
+      LwfNo: data.lwfNo || '',
+      TradeNo: data.tradeNo || '',
+      IsEsiIncludeInCTC: data.isEsiIncludeInCTC === 'Yes',
+      IsEsiOverridableAtEmployeeLevel: data.isEsiOverridableAtEmployeeLevel === 'Yes',
+      IsLwfIncludeInCTC: data.isLwfIncludeInCTC === 'Yes',
+      IsLwfOverridableAtEmployeeLevel: data.isLwfOverridableAtEmployeeLevel === 'Yes',
+      IsGratuityIncludeInCTC: data.isGratuityIncludeInCTC === 'Yes',
+      IsAdminChargesIncludeInCTC: data.isAdminChargesIncludeInCTC === 'Yes',
+      PfCalculation:
         data.pfCalculation === 'Max Limit as per Act'
           ? 'Max'
           : data.pfCalculation || 'Max',
-      pfOverridableEmployee: data.pfOverridableEmployee || 'Yes',
+      PfOverridableEmployee: data.pfOverridableEmployee || 'Yes',
       isPfExpensesIncludeInCTC: data.isPfExpensesIncludeInCTC === 'Yes',
       isPfExpensesOverridableAtEmployeeLevel:
         data.isPfExpensesOverridableAtEmployeeLevel === 'Yes',
-      status: statusValue,
+      Status: statusValue,
     };
 
-    // Add id only if it exists (update scenario)
-    if (this.dataSource1.length > 0 && this.dataSource1[0].id) {
-      payload.id = this.dataSource1[0].id;
+    if (statutoryId) {
+      payload.Id = statutoryId;
     }
 
-    const statutoryPayload: statutoryDto = payload as statutoryDto;
-    const isUpdate = !!payload.id;
+    const isUpdate = !!statutoryId;
+    console.log('[BRANCH_DETAILS] Statutory Payload (PascalCase):', payload);
+
     const apiCall = isUpdate
       ? this.reposotory.update(
         'api/company-branch/UpdateCompanyStatutory',
-        statutoryPayload,
+        payload,
       )
       : this.reposotory.post(
         'api/company-branch/CreateCompanyStatutory',
-        statutoryPayload,
+        payload,
       );
 
     apiCall.subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[BRANCH_DETAILS] Statutory API Success:', res);
         this.notificationService.showSuccess(
           `Statutory ${isUpdate ? 'updated' : 'created'} successfully`,
         );
@@ -2068,16 +2230,16 @@ export class BranchDetailsComponent implements OnInit {
         this.isFormDirty['statutory'] = false;
       },
       error: (err) => {
+        console.error('[BRANCH_DETAILS] Statutory API Error:', err);
         this.notificationService.showError(
           `Error ${isUpdate ? 'updating' : 'creating'} statutory`,
         );
-        console.error(err);
       },
     });
   }
 
   getBranchStatutory() {
-    this.activeRoute.params.subscribe((params) => {
+    this.route.params.subscribe((params) => {
       this.id = params['id'];
     });
 
@@ -2110,49 +2272,9 @@ export class BranchDetailsComponent implements OnInit {
         });
         this.dataSource1 = this.branchStatutoryList;
         if (this.dataSource1.length > 0) {
-          this.originalData['statutory'] = UtilityService.deepClone(
-            this.dataSource1[0],
-          );
-
-          // Populate FormConfig
-          const statutory = this.dataSource1[0];
-
-          const updateField = (name: string, value: any) => {
-            for (const section of this.statutoryFormConfig.sections) {
-              const field = section.fields.find((f) => f.name === name);
-              if (field) {
-                field.value = value;
-                return;
-              }
-            }
-          };
-
-          updateField('companyPanNo', statutory.companyPanNo);
-          updateField('companyCinNo', statutory.companyCinNo);
-          updateField('companyPfNo', statutory.companyPfNo);
-          updateField('companyTanNo', statutory.companyTanNo);
-          updateField('pfCalculation', statutory.pfCalculation);
-          updateField('pfOverridableEmployee', statutory.pfOverridableEmployee);
-          updateField(
-            'isPfExpensesIncludeInCTC',
-            statutory.isPfExpensesIncludeInCTC,
-          );
-          updateField(
-            'isPfExpensesOverridableAtEmployeeLevel',
-            statutory.isPfExpensesOverridableAtEmployeeLevel,
-          );
-          updateField('companyEsiNo', statutory.companyEsiNo);
-          updateField('companyAoCode', statutory.companyAoCode);
-          updateField('tradeNumber', statutory.tradeNumber);
-          updateField('eidNumber', statutory.eidNumber);
-          updateField('companyTdsCircle', statutory.companyTdsCircle);
-          // Handle status conversion back to 1/0 for radio
-          const statusVal =
-            statutory.status === 'Active' || statutory.status === 1 ? 1 : 0;
-          updateField('status', statusVal);
-
-          // trigger update
-          this.statutoryFormConfig = { ...this.statutoryFormConfig };
+          this.initializeStatutoryConfig(this.dataSource1[0]);
+        } else {
+          this.initializeStatutoryConfig(null);
         }
       });
   }
@@ -2168,6 +2290,10 @@ export class BranchDetailsComponent implements OnInit {
           status: UtilityService.normalizeStatus(item.status),
         }));
         this.dataSource5 = this.branchLeaveEncashmentList;
+        // Refresh Form State
+        this.initializeFormState('leaveEncashment');
+        // Trigger UI Update for FormConfig
+        this.leaveEncashmentFormConfig = { ...this.leaveEncashmentFormConfig };
       });
   }
 
@@ -2369,7 +2495,7 @@ export class BranchDetailsComponent implements OnInit {
     }
   }
   getTaxDeductor = () => {
-    this.activeRoute.params.subscribe((params) => {
+    this.route.params.subscribe((params) => {
       this.id = params['id'];
     });
     this.reposotory
@@ -2385,6 +2511,10 @@ export class BranchDetailsComponent implements OnInit {
             })),
           );
           this.dataSource2 = this.branchTaxList;
+          // Refresh Form State
+          this.initializeFormState('tax');
+          // Trigger UI Update for FormConfig
+          this.taxDeductorFormConfig = { ...this.taxDeductorFormConfig };
         },
         error: (err: HttpErrorResponse) => {
           const errorMessage =

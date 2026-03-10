@@ -7,6 +7,7 @@ import { Injectable } from '@angular/core';
 export class EnvironmentUrlService {
   public urlAddress: string = environment.urlAddress;
   public salaryUrlAddress: string = environment.salaryUrlAddress || environment.urlAddress;
+  public essUrlAddress: string = environment.EssUrlAddress || environment.urlAddress;
 
   constructor() { }
 

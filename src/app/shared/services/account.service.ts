@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
 import { AuditLoggingService } from './audit-logging.service';
 import { SecureTokenStorageService } from './secure-token-storage.service';
+import { EnvironmentUrlService } from './environment-url.service';
 
 export interface Login {
   email: string;
@@ -65,6 +66,7 @@ export class AccountService {
     private http: HttpClient,
     private auditLogger: AuditLoggingService,
     private secureTokenStorage: SecureTokenStorageService,
+    private envUrl: EnvironmentUrlService,
   ) {
     this.loginSubject$ = new BehaviorSubject(
       JSON.parse(sessionStorage.getItem('user')!),
@@ -145,8 +147,9 @@ export class AccountService {
   };
 
   public getEmployee = (route: any, params?: any) => {
+    let baseUrl = route.includes('EmployeeBasicDetailList') ? this.envUrl.essUrlAddress : this.environment.urlAddress;
     return this.http.get<any[]>(
-      this.createCompleteRoute(route, this.environment.urlAddress),
+      this.createCompleteRoute(route, baseUrl),
       { params },
     );
   };
@@ -182,21 +185,23 @@ export class AccountService {
   };
 
   public get = (route: string) => {
+    let baseUrl = route.includes('EmployeeBasicDetailList') ? this.envUrl.essUrlAddress : this.environment.urlAddress;
     return this.http.get<any[]>(
-      this.createCompleteRoute(route, this.environment.urlAddress),
+      this.createCompleteRoute(route, baseUrl),
     );
   };
 
   public delete = (route: string) => {
-    return this.http.delete(
-      this.createCompleteRoute(route, this.environment.urlAddress),
-    );
+    let url = this.createCompleteRoute(route, this.environment.urlAddress);
+    return this.http.delete(url);
   };
 
   public put(email: string, tenantSchema: string, companyName: string) {
     const url = this.environment.urlAddress;
     return this.http.put(
-      `${url}/api/Account/UpdateTenantControl?EmailID=${email}&tenantSchema=${encodeURIComponent(tenantSchema)}&companyName=${encodeURIComponent(companyName)}`,
+      `${url}/api/Account/UpdateTenantControl?EmailID=${encodeURIComponent(
+        email,
+      )}&tenantSchema=${encodeURIComponent(tenantSchema)}&companyName=${encodeURIComponent(companyName)}`,
       {},
       { responseType: 'text' as 'json' }, // Handle string response
     );

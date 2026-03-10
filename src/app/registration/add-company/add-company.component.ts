@@ -40,7 +40,7 @@ export class AddCompanyComponent implements OnInit {
     private location: Location,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // 1. Load dependencies
@@ -100,11 +100,11 @@ export class AddCompanyComponent implements OnInit {
               colSpan: 5,
               hint: 'Upload employee photo (JPG, PNG)',
               // Pass existing logo so form isn't invalid
-              value: '',
-              validations: [
+              value: initialLogo || '',
+              validations: (!isUpdate && !initialLogo) ? [
                 // Only make it required if we don't already have a logo
                 { type: 'required', message: 'Company Logo is required' },
-              ],
+              ] : [],
               onChange: (val: any) => {
                 // We ignore the error as requested, just capturing value if possible
                 console.log('Logo changed:', val);
@@ -268,36 +268,36 @@ export class AddCompanyComponent implements OnInit {
               options: [
                 {
                   label: 'UTC (Coordinated Universal Time)',
-                  value: 'UTC (Coordinated Universal Time)',
+                  value: 'UTC',
                 },
                 {
                   label: 'GMT (Greenwich Mean Time)',
-                  value: 'GMT (Greenwich Mean Time)',
+                  value: 'GMT',
                 },
                 {
                   label: 'IST (Indian Standard Time, UTC+5:30)',
-                  value: 'IST (Indian Standard Time, UTC+5:30)',
+                  value: 'IST',
                 },
                 {
                   label: 'ICT (Indochina Time, UTC+7:00)',
-                  value: 'ICT (Indochina Time, UTC+7:00)',
+                  value: 'ICT',
                 },
                 {
                   label: 'BST (Bangladesh Standard Time, UTC+6:00)',
-                  value: 'BST (Bangladesh Standard Time, UTC+6:00)',
+                  value: 'BST',
                 },
                 {
                   label: 'CST (China Standard Time, UTC+8:00)',
-                  value: 'CST (China Standard Time, UTC+8:00)',
+                  value: 'CST',
                 },
                 {
                   label: 'SGT (Singapore Time, UTC+8:00)',
-                  value: 'SGT (Singapore Time, UTC+8:00)',
+                  value: 'SGT',
                 },
               ],
               value:
                 initialValues?.timezone ||
-                'IST (Indian Standard Time, UTC+5:30)',
+                'IST',
               validations: [{ type: 'required', message: 'Required' }],
               onChange: (val: string) => {
                 this.selectedTimezone = val;

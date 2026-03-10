@@ -252,3 +252,19 @@ mat-icon {
         line-height: 1 !important;
     }
 }
+
+/* ============================================
+   Iframe Resets for Shell embedding
+   ============================================ */
+body.is-iframe {
+
+    .custom-query-form-container,
+    .table-container,
+    .header-container,
+    .main,
+    .page-container,
+    .container,
+    .container-fluid {
+        margin-top: 0 !important;
+    }
+}

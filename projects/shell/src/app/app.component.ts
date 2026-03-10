@@ -130,10 +130,6 @@ export class AppComponent implements OnInit {
       url === '/authentication/login' ||
       url.includes('forgot-password') ||
       url.includes('reset') ||
-      url.includes('/employee') ||
-      url.includes('/salary') ||
-      url.includes('/alms') ||
-      url.includes('/notification') ||
       url.includes('login-inventory');
 
     console.log(`[Shell] URL: ${url}, isLoginPage: ${this.isLoginPage}`);

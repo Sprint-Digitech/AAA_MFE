@@ -82,21 +82,23 @@
           <h2>{{ getSectionTitle(selectedSection) }}</h2>
           <div class="content-card">
             <div class="content-body">
-              <!-- Contact Section -->
               <div *ngIf="selectedSection === 'contact'">
-<div *ngIf="contactDataLoaded">
-  <lib-add-update-form [config]="contactFormConfig"></lib-add-update-form>
-</div>
+                <div *ngIf="contactDataLoaded">
+                  <lib-add-update-form [config]="contactFormConfig"></lib-add-update-form>
+                  <!-- Buttons handled by library -->
+                </div>
               </div>
 
               <!-- Statutory Section -->
               <div *ngIf="selectedSection === 'statutory'">
                 <lib-add-update-form [config]="statutoryFormConfig"></lib-add-update-form>
+                <!-- Buttons handled by library -->
               </div>
 
               <!-- Tax Deductor Section -->
               <div *ngIf="selectedSection === 'tax'">
                 <lib-add-update-form [config]="taxDeductorFormConfig"></lib-add-update-form>
+                <!-- Buttons handled by library -->
               </div>
 
               <!-- Address Section -->
@@ -105,6 +107,7 @@
                   <div class="address-list">
                     <div *ngIf="addressDataLoaded">
                       <lib-add-update-form [config]="addressFormConfig"></lib-add-update-form>
+                      <!-- Buttons handled by library -->
                     </div>
                   </div>
                 </div>
@@ -113,11 +116,10 @@
               <!-- Overtime Configuration Section -->
               <div *ngIf="selectedSection === 'overtime'">
                 <div class="address-contact-container">
-
-<div *ngIf="overtimeDataLoaded">
-      <lib-add-update-form [config]="overtimeFormConfig"></lib-add-update-form>
-    </div>
-
+                  <div *ngIf="overtimeDataLoaded">
+                    <lib-add-update-form [config]="overtimeFormConfig"></lib-add-update-form>
+                    <!-- Buttons handled by library -->
+                  </div>
                 </div>
               </div>
 
@@ -125,6 +127,7 @@
               <div *ngIf="selectedSection === 'leaveEncashment'">
                 <div class="address-contact-container">
                   <lib-add-update-form [config]="leaveEncashmentFormConfig"></lib-add-update-form>
+                  <!-- Buttons handled by library -->
                 </div>
               </div>
 

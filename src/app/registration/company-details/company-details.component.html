@@ -46,10 +46,11 @@
     </div>
 
     <!-- Branches Section -->
-    <lib-nemo-reusable-tbl [searchResultTitle]="'Branches'" [showAddButton]="true" [addButtonLabel]="'Add Branch'"
-      (onAdd)="addCompanyDetail()" [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="40" [tableWidth]="'100%'"
-      (editAction)="onEditRow($event)" (deleteAction)="deleteBranch($event)" (detailAction)="onDetailRow($event)"
-      [showDeleteOption]="false" [showEditOption]="true" [showDetailsOption]="onCompanyDetail" [showSearch]="true">
+    <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Branches'" [showAddButton]="true"
+      [addButtonLabel]="'Add Branch'" (onAdd)="addCompanyDetail()" [columns]="columns" [dataSource]="dataArray"
+      [rowsPerPage]="40" [tableWidth]="'100%'" (editAction)="onEditRow($event)" (deleteAction)="deleteBranch($event)"
+      (detailAction)="onDetailRow($event)" [showDeleteOption]="false" [showEditOption]="true"
+      [showDetailsOption]="onCompanyDetail" [showSearch]="true">
     </lib-nemo-reusable-tbl>
 
     <!-- Back Button -->

@@ -1,6 +1,7 @@
-*{
-  font-family: 'Poppins'!important;
+* {
+  font-family: 'Poppins' !important;
 }
+
 :host {
   display: block !important;
   overflow: visible !important;
@@ -10,7 +11,7 @@
   height: auto;
 }
 
-::ng-deep router-outlet + * {
+::ng-deep router-outlet+* {
   overflow: visible !important;
 }
 
@@ -30,7 +31,7 @@ svg {
 
 .container {
   max-width: 1400px;
-  margin: 60px auto 20px auto;
+  margin: 0px auto 20px auto;
   overflow: visible !important;
   position: relative;
   z-index: 1;
@@ -61,7 +62,7 @@ svg {
   visibility: visible;
   position: relative;
   z-index: 1;
-  
+
   h2 {
     font-size: 20px;
     font-weight: 700;
@@ -80,13 +81,13 @@ svg {
   visibility: visible;
   position: relative;
   width: 100%;
-  
+
   .row {
     display: flex;
     row-gap: 15px;
     width: 100%;
     flex-wrap: wrap;
-    
+
     .col {
       // flex: 1;
       min-width: 236px;

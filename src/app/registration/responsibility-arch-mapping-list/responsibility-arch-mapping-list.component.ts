@@ -3,9 +3,11 @@ import { Router } from '@angular/router';
 import { ResponsibilityService } from '../../shared/services/responsibility.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 @Component({
+  standalone: true,
   selector: 'app-responsibility-arch-mapping-list',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './responsibility-arch-mapping-list.component.html',
   styleUrls: ['./responsibility-arch-mapping-list.component.scss'],
 })
@@ -19,7 +21,7 @@ export class ResponsibilityArchMappingListComponent {
     private router: Router,
     private responsibilityService: ResponsibilityService,
     private notificationService: NotificationService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initializeColumns();

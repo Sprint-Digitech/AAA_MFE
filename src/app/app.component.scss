@@ -297,6 +297,10 @@
   flex-direction: column;
   margin-left: var(--sidebar-width);
   transition: margin-left 0.3s ease;
+  overflow: hidden;
+  /* Keeps header fixed at top; only .content-area scrolls */
+  min-height: 0;
+  /* Required for flex child height containment */
 }
 
 .sidebar.expanded~.main-container {
@@ -381,6 +385,11 @@
 
 .content-area {
   flex: 1;
+  min-height: 0;
+  /* Critical: lets flex child shrink below content height so it scrolls */
+  overflow-y: auto;
+  /* The scroll container for all page content */
+  overflow-x: hidden;
   padding: 0 9px 13px;
   background-color: #FFFFFF;
 }

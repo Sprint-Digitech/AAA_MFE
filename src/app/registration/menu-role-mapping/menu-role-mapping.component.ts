@@ -8,10 +8,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 
 @Component({
+  standalone: true,
   selector: 'app-menu-role-mapping',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './menu-role-mapping.component.html',
   styleUrls: ['./menu-role-mapping.component.scss'],
 })
@@ -33,7 +35,7 @@ export class MenuRoleMappingComponent {
     private service: AccountService,
     private dialogueService: DialogService,
     private router: Router,
-  ) {}
+  ) { }
   ngOnInit(): void {
     this.getMenuMaster();
     this.onDeleteDepartment = true;

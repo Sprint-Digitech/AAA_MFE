@@ -4,7 +4,7 @@ import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta'
 import { GlobalSearchService } from '../services/global-search.service';
 
 @Directive({
-    selector: 'lib-nemo-reusable-tbl',
+    selector: '[appGlobalTableSearch]',
     standalone: true,
 })
 export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {

@@ -1,19 +1,8 @@
- <div style="margin-top:55px">
- <lib-nemo-reusable-tbl     [showAddButton]="true"
-    [addButtonLabel]="'Add Responsibility'" 
-    (onAdd)="addResponsibility()" 
-    [searchResultTitle]="'Responsibility List'" 
-    [columns]="columns"
-    [dataSource]="dataArray" 
-    [rowsPerPage]="10" 
-    [tableWidth]="'100%'" 
-    [showSearch]="true" 
-    [showActions]="true"
-    [showEditOption]="true"
-    [showDeleteOption]="true"
-    [showDetailsOption]="false"
-    (editAction)="onEditRow($event)"
-    (deleteAction)="deleteList($event)"
-    (search)="onSearch($event)">
+<div style="margin-top:55px">
+  <lib-nemo-reusable-tbl appGlobalTableSearch [showAddButton]="true" [addButtonLabel]="'Add Responsibility'"
+    (onAdd)="addResponsibility()" [searchResultTitle]="'Responsibility List'" [columns]="columns"
+    [dataSource]="dataArray" [rowsPerPage]="10" [tableWidth]="'100%'" [showSearch]="true" [showActions]="true"
+    [showEditOption]="true" [showDeleteOption]="true" [showDetailsOption]="false" (editAction)="onEditRow($event)"
+    (deleteAction)="deleteList($event)" (search)="onSearch($event)">
   </lib-nemo-reusable-tbl>
 </div>

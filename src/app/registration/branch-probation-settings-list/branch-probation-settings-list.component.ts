@@ -1,7 +1,8 @@
-import { Component,ChangeDetectorRef } from '@angular/core';
-import { Router ,NavigationEnd} from '@angular/router';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 import { AccountService } from '../../shared/services/account.service';
 import { UtilityService } from '../../shared/services/utility.service';
 import { Subscription } from 'rxjs';
@@ -9,13 +10,14 @@ import { filter } from 'rxjs/operators';
 
 
 @Component({
+  standalone: true,
   selector: 'app-branch-probation-settings-list',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './branch-probation-settings-list.component.html',
   styleUrl: './branch-probation-settings-list.component.scss'
 })
 export class BranchProbationSettingsListComponent {
-payHeadId: any;
+  payHeadId: any;
   originalData: any[] = [];
   payheadList: any[] = [];
   branchesList: any[] = [];
@@ -33,8 +35,8 @@ payHeadId: any;
   columns = [
     { field: 'srNo', header: '#' },
     { field: 'companyBranchName', header: 'Branch' },
-    {field: 'departmentName', header: 'Department' },
-    {field: 'designationName', header: 'Designation' },
+    { field: 'departmentName', header: 'Department' },
+    { field: 'designationName', header: 'Designation' },
     { field: 'probationPeriodDays', header: 'Probation Days' },
     { field: 'isProbationMandatory', header: 'Is Probation Mandatory' },
     { field: 'status', header: 'Status' }
@@ -53,7 +55,7 @@ payHeadId: any;
       this.companyId = user.companyId;
       this.loadBranches();
     }
-    
+
     // Refresh data when navigating back to this component
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -108,7 +110,7 @@ payHeadId: any;
             branchProbationSettingId: item.branchProbationSettingId,
             designationName: item.designationName || '-',
             departmentName: item.departmentName || '-',
-            status: item.status? 'Active' : 'Inactive'
+            status: item.status ? 'Active' : 'Inactive'
           };
         });
 

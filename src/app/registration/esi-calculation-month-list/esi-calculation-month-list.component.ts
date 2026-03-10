@@ -3,17 +3,19 @@ import { Router } from '@angular/router';
 import { ResponsibilityService } from '../../shared/services/responsibility.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 import { AccountService } from '../../shared/services/account.service';
 import { UtilityService } from '../../shared/services/utility.service';
 import { BranchFilterService } from "../../shared/services/branch-filter.service";
 @Component({
+  standalone: true,
   selector: 'app-esi-calculation-month-list',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './esi-calculation-month-list.component.html',
   styleUrl: './esi-calculation-month-list.component.scss'
 })
 export class EsiCalculationMonthListComponent {
- public dataSource: any[] = [];
+  public dataSource: any[] = [];
   public columns = [
     { field: 'srNo', header: '#' },
     { field: 'branchName', header: 'Branch Name' },

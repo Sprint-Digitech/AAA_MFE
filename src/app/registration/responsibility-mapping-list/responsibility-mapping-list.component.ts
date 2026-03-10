@@ -3,10 +3,12 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../shared/services/notification.service';
 import { ResponsibilityService } from '../../shared/services/responsibility.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
+import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
 
 @Component({
+  standalone: true,
   selector: 'app-responsibility-mapping-list',
-  imports: [NemoReusableTblComponent],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
   templateUrl: './responsibility-mapping-list.component.html',
   styleUrls: ['./responsibility-mapping-list.component.scss'],
 })
@@ -20,7 +22,7 @@ export class ResponsibilityMappingListComponent {
     private router: Router,
     private responsibilityService: ResponsibilityService,
     private notificationService: NotificationService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initializeColumns();
