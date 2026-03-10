@@ -1,3 +1,573 @@
+// // ─── RESET ────────────────────────────────────────────────
+// ::ng-deep body {
+//   margin: 0;
+//   padding: 0;
+//   width: 100vw;
+//   height: 100vh;
+//   overflow: hidden;
+//   font-family: 'Poppins', sans-serif;
+//   background: #c8d0dc;
+// }
+
+// // ─── PAGE WRAPPER ─────────────────────────────────────────
+// .main {
+//   width: 100vw;
+//   height: 100vh;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   background: #c8d0dc;
+// }
+
+// // ─── OUTER CARD ───────────────────────────────────────────
+// .login-wrapper {
+//   display: flex;
+//   align-items: stretch;
+//   width: 1080px;
+//   max-width: 98vw;
+//   height: 660px;
+//   max-height: 96vh;
+//   border-radius: 18px;
+//   overflow: hidden;
+//   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+// }
+
+// // ════════════════════════════════════════════════════════
+// //   LEFT — white panel: logo + form + footer
+// // ════════════════════════════════════════════════════════
+// .left-section {
+//   flex: 0 0 50%;
+//   background: #e5e5e5;
+//   padding: 2px 34px 10px 37px;
+//   // padding: 14px 48px 26px 48px;
+//   display: flex;
+//   flex-direction: column;
+//   overflow-y: auto;
+//   position: relative;
+//   z-index: 2;
+// }
+
+
+// .logo-box {
+//   display: flex;
+//   align-items: baseline;
+//   justify-content: flex-start;
+//   gap: 12px;
+//   padding-top: 0px;
+//   // padding-top: 10px;
+//   margin-top: 0;
+//   margin-left: -14px;
+// }
+
+// .logo-img {
+//   width: 141px;
+//   height: auto;
+//   object-fit: contain;
+//   background: transparent;
+//   mix-blend-mode: multiply;
+//   border: none;
+//   display: block;
+//   // transform: translateY(6px);
+// }
+
+// .divider-line {
+//   width: 1px;
+//   height: 28px;
+//   background-color: #606060;
+//   // transform: translateY(2px);
+// }
+
+// .label {
+//   color: #606060;
+//   font-size: 24px;
+//   font-weight: 500;
+//   font-family: 'Poppins';
+//   // display: flex;
+//   // align-items: center;
+//   // transform: translateY(2px);
+// }
+
+// .text-section {
+//   // margin-top: 20px;
+//   margin-top: 9px;
+// }
+
+// .text-section h1 {
+//   font-size: 32px;
+//   /* ← reduce from 40px to fit wrapper */
+//   font-weight: 700;
+//   color: #0E1B2C;
+//   font-family: 'Poppins';
+//   margin-bottom: 8px;
+//   line-height: 100%;
+// }
+
+// .text-section p {
+//   color: #303030;
+//   line-height: 160%;
+//   font-size: 13px;
+//   /* ← reduce from 15px */
+//   font-weight: 400;
+//   font-family: 'Poppins';
+//   text-align: left;
+//   margin-bottom: 0;
+//   padding-bottom: 0;
+// }
+
+// .image-wrapper {
+//   margin-top: 0;
+//   padding-top: 0;
+// }
+
+// .illustration-img {
+//   width: 100%;
+//   max-width: 400px;
+//   height: 295px;
+//   // max-width: 340px;
+//   // height: 200px;
+//   object-fit: contain;
+//   margin-top: 50px;
+//   /* ← reduce from 15px */
+// }
+
+// .footer {
+//   position: static;
+//   bottom: 8px;
+//   left: 25px;
+//   /* ← match left-section padding */
+//   display: flex;
+//   align-items: center;
+//   gap: 24px;
+//   font-size: 12px;
+//   line-height: 100%;
+//   letter-spacing: 0%;
+//   font-style: 'regular';
+//   font-weight: 400;
+//   font-family: 'Poppins';
+//   color: #0E1B2C;
+//   margin-top: auto;
+// }
+
+// .right-section {
+//   flex: 0 0 50%;
+//   position: relative;
+//   overflow: hidden;
+//   background: #154487;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   overflow: hidden;
+//   box-sizing: border-box;
+//   padding: 20px 15px;
+//   /* ← match left section top padding */
+// }
+
+// .login-card {
+//   width:400px;
+//   // max-width: 340px;
+//   height: 480px;
+//   border-radius: 12px;
+//   background: #ffffff;
+//   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+//   padding: 25px 20px;
+//   box-sizing: border-box;
+// }
+
+// .login-header {
+//   display: flex;
+//   margin-bottom: 10px;
+//   justify-content: flex-start;
+// }
+
+// .login-header h1 {
+//   width: 110px;
+//   height: auto;
+//   font-family: 'Poppins';
+//   font-weight: 600;
+//   font-size: 32px;
+//   line-height: 100%;
+//   letter-spacing: 0px;
+//   color: #151D48;
+//   justify-content: flex-start;
+// }
+
+// /* Form group and label */
+// .form-group {
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: flex-start;
+//   margin-bottom: 13px;
+// }
+
+// .form-group label {
+//   font-size: 14px;
+//   font-weight: 600;
+//   color: #151D48;
+//   font-family: 'Poppins';
+//   margin-bottom: 4px;
+//   /* minimal space below label */
+//   line-height: 1.2;
+//   justify-content: flex-start;
+// }
+
+// /* Angular Material form field adjustments */
+// mat-form-field {
+//   width: 100%;
+//   margin-top: 0;
+// }
+
+// .password-field {
+//   width: 100%;
+//   margin: 0;
+//   align-items: center;
+// }
+
+// mat-form-field.mat-mdc-form-field {
+//   margin-top: 0 !important;
+// }
+
+// .mat-mdc-form-field-wrapper,
+// .mat-mdc-text-field-wrapper,
+// .mat-mdc-form-field-infix {
+//   padding-top: 0 !important;
+//   padding-bottom: 0 !important;
+// }
+
+// .mdc-text-field {
+//   padding: 0;
+// }
+
+// ::ng-deep .mat-mdc-text-field-wrapper:not(.mdc-text-field--outlined) .mat-mdc-form-field-infix {
+//   padding-top: 12px !important;
+//   padding-bottom: 0 !important;
+// }
+
+// ::ng-deep .mdc-text-field {
+//   padding: 0 !important;
+// }
+
+// ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+//   height: 0 !important;
+// }
+
+// /* Input styling */
+// mat-form-field input {
+//   font-size: 14px;
+//   padding: 4px !important;
+//   height: 32px !important;
+//   font-family: 'Poppins';
+//   color: #151D48;
+//   width: 100%;
+//   /* ← was 100px — this is why inputs look small! */
+//   background-color: transparent;
+// }
+
+// ::ng-deep .error {
+//   color: red;
+//   font-size: 12px;
+//   margin-top: 0px !important;
+//   margin-bottom: 0px !important;
+//   text-align: left !important;
+// }
+
+// lib-required-nemo,
+// lib-password-nemo {
+//   display: none !important;
+// }
+
+// ::ng-deep .mat-mdc-form-field,
+// ::ng-deep .mat-mdc-text-field-wrapper,
+// ::ng-deep .mat-mdc-form-field-flex,
+// ::ng-deep .mat-mdc-form-field-infix,
+// ::ng-deep .mdc-text-field,
+// ::ng-deep .mdc-text-field--filled,
+// ::ng-deep .mdc-text-field--outlined {
+//   background: transparent !important;
+//   box-shadow: none !important;
+//   border: none !important;
+// }
+
+// ::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-flex,
+// ::ng-deep .mat-mdc-form-field-flex:hover {
+//   background: transparent !important;
+//   box-shadow: none !important;
+// }
+
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__leading,
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__trailing,
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__notch {
+//   border-color: transparent !important;
+//   background: transparent !important;
+// }
+
+// //  Remove focus ripple + underline 
+// ::ng-deep .mdc-line-ripple,
+// ::ng-deep .mat-mdc-form-field-underline {
+//   display: none !important;
+
+// }
+
+// ::ng-deep .mat-mdc-form-field-flex:hover,
+// ::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-flex {
+//   background: transparent !important;
+//   box-shadow: none !important;
+// }
+
+// mat-form-field.password-field input {
+//   width: auto !important;
+//   padding-left: 0 !important;
+// }
+
+// // Minimal gap between prefix and input, and between input and suffix
+// ::ng-deep .password-field .mat-mdc-form-field-icon-prefix {
+//   margin-left: 0 !important;
+//   margin-right: 8px !important;
+//   left: 0 !important;
+//   position: relative !important;
+//   display: flex !important;
+//   align-items: center !important;
+//   transform: translateX(0) !important;
+// }
+
+// ::ng-deep .password-field .mat-mdc-form-field-icon-suffix {
+//   margin-right: 0 !important;
+//   margin-left: 4px !important;
+//   display: flex !important;
+//   align-items: center !important;
+// }
+
+// ::ng-deep .password-field .mat-mdc-form-field-infix {
+//   display: flex !important;
+//   align-items: center !important;
+//   column-gap: 0 !important;
+// }
+
+// /* Add right margin to all outlined MDC text fields without label */
+// ::ng-deep .custom-password-margin .mat-mdc-text-field-wrapper.mdc-text-field.mdc-text-field--outlined.mdc-text-field--no-label {
+//   right: 15px !important;
+// }
+
+// ::ng-deep .password-field .mat-mdc-form-field-icon-prefix.lock-icon {
+//   margin-left: 0 !important;
+//   margin-right: 8px !important;
+//   left: 0 !important;
+//   position: relative !important;
+//   transform: translateX(0) !important;
+//   display: flex !important;
+//   align-items: center !important;
+// }
+
+// // FORM FIELD SPECIALS
+// .user-id-field .mat-mdc-form-field-infix,
+// .password-field .mat-mdc-form-field-infix {
+//   background: transparent !important;
+//   box-shadow: none !important;
+//   border: none !important;
+//   min-height: 40px !important;
+// }
+
+// // REMOVE GREY BACKGROUND from user id/email
+// // ::ng-deep .user-id-field .mat-mdc-form-field-flex {
+// //   background: transparent !important;
+// //   box-shadow: none !important;
+// // }
+// ::ng-deep .password-field .mat-mdc-form-field-flex {
+//   width: 100% !important;
+//   height: 40px !important;
+//   border: 1px solid #8CBBA8 !important;
+//   border-radius: 7px !important;
+//   background: transparent !important;
+//   padding: 0 6px !important;
+//   display: flex !important;
+//   align-items: center !important;
+// }
+
+// /* Outline border invisible but we use our own */
+// ::ng-deep .password-field .mdc-notched-outline {
+//   display: none !important;
+//   border: none !important;
+// }
+
+// /* Input inside box */
+// ::ng-deep .password-field input.mat-mdc-input-element {
+//   font-size: 14px !important;
+//   color: #151d48 !important;
+//   font-family: 'Poppins' !important;
+//   background: transparent !important;
+//   height: 100% !important;
+//   border: none !important;
+//   outline: none !important;
+//   padding-right: 35px !important;
+//   /* Space for the icon inside */
+//   box-sizing: border-box !important;
+//   box-shadow: 0 0 0 1000px #ffffff inset !important;
+//   -webkit-text-fill-color: #151d48 !important;
+// }
+
+// ::ng-deep .password-field .mat-mdc-form-field-icon-suffix button {
+//   background: transparent !important;
+//   color: #151d48 !important;
+//   padding: 0 !important;
+//   margin: 0 !important;
+// }
+
+// /* Remove Angular Material underline completely */
+// ::ng-deep .password-field .mat-mdc-form-field-underline,
+// ::ng-deep .password-field .mdc-line-ripple {
+//   display: none !important;
+// }
+
+// /* On focus: change border color */
+// ::ng-deep .password-field.mat-focused .mat-mdc-form-field-flex {
+//   background: none !important;
+//   height: 40px !important;
+//   border: 1px solid #8CBBA8 !important;
+//   box-shadow: none !important;
+//   transition: none !important;
+// }
+
+// /* Form options */
+// .form-options {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: flex-start !important;
+//   font-family: 'Poppins';
+//   font-weight: 500;
+//   font-size: 14px;
+//   line-height: 100%;
+//   text-wrap: nowrap;
+//   color: #303030;
+//   gap: 4px;
+//   margin-left: 0px;
+// }
+
+// ::ng-deep .form-options mat-checkbox {
+//   width: auto !important;
+//   /* Only as wide as content */
+//   display: inline-flex !important;
+//   /* Keep checkbox & label together */
+//   align-items: center !important;
+//   /* Vertically align label with box */
+//   justify-content: flex-start !important;
+//   /* Left align label & box */
+//   margin-left: 0 !important;
+//   /* Remove extra left spacing */
+//   padding-left: 0 !important;
+//   /* Remove padding */
+//   right: 10px;
+// }
+
+// /* Inner container spacing */
+// ::ng-deep .form-options .mat-checkbox-inner-container {
+//   margin-right: 8px !important;
+//   /* Gap between checkbox and label */
+// }
+
+// /* Checkbox layout container */
+// ::ng-deep .form-options .mat-checkbox-layout {
+//   align-items: center !important;
+//   justify-content: flex-start !important;
+// }
+
+// .form-options a {
+//   align-self: flex-start !important;
+//   font-family: 'Poppins';
+//   font-weight: 500;
+//   font-size: 14px;
+//   line-height: 100%;
+//   width: 125px;
+//   height: 21px;
+//   text-decoration: none;
+//   color: #006AFF;
+// }
+
+// .forgot-link {
+//   text-decoration: none;
+//   color: #006aff;
+// }
+
+// .forgot-link:hover {
+//   text-decoration: underline;
+// }
+
+// /* Login button */
+// .login-button {
+//   background-color: #006AFF;
+//   color: white;
+//   font-weight: 600;
+//   font-size: 15px;
+//   width: 100%;
+//   height: 40px;
+//   border-radius: 7px;
+//   margin-top: 10px;
+//   cursor: pointer !important;
+//   position: relative;
+//   z-index: 99999 !important;
+//   /* Nuclear z-index */
+//   pointer-events: auto !important;
+// }
+
+// /* Create account link */
+// .create-account {
+//   text-align: center;
+//   margin-top: 10px;
+//   font-size: 14px;
+// }
+
+// .create-account a {
+//   text-decoration: none;
+//   color: #D700FF;
+//   font-weight: 500;
+//   font-size: 14px;
+// }
+
+// .create-account a:hover {
+//   text-decoration: underline;
+// }
+
+// ::ng-deep .user-id-field .mat-mdc-form-field-flex {
+//   width: 100% !important;
+//   height: 38px !important;
+//   border: 1px solid #8CBBA8 !important;
+//   border-radius: 7px !important;
+//   background: transparent !important;
+//   align-items: center !important;
+// }
+
+// ::ng-deep .user-id-field input.mat-mdc-input-element {
+//   border: 0 !important;
+//   border-radius: 0 !important;
+//   background: transparent !important;
+//   width: 100% !important;
+//   box-shadow: 0 0 0px 1000px white inset !important;
+// }
+
+// ::ng-deep .user-id-field.mat-focused .mat-mdc-form-field-flex {
+//   background: transparent !important;
+// }
+
+// ::ng-deep .mat-mdc-form-field {
+//   background: transparent !important;
+//   box-shadow: none !important;
+// }
+
+// ::ng-deep .mat-mdc-form-field-flex {
+//   background: transparent !important;
+//   box-shadow: none !important;
+// }
+
+// ::ng-deep .mdc-notched-outline,
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__leading,
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__trailing,
+// ::ng-deep .mdc-text-field--outlined .mdc-notched-outline__notch {
+//   border: none !important;
+// }
+
+
+// /* Remove Angular Material underline completely */
+// ::ng-deep .mdc-line-ripple {
+//   display: none !important;
+// }
 // ─── RESET ────────────────────────────────────────────────
 ::ng-deep body {
   margin: 0;
@@ -37,9 +607,8 @@
 // ════════════════════════════════════════════════════════
 .left-section {
   flex: 0 0 50%;
-  background: #f5f5f5;
+  background: #e5e5e5;
   padding: 2px 34px 10px 37px;
-  // padding: 14px 48px 26px 48px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -47,14 +616,12 @@
   z-index: 2;
 }
 
-
 .logo-box {
   display: flex;
   align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
   padding-top: 0px;
-  // padding-top: 10px;
   margin-top: 0;
   margin-left: -14px;
 }
@@ -67,14 +634,12 @@
   mix-blend-mode: multiply;
   border: none;
   display: block;
-  // transform: translateY(6px);
 }
 
 .divider-line {
   width: 1px;
   height: 28px;
   background-color: #606060;
-  // transform: translateY(2px);
 }
 
 .label {
@@ -82,19 +647,14 @@
   font-size: 24px;
   font-weight: 500;
   font-family: 'Poppins';
-  // display: flex;
-  // align-items: center;
-  // transform: translateY(2px);
 }
 
 .text-section {
-  // margin-top: 20px;
   margin-top: 9px;
 }
 
 .text-section h1 {
   font-size: 32px;
-  /* ← reduce from 40px to fit wrapper */
   font-weight: 700;
   color: #0E1B2C;
   font-family: 'Poppins';
@@ -106,7 +666,6 @@
   color: #303030;
   line-height: 160%;
   font-size: 13px;
-  /* ← reduce from 15px */
   font-weight: 400;
   font-family: 'Poppins';
   text-align: left;
@@ -123,18 +682,14 @@
   width: 100%;
   max-width: 400px;
   height: 295px;
-  // max-width: 340px;
-  // height: 200px;
   object-fit: contain;
-  margin-top: 5px;
-  /* ← reduce from 15px */
+  margin-top: 50px;
 }
 
 .footer {
   position: static;
   bottom: 8px;
   left: 25px;
-  /* ← match left-section padding */
   display: flex;
   align-items: center;
   gap: 24px;
@@ -159,14 +714,11 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 20px 15px;
-  /* ← match left section top padding */
 }
 
 .login-card {
-  width: 100%;
-  max-width: 410px;
-  // max-width: 340px;
-  height: 100%;
+  width: 400px;
+  height: 480px;
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
@@ -206,7 +758,6 @@
   color: #151D48;
   font-family: 'Poppins';
   margin-bottom: 4px;
-  /* minimal space below label */
   line-height: 1.2;
   justify-content: flex-start;
 }
@@ -251,7 +802,6 @@ mat-form-field.mat-mdc-form-field {
   height: 0 !important;
 }
 
-/* Input styling */
 mat-form-field input {
   font-size: 14px;
   padding: 4px !important;
@@ -259,7 +809,6 @@ mat-form-field input {
   font-family: 'Poppins';
   color: #151D48;
   width: 100%;
-  /* ← was 100px — this is why inputs look small! */
   background-color: transparent;
 }
 
@@ -301,11 +850,9 @@ lib-password-nemo {
   background: transparent !important;
 }
 
-//  Remove focus ripple + underline 
 ::ng-deep .mdc-line-ripple,
 ::ng-deep .mat-mdc-form-field-underline {
   display: none !important;
-
 }
 
 ::ng-deep .mat-mdc-form-field-flex:hover,
@@ -319,7 +866,6 @@ mat-form-field.password-field input {
   padding-left: 0 !important;
 }
 
-// Minimal gap between prefix and input, and between input and suffix
 ::ng-deep .password-field .mat-mdc-form-field-icon-prefix {
   margin-left: 0 !important;
   margin-right: 8px !important;
@@ -343,7 +889,6 @@ mat-form-field.password-field input {
   column-gap: 0 !important;
 }
 
-/* Add right margin to all outlined MDC text fields without label */
 ::ng-deep .custom-password-margin .mat-mdc-text-field-wrapper.mdc-text-field.mdc-text-field--outlined.mdc-text-field--no-label {
   right: 15px !important;
 }
@@ -358,7 +903,6 @@ mat-form-field.password-field input {
   align-items: center !important;
 }
 
-// FORM FIELD SPECIALS
 .user-id-field .mat-mdc-form-field-infix,
 .password-field .mat-mdc-form-field-infix {
   background: transparent !important;
@@ -367,11 +911,6 @@ mat-form-field.password-field input {
   min-height: 40px !important;
 }
 
-// REMOVE GREY BACKGROUND from user id/email
-// ::ng-deep .user-id-field .mat-mdc-form-field-flex {
-//   background: transparent !important;
-//   box-shadow: none !important;
-// }
 ::ng-deep .password-field .mat-mdc-form-field-flex {
   width: 100% !important;
   height: 40px !important;
@@ -383,13 +922,11 @@ mat-form-field.password-field input {
   align-items: center !important;
 }
 
-/* Outline border invisible but we use our own */
 ::ng-deep .password-field .mdc-notched-outline {
   display: none !important;
   border: none !important;
 }
 
-/* Input inside box */
 ::ng-deep .password-field input.mat-mdc-input-element {
   font-size: 14px !important;
   color: #151d48 !important;
@@ -399,7 +936,6 @@ mat-form-field.password-field input {
   border: none !important;
   outline: none !important;
   padding-right: 35px !important;
-  /* Space for the icon inside */
   box-sizing: border-box !important;
   box-shadow: 0 0 0 1000px #ffffff inset !important;
   -webkit-text-fill-color: #151d48 !important;
@@ -412,13 +948,11 @@ mat-form-field.password-field input {
   margin: 0 !important;
 }
 
-/* Remove Angular Material underline completely */
 ::ng-deep .password-field .mat-mdc-form-field-underline,
 ::ng-deep .password-field .mdc-line-ripple {
   display: none !important;
 }
 
-/* On focus: change border color */
 ::ng-deep .password-field.mat-focused .mat-mdc-form-field-flex {
   background: none !important;
   height: 40px !important;
@@ -427,7 +961,6 @@ mat-form-field.password-field input {
   transition: none !important;
 }
 
-/* Form options */
 .form-options {
   display: flex;
   flex-direction: column;
@@ -444,27 +977,18 @@ mat-form-field.password-field input {
 
 ::ng-deep .form-options mat-checkbox {
   width: auto !important;
-  /* Only as wide as content */
   display: inline-flex !important;
-  /* Keep checkbox & label together */
   align-items: center !important;
-  /* Vertically align label with box */
   justify-content: flex-start !important;
-  /* Left align label & box */
   margin-left: 0 !important;
-  /* Remove extra left spacing */
   padding-left: 0 !important;
-  /* Remove padding */
   right: 10px;
 }
 
-/* Inner container spacing */
 ::ng-deep .form-options .mat-checkbox-inner-container {
   margin-right: 8px !important;
-  /* Gap between checkbox and label */
 }
 
-/* Checkbox layout container */
 ::ng-deep .form-options .mat-checkbox-layout {
   align-items: center !important;
   justify-content: flex-start !important;
@@ -491,7 +1015,6 @@ mat-form-field.password-field input {
   text-decoration: underline;
 }
 
-/* Login button */
 .login-button {
   background-color: #006AFF;
   color: white;
@@ -504,11 +1027,9 @@ mat-form-field.password-field input {
   cursor: pointer !important;
   position: relative;
   z-index: 99999 !important;
-  /* Nuclear z-index */
   pointer-events: auto !important;
 }
 
-/* Create account link */
 .create-account {
   text-align: center;
   margin-top: 10px;
@@ -564,8 +1085,158 @@ mat-form-field.password-field input {
   border: none !important;
 }
 
-
-/* Remove Angular Material underline completely */
 ::ng-deep .mdc-line-ripple {
   display: none !important;
+}
+
+
+// ════════════════════════════════════════════════════════
+//   RESPONSIVE MEDIA QUERIES
+//   Laptop >1024px = original, zero changes
+//   Tablet/Mobile ≤1024px = column layout + scroll
+// ════════════════════════════════════════════════════════
+
+@media (max-width: 1024px) {
+  .main {
+    position: relative !important;
+    width: 100vw !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 20px 0 40px !important;
+    box-sizing: border-box !important;
+  }
+
+  .login-wrapper {
+    flex-direction: column !important;
+    width: min(580px, 94vw) !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 14px !important;
+    margin: 0 auto !important;
+  }
+
+  .left-section {
+    flex: none !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 20px 28px !important;
+    box-sizing: border-box !important;
+  }
+
+  .illustration-img {
+    height: 180px !important;
+    margin-top: 16px !important;
+    max-width: 300px !important;
+  }
+
+  .footer {
+    margin-top: 16px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .right-section {
+    flex: none !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 24px 20px 40px !important;
+  }
+
+  .login-card {
+    width: 100% !important;
+    max-width: 460px !important;
+    height: auto !important;
+    padding: 24px 22px 32px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 16px 0 40px !important;
+  }
+
+  .login-wrapper {
+    width: 96vw !important;
+    border-radius: 12px !important;
+  }
+
+  .left-section {
+    padding: 16px 20px !important;
+  }
+
+  .logo-img {
+    width: 110px !important;
+  }
+
+  .label {
+    font-size: 20px !important;
+  }
+
+  .text-section h1 {
+    font-size: 24px !important;
+  }
+
+  .illustration-img {
+    height: 160px !important;
+    max-width: 260px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 0 0 40px !important;
+  }
+
+  .login-wrapper {
+    width: 100vw !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .left-section {
+    padding: 14px 16px !important;
+  }
+
+  .logo-img {
+    width: 90px !important;
+  }
+
+  .label {
+    font-size: 17px !important;
+  }
+
+  .text-section h1 {
+    font-size: 20px !important;
+  }
+
+  .text-section p {
+    font-size: 12px !important;
+  }
+
+  .illustration-img {
+    height: 130px !important;
+    max-width: 100% !important;
+    margin-top: 10px !important;
+  }
+
+  .right-section {
+    padding: 20px 14px 40px !important;
+  }
+
+  .login-card {
+    padding: 20px 16px 28px !important;
+    border-radius: 10px !important;
+  }
+
+  .login-header h1 {
+    font-size: 26px !important;
+  }
 }
