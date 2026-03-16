@@ -275,63 +275,12 @@ body.is-iframe {
         margin-top: 0 !important;
     }
 }
-
-/* ============================================
-   Global Back Button Styles
-   Ensures visibility on hover across all screens
-   ============================================ */
-.back-button {
-    background-color: #303030 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 7px !important;
-    padding: 8px 15px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    &:hover:not(:disabled) {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-    }
-
-    &:active:not(:disabled) {
-        transform: translateY(0) !important;
-    }
-
-    &:disabled {
-        opacity: 0.6 !important;
-        cursor: not-allowed !important;
-        background-color: #666 !important;
-    }
-}
-
-/* Target Material UI buttons specifically if they use the back-button class */
-::ng-deep {
-
-    .back-button.mat-mdc-button,
-    .back-button.mat-mdc-stroked-button,
-    .back-button.mat-mdc-flat-button {
-        background-color: #303030 !important;
-        color: #ffffff !important;
-
-        .mdc-button__label {
-            color: #ffffff !important;
-        }
-
-        &:hover:not(:disabled) {
-            background-color: #1a1a1a !important;
-            color: #ffffff !important;
-
-            .mdc-button__label {
-                color: #ffffff !important;
-            }
-        }
-    }
+// styles.scss (GLOBAL FILE)
+@media (max-width: 1024px) {
+  html, body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
 }
