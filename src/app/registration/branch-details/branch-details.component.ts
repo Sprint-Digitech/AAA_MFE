@@ -2034,7 +2034,7 @@ export class BranchDetailsComponent implements OnInit {
                 { type: 'required', message: 'Required' },
                 {
                   type: 'pattern',
-                  value: '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$',
+                  value: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
                   message: 'Invalid email',
                 },
               ],
@@ -2046,7 +2046,13 @@ export class BranchDetailsComponent implements OnInit {
               colSpan: 1,
               value: initialValues?.secondaryEmailId || '',
               onChange: (val: any) => (this.manualContactData.secondaryEmailId = val),
-              validations: [],
+              validations: [
+                {
+                  type: 'pattern',
+                  value: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+                  message: 'Invalid secondary email',
+                },
+              ],
             },
             {
               name: 'primaryMobileNo',
@@ -2071,7 +2077,13 @@ export class BranchDetailsComponent implements OnInit {
               colSpan: 1,
               value: initialValues?.secondaryMobileNo || '',
               onChange: (val: any) => (this.manualContactData.secondaryMobileNo = val),
-              validations: [],
+              validations: [
+                {
+                  type: 'pattern',
+                  value: '^[0-9]{10,15}$',
+                  message: 'Enter valid secondary mobile',
+                },
+              ],
             },
             {
               name: 'status',
@@ -2096,7 +2108,7 @@ export class BranchDetailsComponent implements OnInit {
   }
 
   onContactFormSubmit(data: any, id?: string) {
-    console.warn('!!! [BRANCH_DETAILS] onContactFormSubmit Fired - v22.3 !!!');
+    console.warn('!!! [BRANCH_DETAILS] onContactFormSubmit Fired - v22.4 !!!');
     const finalId = id || this.contactId;
     console.log('[BRANCH_DETAILS] ID:', finalId, 'Data Received:', data);
 
@@ -2116,7 +2128,6 @@ export class BranchDetailsComponent implements OnInit {
         : data.secondaryMobileNo || '';
 
     const payload: any = {
-      Id: finalId || undefined,
       CompanyBranchId: this.companyBranchId,
       ContactPerson: String(data.contactPerson || '').trim(),
       PrimaryEmailId: String(data.primaryEmailId || '').trim(),
@@ -2125,6 +2136,10 @@ export class BranchDetailsComponent implements OnInit {
       SecondaryMobileNo: String(secondaryMobile).trim(),
       Status: UtilityService.normalizeStatus(data.status),
     };
+
+    if (finalId) {
+      payload.Id = finalId;
+    }
 
     const isUpdate = !!finalId;
     console.log('[BRANCH_DETAILS] Final Payload to API:', payload);
@@ -2432,7 +2447,7 @@ export class BranchDetailsComponent implements OnInit {
   deleteBranchStatutory = (row: any) => {
     this.dialogService
       .openConfirmDialog(
-        'Delete Branch Contact',
+        'Delete Branch Statutory',
         'Are you sure you want to delete this branch Statutory',
         'Delete',
         'Cancel',
@@ -2541,7 +2556,7 @@ export class BranchDetailsComponent implements OnInit {
   deleteTaxDeductor = (row: any) => {
     this.dialogService
       .openConfirmDialog(
-        'Delete Branch Contact',
+        'Delete Tax Deductor',
         'Are you sure you want to delete this Tax Deductor',
         'Delete',
         'Cancel',

@@ -10,19 +10,19 @@ import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-add-branch-probation-settings',
-  imports: [AddUpdateFormComponent,CommonModule],
+  imports: [AddUpdateFormComponent, CommonModule],
   templateUrl: './add-branch-probation-settings.component.html',
   styleUrl: './add-branch-probation-settings.component.scss'
 })
 export class AddBranchProbationSettingsComponent {
- formConfig!: FormConfig;
+  formConfig!: FormConfig;
   companyId: any;
   branchesList: any[] = [];
   departmentList: any[] = [];
   designationList: any[] = [];
   isEditMode = false;
   branchProbationSettingId: string | null = null;
- isLoading = true; // Add loading state
+  isLoading = true; // Add loading state
 
   constructor(
     private router: Router,
@@ -57,12 +57,12 @@ export class AddBranchProbationSettingsComponent {
         console.log('Loaded existing data:', response); // Debug log
         const data = Array.isArray(response) ? response[0] : response;
 
-          if (!data) {
-            this.notificationService.showError('No data found for this ID');
-            return;
-          }
+        if (!data) {
+          this.notificationService.showError('No data found for this ID');
+          return;
+        }
 
-          console.log('Extracted data object:', data);
+        console.log('Extracted data object:', data);
         // Build form with existing values
         this.buildFormConfig(data);
         this.isLoading = false;
@@ -106,27 +106,27 @@ export class AddBranchProbationSettingsComponent {
         console.log('API Results:', results); // Debug log
 
         // 1. Map Branches
-        this.branchesList = Array.isArray(results.branches) 
+        this.branchesList = Array.isArray(results.branches)
           ? results.branches.map((b: any) => ({
-              label: b.companyBranchName || b.name,
-              value: b.id.toString()
-            }))
+            label: b.companyBranchName || b.name,
+            value: b.id.toString()
+          }))
           : [];
 
         // 2. Map Departments (Using departmentName and departmentId)
         this.departmentList = Array.isArray(results.departments)
           ? results.departments.map((d: any) => ({
-              label: d.departmentName,
-              value: d.departmentId
-            }))
+            label: d.departmentName,
+            value: d.departmentId
+          }))
           : [];
 
         // 3. Map Designations (Using designationName and id)
         this.designationList = Array.isArray(results.designations)
           ? results.designations.map((ds: any) => ({
-              label: ds.designationName,
-              value: ds.id
-            }))
+            label: ds.designationName,
+            value: ds.id
+          }))
           : [];
 
         console.log('Mapped Lists:', {
@@ -150,7 +150,7 @@ export class AddBranchProbationSettingsComponent {
         console.error('Error loading dropdown data:', err);
         this.notificationService.showError('Error loading form data');
         this.isLoading = false;
-        
+
         // Build form anyway with empty dropdowns
         this.buildFormConfig();
         this.cdr.detectChanges();
