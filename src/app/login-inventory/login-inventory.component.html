@@ -24,13 +24,13 @@
             <input matInput formControlName="email" type="email"
                    placeholder="Username / Email" required />
           </mat-form-field>
-          <mat-error *ngIf="loginForm.get('email')?.hasError('email') &&
-                           loginForm.get('email')?.touched &&
+          <mat-error *ngIf="submitted && loginForm.get('email')?.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="submitted && loginForm.get('email')?.hasError('email') &&
                            !loginForm.get('email')?.hasError('required')">
             Email must be a valid email
           </mat-error>
-          <lib-required-nemo [control]="loginForm.get('email')" label="Email">
-          </lib-required-nemo>
         </div>
 
         <div class="form-group">
@@ -44,10 +44,9 @@
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </mat-form-field>
-          <lib-required-nemo [control]="loginForm.get('password')" label="Password">
-          </lib-required-nemo>
-          <lib-password-nemo [control]="loginForm.get('password')" label="Password">
-          </lib-password-nemo>
+         <mat-error *ngIf="submitted && loginForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
         </div>
 
         <div class="form-options">
@@ -55,8 +54,8 @@
           <a routerLink="/forgot-password">Forgot Password?</a>
         </div>
 
-        <button mat-raised-button class="login-button"
-                type="submit" [disabled]="loading">
+        <button mat-raised-button class="login-button" 
+                type="submit" [disabled]="loading" (click)="submit()">
           {{ loading ? 'Logging in...' : 'Login' }}
         </button>
 

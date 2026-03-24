@@ -35,13 +35,11 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { CommonModule } from '@angular/common';
-import { RequiredNemoComponent } from 'required-nemo-fovestta';
-import { PasswordNemoComponent } from 'password-nemo';
 
 
 @Component({
-  selector: 'app-login-inventory',
-   standalone: true,
+    selector: 'app-login-inventory',
+    standalone: true,
     imports: [
         CommonModule,
         FormsModule,
@@ -63,26 +61,23 @@ import { PasswordNemoComponent } from 'password-nemo';
         GoogleSigninButtonModule,
         MatProgressSpinnerModule,
         MatSnackBarModule,
-        RequiredNemoComponent,
-        PasswordNemoComponent,
         RouterModule,
     ],
-  templateUrl: './login-inventory.component.html',
-  styleUrl: './login-inventory.component.scss'
+    templateUrl: './login-inventory.component.html',
+    styleUrl: './login-inventory.component.scss'
 })
 export class LoginInventoryComponent {
-  loginForm: FormGroup;
+    loginForm: FormGroup;
     user: SocialUser | null = null;
     hidePassword = true;
     loading = false;
     backgroundImage: string =
         "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/background-inventory.avif')";
-    // backgroundImage = "url('assets/img/background-inventory.avif')";
     submitted = false;
     returnUrl: string = '';
     error = '';
     emailFocused = false;
-pwFocused = false;
+    pwFocused = false;
     login$ = new BehaviorSubject<boolean>(false);
 
     constructor(
@@ -95,6 +90,14 @@ pwFocused = false;
         private http: HttpClient,
         private _snackBar: MatSnackBar
     ) {
+        // ✅ Logout ke baad sessionStorage clear hoti hai (Next.js se)
+        // Agar session mein user nahi hai toh accountService ka cached BehaviorSubject bhi clear karo
+        // Warna constructor mein userValue truthy milta hai aur turant dashboard redirect ho jaata hai
+        const sessionUser = sessionStorage.getItem('user');
+        if (!sessionUser) {
+            this.accountService.setUser(null as any);
+        }
+
         if (this.accountService.userValue) {
             const user = this.accountService.userValue;
             const branchId = user.companyBranchId || user.branchID || '';
@@ -110,38 +113,39 @@ pwFocused = false;
                                 this.router.navigate(['/dashboard'], { replaceUrl: true });
                             }
                             this.navigateToDashboard();
-
                         }
                     },
                     error: () => {
-                        this.router.navigate(['/welcome']);
+                        // ✅ Welcome ki jagah localhost:3000 open hoga
+                        window.location.href = 'http://localhost:3000/';
                     }
                 });
             } else {
-                this.router.navigate(['/welcome']);
+                // ✅ Welcome ki jagah localhost:3000 open hoga
+                window.location.href = 'http://localhost:3000/';
             }
         }
         this.loginForm = this.formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
-            password: [''],
+            password: ['', [Validators.required]],
             rememberMe: [false],
         });
     }
+
     private navigateToDashboard(): void {
-  sessionStorage.setItem('productType', 'inventory');
+        sessionStorage.setItem('productType', 'inventory');
 
-  const token = sessionStorage.getItem('token');
-  const user = sessionStorage.getItem('user');
+        const token = sessionStorage.getItem('token');
+        const user = sessionStorage.getItem('user');
 
-  const params = new URLSearchParams({
-    token: token ?? '',
-    user: encodeURIComponent(user ?? '')
-  });
+        const params = new URLSearchParams({
+            token: token ?? '',
+            user: encodeURIComponent(user ?? '')
+        });
 
-  // Local:
-  window.location.href = 'http://localhost:3000/';
-
-}
+        // ✅ Login ke baad yeh URL open hoga
+        window.location.href = 'http://localhost:3000/';
+    }
 
     get f() {
         return this.loginForm.controls;
@@ -159,11 +163,6 @@ pwFocused = false;
                                 .pipe(first())
                                 .subscribe((userDetail) => {
                                     if (userDetail) {
-                                        if (!userDetail.companyId) {
-                                            this.router.navigate(['employee/employeeOnboarding']);
-                                            return;
-                                        }
-
                                         const processedRoles =
                                             userDetail.employeeRoleLoginDtos ?? [];
                                         const processedMenus = this.processMenus(processedRoles);
@@ -194,15 +193,16 @@ pwFocused = false;
                                                             this.router.navigate(['/dashboard'], { replaceUrl: true });
                                                         }
                                                         this.navigateToDashboard();
-
                                                     }
                                                 },
                                                 error: () => {
-                                                    this.router.navigate(['/welcome']);
+                                                    // ✅ Welcome ki jagah localhost:3000 open hoga
+                                                    window.location.href = 'http://localhost:3000/';
                                                 }
                                             });
                                         } else {
-                                            this.router.navigate(['/welcome']);
+                                            // ✅ Welcome ki jagah localhost:3000 open hoga
+                                            window.location.href = 'http://localhost:3000/';
                                         }
                                     }
                                 });
@@ -286,15 +286,13 @@ pwFocused = false;
                                                 });
                                             }
                                             this.navigateToDashboard();
-
                                         }
                                         this.loading = false;
                                     },
                                     error: () => {
                                         console.error('Error fetching setup status');
-                                        this.router.navigate(['/welcome'], {
-                                            replaceUrl: true,
-                                        });
+                                        // ✅ Welcome ki jagah localhost:3000 open hoga
+                                        window.location.href = 'http://localhost:3000/';
                                         this.loading = false;
                                     },
                                 });
