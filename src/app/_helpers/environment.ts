@@ -13,6 +13,8 @@ export const environment = {
   reimbursementUrl: 'https://test.fovestta.com/salary/sdapi',
   EssUrlAddress: 'https://test.fovestta.com/employee/sdapi',
   masterUrlAddress: 'https://test.fovestta.com/master/sdapi',
+  hrmsAuthZUrlAddress: 'https://test.fovestta.com/hrmsauthz/sdapi',
+  wmsAuthZUrlAddress: 'https://test.fovestta.com/wmsauthz/sdapi',
 };
 
 // Alternative for development with TLS issues:
@@ -22,6 +24,8 @@ export const environment = {
 //   biometricAddress: 'http://localhost:5000',
 //   ESSBaseUrl: 'http://localhost:5000'
 // };
+
+
 
 
 /*

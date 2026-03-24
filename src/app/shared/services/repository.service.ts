@@ -95,7 +95,11 @@ export class RepositoryService {
   };
 
   public getBranch = (route: string) => {
-    let baseUrl = route.includes('EmployeeBasicDetailList') ? this.envUrl.essUrlAddress : this.salaryUrlAddress;
+    let baseUrl = route.includes('EmployeeBasicDetailList')
+      ? this.envUrl.essUrlAddress
+      : (route.includes('company-branch/') || route.includes('InitialSetup/'))
+        ? this.envUrl.hrmsAuthZUrlAddress
+        : this.salaryUrlAddress;
     return this.http.get<any[]>(
       this.createCompleteRoute(route, baseUrl)
     );
@@ -109,9 +113,13 @@ export class RepositoryService {
     });
   }
   public getCompany = (route: string, headers?: HttpHeaders) => {
+    const baseUrl =
+      route.includes('company-branch/') || route.includes('InitialSetup/')
+        ? this.envUrl.hrmsAuthZUrlAddress
+        : this.envUrl.urlAddress;
     const options = headers ? { headers } : {};
     return this.http.get<any[]>(
-      this.createCompleteRoute(route, this.envUrl.urlAddress),
+      this.createCompleteRoute(route, baseUrl),
       options
     );
   };

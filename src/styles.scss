@@ -251,6 +251,13 @@ mat-icon {
         vertical-align: middle !important;
         line-height: 1 !important;
     }
+
+    /* Fix for Status Badges not coming in the same row/wrapping */
+    .status-badge {
+        white-space: nowrap !important;
+        display: inline-block !important;
+        text-align: center !important;
+    }
 }
 
 /* ============================================

@@ -864,7 +864,7 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
     // For critical operations like company registration, don't use takeUntil
     // This ensures the request completes even if component is destroyed
     this.accountService
-      .post('api/Account/CreatCompanyRegitration', company, headers)
+      .post('api/Tenants/CreateCompanyRegistration', company, headers)
       .pipe(
         finalize(() => {
           console.log('Company registration request finalized');
@@ -1198,10 +1198,9 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
         'X-Tenant-Schema': 'dbo',
       });
 
-      const url = `${this.accountService.environment.urlAddress
-        }/api/Account/CheckCompanyNameExists?companyName=${encodeURIComponent(
-          companyName
-        )}`;
+      const url = `${this.accountService.envUrl.hrmsAuthZUrlAddress}/api/Tenants/CheckCompanyNameExists?companyName=${encodeURIComponent(
+        companyName
+      )}`;
       return this.http.get<{ exists: boolean }>(url, { headers }).pipe(
         map((response: { exists: boolean }) => {
           return response.exists ? { companyNameExists: true } : null;

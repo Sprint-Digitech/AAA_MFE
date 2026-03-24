@@ -70,7 +70,7 @@ import { ValidationSchema } from '@fovestta2/validation-engine';
 
 @Component({
   selector: 'app-register-inventory',
- standalone: true,
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -100,15 +100,15 @@ import { ValidationSchema } from '@fovestta2/validation-engine';
     FvEntryFieldComponent,
     FvEmailFieldComponent,
   ],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './register-inventory.component.html',
   styleUrl: './register-inventory.component.scss'
 })
 export class RegisterInventoryComponent {
-   backgroundImage: string =
-        "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/background-inventory.avif')";
+  backgroundImage: string =
+    "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/background-inventory.avif')";
 
- accountFormGroup!: FormGroup;
+  accountFormGroup!: FormGroup;
   companyFormGroup!: FormGroup;
   packageFormGroup!: FormGroup;
   reviewFormGroup!: FormGroup;
@@ -837,7 +837,7 @@ export class RegisterInventoryComponent {
     // For critical operations like company registration, don't use takeUntil
     // This ensures the request completes even if component is destroyed
     this.accountService
-      .post('api/Account/CreatCompanyRegitration', company, headers)
+      .post('api/Tenants/CreateCompanyRegistration', company, headers)
       .pipe(
         finalize(() => {
           console.log('Company registration request finalized');
@@ -1170,10 +1170,9 @@ export class RegisterInventoryComponent {
         'X-Tenant-Schema': 'dbo',
       });
 
-      const url = `${this.accountService.environment.urlAddress
-        }/api/Account/CheckCompanyNameExists?companyName=${encodeURIComponent(
-          companyName
-        )}`;
+      const url = `${this.accountService.envUrl.hrmsAuthZUrlAddress}/api/Tenants/CheckCompanyNameExists?companyName=${encodeURIComponent(
+        companyName
+      )}`;
       return this.http.get<{ exists: boolean }>(url, { headers }).pipe(
         map((response: { exists: boolean }) => {
           return response.exists ? { companyNameExists: true } : null;

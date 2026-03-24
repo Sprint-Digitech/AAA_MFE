@@ -66,7 +66,7 @@ export class AccountService {
     private http: HttpClient,
     private auditLogger: AuditLoggingService,
     private secureTokenStorage: SecureTokenStorageService,
-    private envUrl: EnvironmentUrlService,
+    public envUrl: EnvironmentUrlService,
   ) {
     this.loginSubject$ = new BehaviorSubject(
       JSON.parse(sessionStorage.getItem('user')!),
@@ -168,9 +168,13 @@ export class AccountService {
   }
 
   public getCompany = (route: string, headers?: HttpHeaders) => {
+    const baseUrl =
+      route.includes('company-branch/') || route.includes('InitialSetup/') || route.includes('Tenants/')
+        ? this.envUrl.hrmsAuthZUrlAddress
+        : this.environment.urlAddress;
     const options = headers ? { headers } : {};
     return this.http.get<any[]>(
-      this.createCompleteRoute(route, this.environment.urlAddress),
+      this.createCompleteRoute(route, baseUrl),
       options,
     );
   };
@@ -180,12 +184,15 @@ export class AccountService {
     return this.http.put(url, body);
   };
   public post = (route: string, body: any, headers?: HttpHeaders) => {
-    let url = this.createCompleteRoute(route, this.environment.urlAddress);
+    let baseUrl = (route.includes('company-branch/') || route.includes('InitialSetup/') || route.includes('Tenants/'))
+      ? this.envUrl.hrmsAuthZUrlAddress
+      : this.environment.urlAddress;
+    let url = this.createCompleteRoute(route, baseUrl);
     return this.http.post(url, body, { headers });
   };
 
   public get = (route: string) => {
-    let baseUrl = route.includes('EmployeeBasicDetailList') ? this.envUrl.essUrlAddress : this.environment.urlAddress;
+    const baseUrl = this.envUrl.getBaseUrl(route);
     return this.http.get<any[]>(
       this.createCompleteRoute(route, baseUrl),
     );
@@ -265,15 +272,55 @@ export class AccountService {
     return this.http.get(url, { headers });
   }
 
+  getEmployeeAuthDetail(email: string, tenantSchema: string): Observable<any> {
+    const rawToken = sessionStorage.getItem('token') || '';
+    let token: string | null = null;
+    try {
+      token = rawToken ? JSON.parse(rawToken) : null;
+    } catch {
+      token = rawToken || null; // already a raw JWT string
+    }
+    const headers: { [key: string]: string } = { 'x-tenant-schema': tenantSchema };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/Roles/GetEmployeeRoleDetail?email=${encodeURIComponent(email)}`;
+    return this.http.get<any>(url, { headers });
+  }
+
+  getMenusForUser(email: string, tenantSchema: string): Observable<any[]> {
+    const token = JSON.parse(sessionStorage.getItem('token') || 'null');
+    const headers: { [key: string]: string } = {
+      'x-tenant-schema': tenantSchema,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/Roles/GetUserMenus?email=${encodeURIComponent(email)}`;
+    return this.http.get<any[]>(url, { headers });
+  }
+
+  getWmsPermissions(email: string, tenantSchema: string): Observable<any> {
+    const token = JSON.parse(sessionStorage.getItem('token') || 'null');
+    const headers: { [key: string]: string } = {
+      'x-tenant-schema': tenantSchema,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const url = `${this.envUrl.wmsAuthZUrlAddress}/api/Roles/GetPermissions?userEmail=${encodeURIComponent(email)}`;
+    return this.http.get<any>(url, { headers }).pipe(
+      catchError(() => of(null))
+    );
+  }
+
   // Get branches of the company for given tenant
   getBranchesForTenant(tenantSchema: string): Observable<any[]> {
-    const url = `${this.environment.urlAddress}/api/company-branch/GetCompanyBranch`;
+    const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/company-branch/GetCompanyBranch`;
     const headers = { 'x-tenant-schema': tenantSchema };
     return this.http.get<any[]>(url, { headers });
   }
   // Get company info for given tenant
   getCompanyInfoForTenant(tenantSchema: string): Observable<any> {
-    const url = `${this.environment.urlAddress}/api/company-branch/GetCompany`; // Adjust endpoint accordingly
+    const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/company-branch/GetCompany`;
     const headers = { 'x-tenant-schema': tenantSchema };
     return this.http.get<any>(url, { headers });
   }
@@ -349,68 +396,17 @@ export class AccountService {
       return of([]);
     }
 
-    const tenantSchema = sessionStorage.getItem('tenantSchema');
+    const tenantSchema = sessionStorage.getItem('tenantSchema') || '';
 
-    let request: Observable<any>;
-    if (tenantSchema) {
-      request = this.getEmployeeLoginDetail(email, tenantSchema);
-    } else {
-      request = this.logindetail(
-        `api/Account/GetEmployeeRoleDetail?email=${encodeURIComponent(email)}`,
-      );
-    }
-
-    return request.pipe(
-      map((userDetail: any) => {
-        console.log('reloadMenuData: API response received', userDetail);
-        if (userDetail && userDetail.employeeRoleLoginDtos) {
-          console.log(
-            'reloadMenuData: Processing menus from employeeRoleLoginDtos',
-            userDetail.employeeRoleLoginDtos.length,
-          );
-
-          // Log all menu statuses before filtering
-          console.log(
-            'reloadMenuData: Menu statuses before filtering:',
-            userDetail.employeeRoleLoginDtos.map((m: any) => ({
-              name: m.menuName,
-              status: m.status ?? m.menuMaster?.status ?? m.menu?.status,
-              menuParentId: m.menuParentId,
-            })),
-          );
-
-          const processedMenus = this.processMenus(
-            userDetail.employeeRoleLoginDtos,
-          );
-          console.log(
-            'reloadMenuData: Processed menus after filtering',
-            processedMenus,
-          );
-          console.log(
-            'reloadMenuData: Active menu names:',
-            processedMenus.map((m: any) => m.menuName),
-          );
-
-          // Force update the observable
-          this.setMenuData(processedMenus);
-          console.log(
-            'Menu data reloaded successfully. Active menus:',
-            processedMenus.length,
-          );
-          return processedMenus;
-        } else {
-          console.warn(
-            'Menu data reload failed: employeeRoleLoginDtos not found in response',
-            userDetail,
-          );
-          // Keep existing menus if reload fails
-          const currentMenus = this.getMenuData();
-          return currentMenus || [];
-        }
+    return this.getMenusForUser(email, tenantSchema).pipe(
+      map((menus: any[]) => {
+        console.log('reloadMenuData: Received menus from HRMSAuthZ', menus?.length);
+        const processedMenus = this.processMenus(menus || []);
+        this.setMenuData(processedMenus);
+        return processedMenus;
       }),
       catchError((error) => {
         console.error('Error reloading menu data:', error);
-        // Keep existing menus if API call fails
         const currentMenus = this.getMenuData();
         return of(currentMenus || []);
       }),

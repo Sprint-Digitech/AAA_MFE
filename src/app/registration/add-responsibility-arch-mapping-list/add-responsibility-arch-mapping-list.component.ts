@@ -33,7 +33,7 @@ export class AddResponsibilityArchMappingListComponent {
     private route: ActivatedRoute,
     private responsibilityService: ResponsibilityService,
     private service: AccountService,
-  ) {}
+  ) { }
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
       if (params['id']) {
@@ -46,9 +46,9 @@ export class AddResponsibilityArchMappingListComponent {
   loadAllData() {
     // Use forkJoin to load all data simultaneously
     forkJoin({
-      departments: this.service.get(`api/Department/DepartmentList`),
+      departments: this.service.get(`api/HrmsAuthZ/departments`),
       branches: this.service.get('api/company-branch/GetCompanyBranch'),
-      designations: this.service.get(`api/Designation/DesignationList`),
+      designations: this.service.get(`api/HrmsAuthZ/designations`),
       responsibilities: this.responsibilityService.getResponsibilityList(
         'api/Responsibility/GetResponsibilities',
       ),

@@ -8,7 +8,7 @@ import {
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AccountService } from '../shared/services/account.service';
 import { NotificationService } from '../shared/services/notification.service';
-import { BehaviorSubject, first, forkJoin, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, first, forkJoin, Observable, of } from 'rxjs';
 import { LoaderService } from '../loader/loader.service';
 import { Login } from '../shared/services/account.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -131,55 +131,90 @@ export class LoginComponent implements OnInit {
         this.authService.authState.subscribe((user) => {
             if (user && user.idToken) {
                 this.accountService.GoogleLogin(user.idToken).subscribe(
-                    (response) => {
+                    (response: any) => {
                         if (response) {
                             const email = user.email;
-                            this.accountService
-                                .logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`)
-                                .pipe(first())
-                                .subscribe((userDetail) => {
-                                    if (userDetail) {
-                                        if (!userDetail.companyId) {
-                                            this.router.navigate(['employee/employeeOnboarding']);
-                                            return;
-                                        }
+                            const tenantSchema = response?.employee?.tenantSchema || response?.tenantSchema || sessionStorage.getItem('tenantSchema');
+                            const detail$ = tenantSchema
+                                ? this.accountService.getEmployeeLoginDetail(email!, tenantSchema)
+                                : this.accountService.logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`);
+                            forkJoin({
+                                userDetail: detail$.pipe(first()),
+                                menus: tenantSchema
+                                    ? this.accountService.getMenusForUser(email!, tenantSchema).pipe(first())
+                                    : of([]),
+                                companyInfo: tenantSchema
+                                    ? this.accountService.getCompanyInfoForTenant(tenantSchema).pipe(first(), catchError(() => of(null)))
+                                    : of(null),
+                                branchInfo: tenantSchema
+                                    ? this.accountService.getBranchesForTenant(tenantSchema).pipe(first(), catchError(() => of([])))
+                                    : of([]),
+                            }).subscribe(({ userDetail, menus, companyInfo, branchInfo }) => {
+                                if (userDetail) {
+                                    const company = companyInfo;
+                                    const branches: any[] = branchInfo || [];
 
-                                        const processedRoles =
-                                            userDetail.employeeRoleLoginDtos ?? [];
-                                        const processedMenus = this.processMenus(processedRoles);
+                                    const resolvedCompanyId =
+                                        userDetail.companyId || userDetail.CompanyId ||
+                                        company?.companyId || company?.id || '';
 
-                                        const finalUser = {
-                                            ...userDetail,
-                                            employeeRoleLoginDtos: processedRoles,
-                                        };
-
-                                        sessionStorage.setItem(
-                                            'menus',
-                                            JSON.stringify(processedMenus)
-                                        );
-                                        sessionStorage.setItem('user', JSON.stringify(finalUser));
-                                        this.accountService.setUser(finalUser);
-                                        this.accountService.setMenuData(processedMenus);
-
-                                        const branchId = finalUser.companyBranchId || finalUser.branchID || '';
-                                        if (branchId) {
-                                            this.callInitialSetupStatus(branchId).subscribe({
-                                                next: (res: any) => {
-                                                    if (res && res.isSetupComplete === false) {
-                                                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                                                    } else {
-                                                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                                                    }
-                                                },
-                                                error: () => {
-                                                    this.router.navigate(['/login']);
-                                                }
-                                            });
-                                        } else {
-                                            this.router.navigate(['/login']);
-                                        }
+                                    if (!resolvedCompanyId) {
+                                        this.router.navigate(['employee/employeeOnboarding']);
+                                        return;
                                     }
-                                });
+
+                                    let branchId =
+                                        userDetail.companyBranchId || userDetail.branchID ||
+                                        userDetail.branchId || userDetail.BranchId || '';
+                                    if (!branchId && branches.length === 1) {
+                                        branchId = branches[0].companyBranchId || branches[0].id || '';
+                                    }
+
+                                    const companyName =
+                                        userDetail.companyName || company?.companyName || company?.name || null;
+
+                                    const branchName =
+                                        userDetail.branchName ||
+                                        (branchId
+                                            ? branches.find((b: any) => (b.companyBranchId || b.id) === branchId)?.branchName
+                                            : null) ||
+                                        (branches.length === 1 ? branches[0].branchName || null : null) ||
+                                        null;
+
+                                    const finalUser = {
+                                        ...userDetail,
+                                        companyId: resolvedCompanyId,
+                                        companyName: companyName,
+                                        branchId: branchId,
+                                        branchID: branchId,
+                                        companyBranchId: branchId,
+                                        branchName: branchName,
+                                    };
+
+                                    const processedMenus = this.processMenus(menus ?? []);
+
+                                    sessionStorage.setItem('menus', JSON.stringify(processedMenus));
+                                    this.accountService.setUser(finalUser);
+                                    this.accountService.setMenuData(processedMenus);
+
+                                    if (branchId) {
+                                        this.callInitialSetupStatus(branchId).subscribe({
+                                            next: (res: any) => {
+                                                if (res && res.isSetupComplete === false) {
+                                                    this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                                                } else {
+                                                    this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                                                }
+                                            },
+                                            error: () => {
+                                                this.router.navigate(['/login']);
+                                            }
+                                        });
+                                    } else {
+                                        this.router.navigate(['/login']);
+                                    }
+                                }
+                            });
                         } else {
                             this.router.navigate(['/login']);
                         }
@@ -223,27 +258,86 @@ export class LoginComponent implements OnInit {
             .subscribe({
                 next: (loginResponse) => {
                     const email = loginResponse?.employee?.email;
+                    const tenantSchema = loginResponse?.employee?.tenantSchema;
 
+                    const svcType = (loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
                     forkJoin({
-                        employeeLoginDetail: this.accountService
-                            .logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`)
-                            .pipe(first()),
+                        employeeLoginDetail: tenantSchema
+                            ? this.accountService.getEmployeeLoginDetail(email, tenantSchema).pipe(first())
+                            : this.accountService.logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`).pipe(first()),
+                        menus: (svcType !== 'WMS_USER' && tenantSchema)
+                            ? this.accountService.getMenusForUser(email, tenantSchema).pipe(first())
+                            : of([]),
+                        wmsPermissions: (svcType === 'WMS_USER' || svcType === 'BOTH') && tenantSchema
+                            ? this.accountService.getWmsPermissions(email, tenantSchema).pipe(first())
+                            : of(null),
+                        companyInfo: tenantSchema
+                            ? this.accountService.getCompanyInfoForTenant(tenantSchema).pipe(first(), catchError(() => of(null)))
+                            : of(null),
+                        branchInfo: tenantSchema
+                            ? this.accountService.getBranchesForTenant(tenantSchema).pipe(first(), catchError(() => of([])))
+                            : of([]),
                     }).subscribe({
                         next: (results) => {
                             const userDetail = results.employeeLoginDetail;
                             if (userDetail !== undefined) {
-                                const branchId =
-                                    userDetail.companyBranchId || userDetail.branchID || '';
-                                const employeeId = userDetail.employeId ?? null;
-                                const processedRoles = userDetail.employeeRoleLoginDtos ?? [];
-                                const processedMenus = this.processMenus(processedRoles);
+                                console.log('--- USER DETAIL RECEIVED FROM SERVER:', userDetail);
+
+                                // GetCompany returns array of CompanyResponseFiledDto: { companyId, companyName, ... }
+                                const companyList: any[] = Array.isArray(results.companyInfo) ? results.companyInfo : (results.companyInfo ? [results.companyInfo] : []);
+                                // GetCompanyBranch returns array of CompanyBrachFildResponseDto: { id, companyBranchName, companyId, ... }
+                                const branches: any[] = results.branchInfo || [];
+
+                                // Extract branchId — fall back to company-branch API (field: id) if null/empty
+                                let branchId =
+                                    userDetail.companyBranchId ||
+                                    userDetail.branchID ||
+                                    userDetail.branchId ||
+                                    userDetail.BranchId ||
+                                    '';
+                                if (!branchId && branches.length === 1) {
+                                    branchId = branches[0].id || '';
+                                }
+
+                                // Extract companyId — branch DTO also has companyId as reliable fallback
+                                const companyId =
+                                    userDetail.companyId ||
+                                    userDetail.CompanyId ||
+                                    companyList[0]?.companyId ||
+                                    branches[0]?.companyId ||
+                                    '';
+
+                                // Resolve company and branch names
+                                const companyName =
+                                    userDetail.companyName ||
+                                    companyList[0]?.companyName ||
+                                    null;
+
+                                // Branch name field in DTO is: companyBranchName
+                                const matchedBranch = branchId ? branches.find((b: any) => b.id === branchId) : null;
+                                const branchName =
+                                    userDetail.branchName ||
+                                    matchedBranch?.companyBranchName ||
+                                    (branches.length === 1 ? branches[0].companyBranchName || null : null) ||
+                                    null;
+
+                                const employeeId = userDetail.employeId ?? userDetail.EmployeeId ?? null;
+                                const serviceType = (userDetail.serviceType || loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
+                                const isWmsOnly = serviceType === 'WMS_USER';
+                                const processedMenus = isWmsOnly ? [] : this.processMenus(results.menus ?? []);
 
                                 const finalUser = {
                                     ...userDetail,
-                                    employeeRoleLoginDtos: processedRoles,
+                                    companyId: companyId,
+                                    companyName: companyName,
+                                    branchId: branchId,
+                                    branchID: branchId,
                                     companyBranchId: branchId,
+                                    branchName: branchName,
                                     employeId: employeeId,
                                 };
+
+                                console.log('--- FINAL PROCESSED USER:', finalUser);
 
                                 sessionStorage.setItem('menus', JSON.stringify(processedMenus));
                                 sessionStorage.setItem('user', JSON.stringify(finalUser));
@@ -252,6 +346,26 @@ export class LoginComponent implements OnInit {
                                 }
                                 this.accountService.setUser(finalUser);
                                 this.accountService.setMenuData(processedMenus);
+
+                                // WMS-only users: store WMS permissions and navigate to WMS app
+                                if (isWmsOnly) {
+                                    if (results.wmsPermissions) {
+                                        sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
+                                    }
+                                    if (window !== window.parent) {
+                                        window.parent.location.href = window.parent.location.origin + '/Gateway/dist/wms';
+                                    } else {
+                                        this.router.navigate(['/wms-dashboard'], { replaceUrl: true });
+                                    }
+                                    this.loading = false;
+                                    return;
+                                }
+
+                                // HRMS (or BOTH): store WMS permissions if present, then run initial-setup check
+                                if (results.wmsPermissions) {
+                                    sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
+                                }
+
                                 this.callInitialSetupStatus(branchId).subscribe({
                                     next: (res: any) => {
                                         if (res && res.isSetupComplete === false) {

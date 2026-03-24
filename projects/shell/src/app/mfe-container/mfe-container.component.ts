@@ -123,12 +123,20 @@ export class MfeContainerComponent implements OnInit {
     const notificationMfeBasePath = isLocal ? 'http://localhost:4208' : 'https://test.fovestta.com/Notification/dist';
 
     let relativePath = '';
+    let hashSearch = '';
+
     // Priority 1: Check hash for route (this is what is changed during nav)
     if (currentHash.startsWith('#/')) {
-      relativePath = currentHash.substring(1).split('?')[0];
+      const hashParts = currentHash.substring(1).split('?');
+      relativePath = hashParts[0];
+      if (hashParts.length > 1) {
+        hashSearch = '?' + hashParts[1];
+      }
     } else if (currentPath.startsWith(shellBase)) {
       relativePath = currentPath.substring(shellBase.length);
     }
+
+    const effectiveSearch = currentSearch || hashSearch;
 
     const path = relativePath.toLowerCase();
     let mfeBaseUrl = '';
@@ -198,8 +206,8 @@ export class MfeContainerComponent implements OnInit {
 
     // If we have a path, append it to the hash to maintain MFE internal routing
     const targetUrl = isLocal
-      ? `${normalizedBase}/${cleanPath}${currentSearch}`
-      : (cleanPath ? `${normalizedBase}/#/${cleanPath}${currentSearch}` : `${normalizedBase}/${currentSearch}`);
+      ? `${normalizedBase}/${cleanPath}${effectiveSearch}`
+      : (cleanPath ? `${normalizedBase}/#/${cleanPath}${effectiveSearch}` : `${normalizedBase}/${effectiveSearch}`);
 
     console.log('[Shell][MfeContainer] Updating Iframe Src to:', targetUrl);
 

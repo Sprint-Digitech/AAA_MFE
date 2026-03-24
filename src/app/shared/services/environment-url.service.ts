@@ -8,6 +8,8 @@ export class EnvironmentUrlService {
   public urlAddress: string = environment.urlAddress;
   public salaryUrlAddress: string = environment.salaryUrlAddress || environment.urlAddress;
   public essUrlAddress: string = environment.EssUrlAddress || environment.urlAddress;
+  public hrmsAuthZUrlAddress: string = (environment as any).hrmsAuthZUrlAddress || environment.urlAddress;
+  public wmsAuthZUrlAddress: string = (environment as any).wmsAuthZUrlAddress || environment.urlAddress;
 
   constructor() { }
 
@@ -16,6 +18,14 @@ export class EnvironmentUrlService {
     const routeLower = route.toLowerCase();
 
     // Priority 1: CAB/Salary Migrated Routes
+    if (routeLower.includes('company-branch/') ||
+      routeLower.includes('initialsetup/') ||
+      routeLower.includes('roles/') ||
+      routeLower.includes('tenants/') ||
+      routeLower.includes('hrmsauthz/')) {
+      return this.hrmsAuthZUrlAddress;
+    }
+
     if (routeLower.includes('reference_data') ||
       routeLower.includes('attendance') ||
       routeLower.includes('salary') ||
@@ -27,8 +37,7 @@ export class EnvironmentUrlService {
       routeLower.includes('gratuity') ||
       routeLower.includes('leave') ||
       routeLower.includes('holiday') ||
-      routeLower.includes('alms') ||
-      routeLower.includes('companybranch')) {
+      routeLower.includes('alms')) {
       return this.salaryUrlAddress;
     }
 

@@ -18,6 +18,7 @@
 					"builder": "ngx-build-plus:browser",
 					"options": {
 						"outputPath": "dist-login",
+						"baseHref": "/Auth/dist/",
 						"index": "src/index.html",
 						"polyfills": [
 							"zone.js"
