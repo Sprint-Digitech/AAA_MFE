@@ -91,12 +91,12 @@ export class AddBranchProbationSettingsComponent {
           console.error('Error loading branches:', err);
           return of([]); // Return empty array on error
         })),
-      departments: this.service.get(`api/Department/DepartmentList`)
+      departments: this.service.get(`api/HrmsAuthZ/departments`)
         .pipe(catchError(err => {
           console.error('Error loading departments:', err);
           return of([]); // Return empty array on error
         })),
-      designations: this.service.get(`api/Designation/DesignationList`)
+      designations: this.service.get(`api/HrmsAuthZ/designations`)
         .pipe(catchError(err => {
           console.error('Error loading designations:', err);
           return of([]); // Return empty array on error

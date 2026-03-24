@@ -133,9 +133,8 @@ export class ReimbursementService {
   }
 
   getDepartmentList(): Observable<any> {
-    return this.http.get(
-      `${this.reimbursementUrl}/api/Department/DepartmentList`
-    );
+    const url = `${environment.hrmsAuthZUrlAddress}/api/HrmsAuthZ/departments`;
+    return this.http.get(url);
   }
 
   getApprovedListByManagerId(id: string): Observable<any> {

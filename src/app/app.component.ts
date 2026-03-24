@@ -193,6 +193,7 @@ export class AppComponent implements OnInit {
     if (storedUser) {
       this.user = JSON.parse(storedUser);
       this.setUserDetails(this.user);
+      this.syncCompanyBrandingFromUser(this.user);
     }
   }
   get userInitials(): string {
@@ -383,7 +384,35 @@ export class AppComponent implements OnInit {
       designation: designation,
     };
 
+    this.syncCompanyBrandingFromUser(userData);
     this.cdr.markForCheck();
+  }
+
+  private syncCompanyBrandingFromUser(userData: any | null | undefined): void {
+    if (!userData || typeof userData !== 'object') {
+      return;
+    }
+
+    const companyName = this.extractCompanyName(userData);
+    if (companyName) {
+      this.companyName = companyName;
+    }
+  }
+
+  private extractCompanyName(userData: any): string {
+    const candidates = [
+      userData.companyName,
+      userData.CompanyName,
+      userData.company?.companyName,
+      userData.company?.CompanyName,
+      userData.employee?.companyName,
+      userData.employee?.CompanyName,
+      userData.employee?.company?.companyName,
+      userData.employee?.company?.CompanyName,
+    ];
+
+    const companyName = candidates.find((value: unknown) => typeof value === 'string' && value.trim());
+    return typeof companyName === 'string' ? companyName.trim() : '';
   }
 
   private getDisplayName(userData: any): string {
@@ -488,9 +517,16 @@ export class AppComponent implements OnInit {
   getCompanies = () => {
     this.CompanyData.getCompany('api/company-branch/GetCompany').subscribe({
       next: (data: any) => {
-        const logo = data?.[0]?.companylogo;
+        const companyRecord = Array.isArray(data)
+          ? data.find((item: any) => item?.companyName || item?.CompanyName || item?.companylogo || item?.CompanyLogo)
+          : null;
+        const logo = companyRecord?.companylogo || companyRecord?.CompanyLogo;
         this.companies = this.resolveCompanyLogo(logo);
-        this.companyName = data?.[0]?.companyName || this.companyName;
+        this.companyName =
+          companyRecord?.companyName ||
+          companyRecord?.CompanyName ||
+          this.extractCompanyName(this.user) ||
+          this.companyName;
         this.cdr.markForCheck();
       },
       error: (error) => {

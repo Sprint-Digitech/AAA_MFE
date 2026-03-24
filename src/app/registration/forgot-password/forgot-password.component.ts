@@ -16,7 +16,7 @@ import {
   HttpClient,
   HttpHeaders,
 } from '@angular/common/http';
-import { map, catchError, takeUntil, finalize, timeout } from 'rxjs/operators';
+import { map, catchError, takeUntil, finalize, timeout, first } from 'rxjs/operators';
 import { AccountService } from '../../shared/services/account.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { MatCardModule } from '@angular/material/card';
@@ -57,62 +57,90 @@ export class ForgotPasswordComponent {
     private notificationService: NotificationService,
     private http: HttpClient
   ) {
+    console.log('ForgotPasswordComponent: constructor');
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    console.log('ForgotPasswordComponent: ngOnInit');
+  }
 
-  onSubmit(): void {
+  get email() {
+    return this.forgotPasswordForm.get('email');
+  }
+
+  onSubmit(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    console.log('--- FORGOT PASSWORD SUBMIT CALLED ---');
+    console.log('Form State Valid:', this.forgotPasswordForm.valid);
+    console.log('Form Values:', this.forgotPasswordForm.value);
+
     if (this.forgotPasswordForm.invalid) {
+      console.warn('Form is invalid. Errors:', this.forgotPasswordForm.errors);
       this.forgotPasswordForm.markAllAsTouched();
-      this.notificationService.showError('Please fill all required fields.');
+      this.notificationService.showError('Please enter a valid email address.');
       return;
     }
 
-    const email = this.forgotPasswordForm.get('email')?.value;
+    const emailValue = this.forgotPasswordForm.get('email')?.value;
+    console.log('Input Email:', emailValue);
+
     this.isLoading = true;
     this.status = 'idle';
     this.message = '';
 
-    // First check if email is registered
-    this.checkEmailExists(email).subscribe({
+    // Step 1: Verify email exists
+    console.log('Verifying email registration...');
+    this.checkEmailExists(emailValue).subscribe({
       next: (exists) => {
+        console.log('Email exists check result:', exists);
         if (!exists) {
           this.status = 'error';
-          this.message = 'Email not registered.';
+          this.message = 'Email is not registered in our system.';
           this.notificationService.showError(this.message);
           this.isLoading = false;
           return;
         }
 
-        // Email exists, proceed with forgot password
+        // Step 2: Call forgot password API
+        console.log('Email found. Proceeding with Reset Link request...');
         this.passwordResetService
-          .forgotPassword(`api/Account/ForgotPassword?email=${email}`, {})
+          .forgotPassword(`api/Account/ForgotPassword?email=${emailValue}`, {})
+          .pipe(first())
           .subscribe({
-            next: () => {
+            next: (res: any) => {
+              console.log('ForgotPassword API internal success:', res);
               this.status = 'success';
-              this.message =
-                'Password reset link has been sent to your email address.';
+              this.message = 'Reset link has been sent to your email address.';
               this.notificationService.showSuccess(this.message);
               this.isLoading = false;
             },
             error: (error: any) => {
+              console.error('ForgotPassword API error details:', error);
               this.status = 'error';
-              if (error?.error?.errors?.[0]) {
-                this.message = error.error.errors[0];
-              } else {
-                this.message = 'Failed to send reset link. Please try again.';
+              // Parse error message carefully
+              let errorMsg = 'Failed to send reset link. Please try again.';
+              if (error?.error) {
+                if (typeof error.error === 'string') errorMsg = error.error;
+                else if (error.error.message) errorMsg = error.error.message;
+                else if (error.error.errors && error.error.errors[0]) errorMsg = error.error.errors[0];
               }
+              this.message = errorMsg;
               this.notificationService.showError(this.message);
               this.isLoading = false;
             },
           });
       },
-      error: () => {
+      error: (err) => {
+        console.error('checkEmailExists subscription error:', err);
         this.status = 'error';
-        this.message = 'Failed to verify email. Please try again.';
+        this.message = 'Service unavailable. Please try again later.';
         this.notificationService.showError(this.message);
         this.isLoading = false;
       },
@@ -123,27 +151,26 @@ export class ForgotPasswordComponent {
     const headers = new HttpHeaders({
       'X-Tenant-Schema': 'dbo',
     });
-    const url = `${this.passwordResetService.environment.urlAddress}/api/Employee/GetAllRegisteredEmails`;
-    console.log('Checking email exists - URL:', url); // DEBUG
-    console.log('Email to check:', email);
+    const url = `${this.passwordResetService.environment.urlAddress}/api/Account/GetAllRegisteredEmails`;
+    console.log('Calling checkEmailExists URL:', url);
+
     return this.http.get<string[]>(url, { headers }).pipe(
       timeout(10000),
       map((emails: string[]) => {
-        console.log('Received emails:', emails);
-        return emails.some(
+        console.log('Total emails retrieved:', emails?.length);
+        if (!emails || !Array.isArray(emails)) return false;
+
+        const found = emails.some(
           (registeredEmail: string) =>
-            registeredEmail?.trim().toLowerCase() === email.trim().toLowerCase()
+            registeredEmail?.trim().toLowerCase() === email?.trim().toLowerCase()
         );
+        return found;
       }),
       catchError((error) => {
-        console.error('Email check API error:', error); // DEBUG
+        console.error('checkEmailExists API failure:', error);
         return of(false);
       })
     );
-  }
-
-  get email() {
-    return this.forgotPasswordForm.get('email');
   }
 }
 

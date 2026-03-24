@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccountService } from '../../shared/services/account.service';
 import { CommonModule } from '@angular/common';
@@ -68,42 +68,63 @@ export class InitialSetupComponent {
   ngOnInit() {
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     this.user = user;
+    const email = user.email;
+    const tenantSchema = sessionStorage.getItem('tenantSchema') || user.tenantSchema || '';
 
-    // Check if user has Admin or HR role
-    const userRoles = user.employeeRoleLoginDtos || [];
-    this.isAdminOrHR = userRoles.some((role: any) => {
-      const roleName = role?.roleName || '';
-      return (
-        roleName === 'Admin' ||
-        roleName === 'HR' ||
-        roleName === 'Human Resource'
-      );
-    });
-
-    // If user is Admin or HR, show setup page
-    if (this.isAdminOrHR) {
-      const email = user.email;
-      this.companyId = user.companyId || '';
-      this.branchId = user.companyBranchId || user.branchID || '';
-      this.userRole = user.userRole || user.roleName || null;
-      this.employeeRoleLoginDtos =
-        user.employeeRoleLoginDtos || user.employeeRoleLoginDtos?.[0] || null;
-      this.loginData = user;
-
-      this.stepCompletion[0] = true;
-      this.stepCompletion[1] = true;
-
-      if (this.companyId)
-        this.steps[0].path = `company/details/${this.companyId}`;
-      if (this.branchId)
-        this.steps[2].path = `company/branchDetails/${this.companyId}/${this.branchId}`;
-
-      // Step 1: fetch employeeId
-      this.getEmployeeIdByEmail(email);
-    } else {
-      // For Employee/Manager, show dashboard view
+    if (!email || !tenantSchema) {
       this.initializeEmployeeDashboard(user);
+      return;
     }
+
+    // Fetch role and hierarchy data from HRMSAuthZ
+    this.accountService.getEmployeeAuthDetail(email, tenantSchema).subscribe({
+      next: (authDetail: any) => {
+        // Resolve user roles from HRMSAuthZ
+        const employeeRoles: any[] = authDetail?.employeeRoles || [];
+        const allRoles: any[] = authDetail?.roles || [];
+        const userRoleIds = employeeRoles.map((er: any) => er.roleID || er.RoleID);
+        const userRoleObjs = allRoles.filter((r: any) =>
+          userRoleIds.includes(r.roleID || r.RoleID)
+        );
+
+        this.isAdminOrHR = userRoleObjs.some((r: any) => {
+          const rn = r.roleName || r.RoleName || '';
+          return rn === 'Admin' || rn === 'HR' || rn === 'Human Resource';
+        });
+
+        this.userRole = userRoleObjs[0]?.roleName || userRoleObjs[0]?.RoleName || null;
+
+        // Resolve IDs preferring session values, falling back to HRMSAuthZ
+        this.companyId = user.companyId || authDetail?.companyId || '';
+        this.branchId = user.companyBranchId || user.branchID || authDetail?.branchId || '';
+        this.employeeId = authDetail?.employeeId || authDetail?.EmployeeId || '';
+
+        if (this.isAdminOrHR) {
+          this.employeeRoleLoginDtos = user.employeeRoleLoginDtos || null;
+          this.loginData = { ...user, branchID: this.branchId };
+
+          this.stepCompletion[0] = true;
+          this.stepCompletion[1] = true;
+
+          if (this.companyId)
+            this.steps[0].path = `company/details/${this.companyId}`;
+          if (this.branchId)
+            this.steps[2].path = `company/branchDetails/${this.companyId}/${this.branchId}`;
+
+          this.getBranchesOfCompany();
+        } else {
+          this.initializeEmployeeDashboard({
+            ...user,
+            companyName: user.companyName || authDetail?.companyName || '',
+            branchName: user.branchName || authDetail?.branchName || '',
+          });
+        }
+      },
+      error: () => {
+        // Fallback to session data if HRMSAuthZ call fails
+        this.initializeEmployeeDashboard(user);
+      }
+    });
   }
 
   initializeEmployeeDashboard(user: any) {
@@ -264,10 +285,7 @@ export class InitialSetupComponent {
       this.checkDataAndUpdateCompletion();
       return;
     }
-    if (
-      this.employeeRoleLoginDtos?.roleName !== 'Admin' &&
-      this.loginData?.branchID
-    ) {
+    if (branchId) {
       this.accountService
         .get(`api/InitialSetup/GetSteps?companyBranchId=${branchId}`)
         .subscribe({
@@ -318,28 +336,6 @@ export class InitialSetupComponent {
     this.getStatutory();
   }
 
-  getEmployeeIdByEmail(email: string) {
-    this.accountService
-      .logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`)
-      .subscribe({
-        next: (res: any) => {
-          if (res && res.id) {
-            this.employeeId = res.id; // store the ID to use in updatedBy
-            console.log('Employee ID  (Guid) fetched:', this.employeeId);
-            if (this.userRole === 'Admin') {
-              this.getBranchesOfCompany();
-            } else {
-              console.log('Not an Admin — skipping Initial Setup API call');
-            }
-          } else {
-            console.error('No ID found in employee response', res);
-          }
-        },
-        error: (err) => {
-          console.error('Error fetching employee ID', err);
-        },
-      });
-  }
   getBranchesOfCompany() {
     this.accountService.get('api/company-branch/GetCompanyBranch').subscribe({
       next: (data) => {
@@ -359,7 +355,7 @@ export class InitialSetupComponent {
     });
   }
   getEmployees() {
-    this.accountService.get('api/Employee/EmployeeBasicDetailList').subscribe({
+    this.accountService.get('api/Salary/EmployeeBasicDetailList').subscribe({
       next: (data: any[]) => {
         this.employees = data;
         console.log('Employees:', data);
@@ -380,7 +376,7 @@ export class InitialSetupComponent {
   }
 
   getEmployeeCtc() {
-    this.accountService.get('api/PayRoll/GetEmployeeCtcList').subscribe({
+    this.accountService.get('api/Salary/EmployeeCtcCommanList').subscribe({
       next: (data: any[]) => {
         this.employeeCtc = data;
         console.log('Employee CTC List:', data);

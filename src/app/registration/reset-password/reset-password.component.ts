@@ -10,20 +10,25 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { HttpClient } from '@angular/common/http';
 import { first, forkJoin } from 'rxjs';
-import { ValidationSchema } from '@fovestta2/validation-engine';
+import { ValidationSchema, Validator } from '@fovestta2/validation-engine';
 import { NotificationService } from '../../shared/services/notification.service';
 import { AccountService } from '../../shared/services/account.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { FvEntryFieldComponent } from '@fovestta2/web-angular';
+import { MatButtonModule } from '@angular/material/button';
+import { FvEntryFieldComponent, FvEmailFieldComponent, FvPasswordFieldComponent } from '@fovestta2/web-angular';
 
 @Component({
   selector: 'app-reset-password',
+  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
+    MatButtonModule,
     ReactiveFormsModule,
     FvEntryFieldComponent,
+    FvEmailFieldComponent,
+    FvPasswordFieldComponent,
   ],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss'],
@@ -31,20 +36,24 @@ import { FvEntryFieldComponent } from '@fovestta2/web-angular';
 export class ResetPasswordComponent {
   emailSchema: ValidationSchema = {
     controlType: 'EntryField',
-    errorPriority: ['required', 'email'],
+    errorPriority: ['required', 'regex'],
     rules: [
       { name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' },
-      { name: 'email', params: { enabled: true }, errorKey: 'ERR_EMAIL' },
+      {
+        name: 'regex',
+        params: { pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$' },
+        errorKey: 'ERR_EMAIL'
+      },
     ],
   };
 
   passwordSchema: ValidationSchema = {
     controlType: 'EntryField',
-    errorPriority: ['required', 'pattern'],
+    errorPriority: ['required', 'minLength', 'regex'],
     rules: [
       { name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' },
       {
-        name: 'pattern',
+        name: 'regex',
         params: {
           pattern:
             '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$',
@@ -53,7 +62,7 @@ export class ResetPasswordComponent {
       },
       {
         name: 'minLength',
-        params: { minLength: 8 },
+        params: { value: 8 },
         errorKey: 'ERR_MINLENGTH',
       },
     ],
@@ -65,8 +74,8 @@ export class ResetPasswordComponent {
     rules: [
       { name: 'required', params: { enabled: true }, errorKey: 'ERR_REQUIRED' },
       {
-        name: 'custom',
-        params: { custom: 'mismatch' },
+        name: 'mismatch',
+        params: { enabled: true },
         errorKey: 'ERR_MISMATCH',
       },
     ],
@@ -116,6 +125,23 @@ export class ResetPasswordComponent {
     private http: HttpClient,
     private accountService: AccountService,
   ) {
+    // Register custom rules to stop console warnings
+    if (!Validator.hasRule('mismatch')) {
+      Validator.registerRule({
+        ruleName: 'mismatch',
+        validate: () => ({ isValid: true, errorKey: null })
+      });
+    }
+    if (!Validator.hasRule('email')) {
+      Validator.registerRule({
+        ruleName: 'email',
+        validate: (val: any) => ({
+          isValid: !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+          errorKey: 'ERR_EMAIL'
+        })
+      });
+    }
+
     //get logged-in user
     const storedUser = JSON.parse(sessionStorage.getItem('user')!);
     if (storedUser) {
@@ -180,19 +206,37 @@ export class ResetPasswordComponent {
   passwordMatchValidator(form: FormGroup) {
     const pass = form.get('newPassword')?.value;
     const confirm = form.get('confirmPassword')?.value;
+    const confirmControl = form.get('confirmPassword');
 
-    if (pass !== confirm) {
+    if (pass && confirm && pass !== confirm) {
+      confirmControl?.setErrors({ mismatch: true });
       return { mismatch: true };
+    } else {
+      // If they match, clear the mismatch error but keep others (like required)
+      const errors = confirmControl?.errors;
+      if (errors) {
+        delete errors['mismatch'];
+        confirmControl?.setErrors(Object.keys(errors).length ? errors : null);
+      }
     }
     return null;
   }
 
   onSubmit() {
-    console.log('tenantSchema =>', this.tenantSchema);
-    console.log('token =>', this.token);
+    console.log('--- ResetPasswordComponent: onSubmit triggered ---');
+    console.log('Form Status:', this.resetPasswordForm.status);
+    console.log('Form Validity:', this.resetPasswordForm.valid);
+    console.log('Errors:', {
+      email: this.emailControl.errors,
+      password: this.newPasswordControl.errors,
+      confirm: this.confirmPasswordControl.errors,
+      baseForm: this.resetPasswordForm.errors
+    });
+
     if (this.resetPasswordForm.invalid) {
+      console.warn('Form is invalid, marking as touched...');
       this.resetPasswordForm.markAllAsTouched();
-      this.notificationService.showError('Please fill all required fields.');
+      this.notificationService.showError('Please correct the errors in the form.');
       return;
     }
 
@@ -302,118 +346,3 @@ export class ResetPasswordComponent {
       });
   }
 }
-// const body = {
-//   email: this.email,
-//   token: this.token,
-//   newPassword: newPassword,
-//   confirmPassword: confirmPassword
-// };
-// custom validator
-// passwordsMatch(group: FormGroup) {
-//   const newPass = group.get('newPassword')?.value;
-//   const confirmPass = group.get('confirmPassword')?.value;
-//   return newPass === confirmPass ? null : { mismatch: true };
-// }
-//   onSubmit() {
-//     if (this.resetPasswordForm.invalid) {
-//       this.resetPasswordForm.markAllAsTouched();
-//        this.notificationService.showError('Please fill all required fields.');
-//       return;
-//     }
-
-//     this.isLoading = true;
-//     this.isError = false;
-
-//     const newPassword = this.resetPasswordForm.get('newPassword')?.value;
-//     const confirmPassword = this.resetPasswordForm.get('confirmPassword')?.value;
-
-//     const queryParams = `?email=${encodeURIComponent(this.email)}&token=${encodeURIComponent(this.token)}&newPassword=${encodeURIComponent(newPassword)}&confirmPassword=${encodeURIComponent(confirmPassword)}`;
-//     this.employeeData.resetPassword(`api/Account/ResetPassword${queryParams}`, {}).pipe(first()).subscribe({
-//       next: (response) => {
-//         this.message = 'Password reset successfully.';
-//         this.isLoading = false;
-//         this.notificationService.showSuccess('Password reset successfully');
-
-//         setTimeout(() => {
-//           this.router.navigate(['/authentication/welcome-user']);
-//         }, 2000);
-//       },
-//   error: (err) => {
-//     this.isLoading = false;
-//         this.isError = true;
-//    console.log('Full Error Object:', err);
-//         console.log('Error.error type:', typeof err?.error);
-//         console.log('Error.error:', err?.error);
-
-//         let errorMessages: string[] = [];
-//         let errorData = err?.error;
-
-//         // If error is a string, try to parse it as JSON
-//         if (typeof errorData === 'string') {
-//           try {
-//             errorData = JSON.parse(errorData);
-//             console.log('Parsed error data:', errorData);
-//           } catch (e) {
-//             console.log('Failed to parse error as JSON');
-//           }
-//         }
-
-//         // Priority 1: Check for array with description (e.g., [{ "description": "User not found." }])
-//         if (Array.isArray(errorData)) {
-//           errorData.forEach((item: any) => {
-//             if (item?.description) {
-//               errorMessages.push(item.description);
-//             }
-//           });
-//         }
-//         // Priority 2: Check for direct description property
-//         else if (errorData?.description) {
-//           errorMessages.push(errorData.description);
-//         }
-//         // Priority 3: Check for validation errors object
-//         else if (errorData?.errors && typeof errorData.errors === 'object') {
-//           Object.keys(errorData.errors).forEach(key => {
-//             const messages = errorData.errors[key];
-//             console.log(`Field '${key}' errors:`, messages);
-
-//             if (Array.isArray(messages)) {
-//               messages.forEach((msg: any) => {
-//                 if (msg && typeof msg === 'string') {
-//                   errorMessages.push(msg);
-//                 }
-//               });
-//             }
-//           });
-//         }
-//         // Priority 4: Check for single message
-//         else if (errorData?.message) {
-//           errorMessages.push(errorData.message);
-//         }
-//         // Priority 5: Check for title
-//         else if (errorData?.title) {
-//           errorMessages.push(errorData.title);
-//         }
-
-//         // Set final message
-//         if (errorMessages.length > 0) {
-//           this.apiMessage = errorMessages.join('\n');
-//         } else {
-//           this.apiMessage = err?.statusText || 'An error occurred. Please try again.';
-//         }
-
-//         console.log('Final Error Messages:', errorMessages);
-//         console.log('Final API Message:', this.apiMessage);
-
-//         // Show error notification
-//         this.notificationService.showError(this.apiMessage);
-//       }
-//     });
-//   }
-
-// }
-
-// if (params['tenantSchema']) {
-//   // user object me tenantSchema store kar sakte ho
-//   sessionStorage.setItem('tenantSchema', params['tenantSchema']);
-//   this.user = { ...this.user, tenantSchema: params['tenantSchema'] };
-// }
