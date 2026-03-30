@@ -8,7 +8,7 @@ import {
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AccountService } from '../shared/services/account.service';
 import { NotificationService } from '../shared/services/notification.service';
-import { BehaviorSubject, first, forkJoin, Observable } from 'rxjs';
+import { BehaviorSubject, first, Observable } from 'rxjs';
 import { Login } from '../shared/services/account.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
@@ -90,6 +90,9 @@ export class LoginInventoryComponent {
         private http: HttpClient,
         private _snackBar: MatSnackBar
     ) {
+        // Mark this browser as WMS product type so the guard redirects here on next visit
+        localStorage.setItem('productType', 'wms');
+
         // ✅ Logout ke baad sessionStorage clear hoti hai (Next.js se)
         // Agar session mein user nahi hai toh accountService ka cached BehaviorSubject bhi clear karo
         // Warna constructor mein userValue truthy milta hai aur turant dashboard redirect ho jaata hai
@@ -117,12 +120,12 @@ export class LoginInventoryComponent {
                     },
                     error: () => {
                         // ✅ Welcome ki jagah localhost:3000 open hoga
-                        window.location.href = 'http://localhost:3000/';
+                        (window.top || window).location.href = (window.location.hostname === 'localhost' ? 'http://localhost:3000' : `${window.location.origin}/WMS/app`) + '/';
                     }
                 });
             } else {
                 // ✅ Welcome ki jagah localhost:3000 open hoga
-                window.location.href = 'http://localhost:3000/';
+                (window.top || window).location.href = (window.location.hostname === 'localhost' ? 'http://localhost:3000' : `${window.location.origin}/WMS/app`) + '/';
             }
         }
         this.loginForm = this.formBuilder.group({
@@ -135,16 +138,12 @@ export class LoginInventoryComponent {
     private navigateToDashboard(): void {
         sessionStorage.setItem('productType', 'inventory');
 
-        const token = sessionStorage.getItem('token');
-        const user = sessionStorage.getItem('user');
+        const wmsBase = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : `${window.location.origin}/WMS/app`;
 
-        const params = new URLSearchParams({
-            token: token ?? '',
-            user: encodeURIComponent(user ?? '')
-        });
-
-        // ✅ Login ke baad yeh URL open hoga
-        window.location.href = 'http://localhost:3000/';
+        // Navigate top-level window so WMS app opens full screen, not inside iframe
+        (window.top || window).location.href = wmsBase + '/';
     }
 
     get f() {
@@ -197,12 +196,12 @@ export class LoginInventoryComponent {
                                                 },
                                                 error: () => {
                                                     // ✅ Welcome ki jagah localhost:3000 open hoga
-                                                    window.location.href = 'http://localhost:3000/';
+                                                    (window.top || window).location.href = (window.location.hostname === 'localhost' ? 'http://localhost:3000' : `${window.location.origin}/WMS/app`) + '/';
                                                 }
                                             });
                                         } else {
                                             // ✅ Welcome ki jagah localhost:3000 open hoga
-                                            window.location.href = 'http://localhost:3000/';
+                                            (window.top || window).location.href = (window.location.hostname === 'localhost' ? 'http://localhost:3000' : `${window.location.origin}/WMS/app`) + '/';
                                         }
                                     }
                                 });
@@ -233,6 +232,7 @@ export class LoginInventoryComponent {
             email: this.loginForm.value.email,
             password: this.loginForm.value.password,
             rememberMe: this.loginForm.value.rememberMe,
+            serviceType: 'WMS',
         };
         this.loading = true;
 
@@ -241,77 +241,38 @@ export class LoginInventoryComponent {
             .pipe(first())
             .subscribe({
                 next: (loginResponse) => {
-                    const email = loginResponse?.employee?.email;
+                    const emp = loginResponse?.employee;
+                    const finalUser = {
+                        email: emp?.email,
+                        firstName: emp?.firstName || emp?.FirstName || '',
+                        lastName: emp?.lastName || emp?.LastName || '',
+                        tenantSchema: emp?.tenantSchema,
+                        serviceType: emp?.serviceType || 'WMS',
+                        id: emp?.id,
+                    };
 
-                    forkJoin({
-                        employeeLoginDetail: this.accountService
-                            .logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`)
-                            .pipe(first()),
-                    }).subscribe({
-                        next: (results) => {
-                            const userDetail = results.employeeLoginDetail;
-                            if (userDetail !== undefined) {
-                                const branchId =
-                                    userDetail.companyBranchId || userDetail.branchID || '';
-                                const employeeId = userDetail.employeId ?? null;
-                                const processedRoles = userDetail.employeeRoleLoginDtos ?? [];
-                                const processedMenus = this.processMenus(processedRoles);
+                    sessionStorage.setItem('user', JSON.stringify(finalUser));
+                    if (emp?.tenantSchema) {
+                        sessionStorage.setItem('tenantSchema', emp.tenantSchema);
+                    }
+                    this.accountService.setUser(finalUser);
 
-                                const finalUser = {
-                                    ...userDetail,
-                                    employeeRoleLoginDtos: processedRoles,
-                                    companyBranchId: branchId,
-                                    employeId: employeeId,
-                                };
-
-                                sessionStorage.setItem('menus', JSON.stringify(processedMenus));
-                                sessionStorage.setItem('user', JSON.stringify(finalUser));
-                                if (loginResponse?.employee?.tenantSchema) {
-                                    sessionStorage.setItem('tenantSchema', loginResponse.employee.tenantSchema);
-                                }
-                                this.accountService.setUser(finalUser);
-                                this.accountService.setMenuData(processedMenus);
-                                this.callInitialSetupStatus(branchId).subscribe({
-                                    next: (res: any) => {
-                                        if (res && res.isSetupComplete === false) {
-                                            this.router.navigate(['/initial-setup'], {
-                                                replaceUrl: true,
-                                            });
-                                        } else {
-                                            if (window !== window.parent) {
-                                                window.parent.location.href = window.location.origin + '/dashboard';
-                                            } else {
-                                                this.router.navigate(['/dashboard'], {
-                                                    replaceUrl: true,
-                                                });
-                                            }
-                                            this.navigateToDashboard();
-                                        }
-                                        this.loading = false;
-                                    },
-                                    error: () => {
-                                        console.error('Error fetching setup status');
-                                        // ✅ Welcome ki jagah localhost:3000 open hoga
-                                        window.location.href = 'http://localhost:3000/';
-                                        this.loading = false;
-                                    },
-                                });
-                            } else {
-                                const msg = 'Invalid credentials!';
-                                this.error = msg;
-                                this.notificationService.showError(msg);
-                                this.loading = false;
+                    // Fetch WMS permissions from WMSAuthZ (same as HRMS fetches menus from HRMSAuthZ)
+                    const email = emp?.email ?? '';
+                    const tenantSchema = emp?.tenantSchema ?? 'dbo';
+                    this.accountService.getWmsPermissions(email, tenantSchema).subscribe({
+                        next: (permissions) => {
+                            if (permissions) {
+                                sessionStorage.setItem('wmsPermissions', JSON.stringify(permissions));
                             }
-                        },
-                        error: (detailError) => {
-                            const msg = this.handleError(
-                                detailError,
-                                'Failed to load user details.'
-                            );
-                            this.error = msg;
-                            this.notificationService.showError(msg);
+                            this.navigateToDashboard();
                             this.loading = false;
                         },
+                        error: () => {
+                            // Navigate even if permissions call fails
+                            this.navigateToDashboard();
+                            this.loading = false;
+                        }
                     });
                 },
                 error: (loginError) => {

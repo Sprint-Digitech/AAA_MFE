@@ -10,6 +10,7 @@ export class EnvironmentUrlService {
   public essUrlAddress: string = environment.EssUrlAddress || environment.urlAddress;
   public hrmsAuthZUrlAddress: string = (environment as any).hrmsAuthZUrlAddress || environment.urlAddress;
   public wmsAuthZUrlAddress: string = (environment as any).wmsAuthZUrlAddress || environment.urlAddress;
+  public wmsUrlAddress: string = (environment as any).wmsUrlAddress || environment.urlAddress;
 
   constructor() { }
 

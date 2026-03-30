@@ -14,7 +14,15 @@ export const routes: Routes = [
         component: LoginContainerComponent
     },
     {
+        path: 'login-inventory',
+        component: LoginContainerComponent
+    },
+    {
         path: 'register',
+        component: LoginContainerComponent
+    },
+    {
+        path: 'register-inventory',
         component: LoginContainerComponent
     },
     {

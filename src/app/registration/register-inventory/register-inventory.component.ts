@@ -830,14 +830,13 @@ export class RegisterInventoryComponent {
       status: 1,
     };
 
-    const headers = new HttpHeaders({
-      'x-tenant-schema': 'dbo',
-    });
+    const tenantSchema = company.scheam;
+    const companyCode = company.companyCode;
 
     // For critical operations like company registration, don't use takeUntil
     // This ensures the request completes even if component is destroyed
     this.accountService
-      .post('api/Tenants/CreateCompanyRegistration', company, headers)
+      .createWmsCompany(companyName, companyCode, tenantSchema)
       .pipe(
         finalize(() => {
           console.log('Company registration request finalized');
@@ -845,12 +844,10 @@ export class RegisterInventoryComponent {
       )
       .subscribe({
         next: (dataSent: any) => {
-          console.log('Company registration successful:', dataSent);
-          if (dataSent === null) {
-            this.notificationService.showSuccess('Company saved successfully');
-            localStorage.setItem('dateSeparator', JSON.stringify(company));
-            localStorage.setItem('tenantSchema', company.scheam);
-          }
+          console.log('WMS Company registration successful:', dataSent);
+          this.notificationService.showSuccess('Company saved successfully');
+          localStorage.setItem('dateSeparator', JSON.stringify(company));
+          localStorage.setItem('tenantSchema', tenantSchema);
           this.currentStep++;
 
           // Call completion callback if provided
@@ -1005,6 +1002,7 @@ export class RegisterInventoryComponent {
         email: this.accountFormGroup.value.email,
         password: this.accountFormGroup.value.password,
         confirmPassword: this.accountFormGroup.value.confirmPassword,
+        serviceType: 'WMS_USER',
       };
 
       // if groupTenant available, add it and call groupTenant API

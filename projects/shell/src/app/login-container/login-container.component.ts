@@ -26,7 +26,7 @@ export class LoginContainerComponent implements OnInit {
   @ViewChild('loginIframe') loginIframe!: ElementRef<HTMLIFrameElement>;
   safeUrl: SafeResourceUrl | null = null;
   mfeUrl: string = '';
-  baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:4204' : 'https://test.fovestta.com/Auth/dist';
+  baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:4204' : `${window.location.origin}/Auth/dist`;
 
   constructor(
     private sanitizer: DomSanitizer,

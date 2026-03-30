@@ -148,6 +148,7 @@
 					"builder": "ngx-build-plus:browser",
 					"options": {
 						"outputPath": "dist",
+						"baseHref": "/Gateway/dist/",
 						"index": "projects/shell/src/index.html",
 						"polyfills": [
 							"zone.js"

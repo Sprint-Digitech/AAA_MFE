@@ -106,8 +106,8 @@ export class AppComponent implements OnInit {
         url.includes('inventory-dashboard') ||
         url.includes('reports') || url.includes('settings');
       console.log('AppComponent: isLoginPage =', this.isLoginPage);
-      const authPaths = ['/login', '/register', '/forgot-password', '/reset', '/welcome', '/authentication'];
-      const isAuthRoute = authPaths.some(p => url.includes(p)) || url === '/' || url === '';
+      const authPaths = ['/login-inventory', '/login', '/register', '/forgot-password', '/reset', '/welcome', '/authentication'];
+      const isAuthRoute = authPaths.some(p => url === p || url.startsWith(p + '?') || url.startsWith(p + '/')) || url === '/' || url === '';
 
       // Hide internal nav if it's a login page OR if we are inside the Shell iframe
       this.isLoginPage = isAuthRoute || (window !== window.parent);

@@ -1,13 +1,16 @@
 import { Routes } from '@angular/router';
+import { productLoginGuard } from './shared/guards/product-login.guard';
 
 export const routes: Routes = [
     {
         path: '',
+        canActivate: [productLoginGuard],
         loadComponent: () =>
             import('./login/login.component').then((m) => m.LoginComponent),
     },
     {
         path: 'login',
+        canActivate: [productLoginGuard],
         loadComponent: () =>
             import('./login/login.component').then((m) => m.LoginComponent),
     },

@@ -10,6 +10,7 @@ export interface Login {
   email: string;
   password: string;
   rememberMe?: boolean;
+  serviceType?: string;
 }
 
 export class Employee {
@@ -75,8 +76,9 @@ export class AccountService {
   }
 
   environment = {
-    production: false,
-    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+    production: true,
+    urlAddress: 'https://fovesttastag.in/Auth/sdapi',
+    wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
   };
 
   public get userValue() {
@@ -296,6 +298,14 @@ export class AccountService {
     }
     const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/Roles/GetUserMenus?email=${encodeURIComponent(email)}`;
     return this.http.get<any[]>(url, { headers });
+  }
+
+  createWmsCompany(companyName: string, companyCode: string, tenantSchema: string): Observable<any> {
+    const url = `${this.envUrl.wmsAuthZUrlAddress}/api/Tenants/CreateCompany`;
+    const body = { companyName, companyCode, tenantSchema };
+    return this.http.post<any>(url, body).pipe(
+      catchError(() => of(null))
+    );
   }
 
   getWmsPermissions(email: string, tenantSchema: string): Observable<any> {
