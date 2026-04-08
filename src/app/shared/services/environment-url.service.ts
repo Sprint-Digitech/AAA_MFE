@@ -11,12 +11,18 @@ export class EnvironmentUrlService {
   public hrmsAuthZUrlAddress: string = (environment as any).hrmsAuthZUrlAddress || environment.urlAddress;
   public wmsAuthZUrlAddress: string = (environment as any).wmsAuthZUrlAddress || environment.urlAddress;
   public wmsUrlAddress: string = (environment as any).wmsUrlAddress || environment.urlAddress;
+  public wmsAuthUrlAddress: string = (environment as any).wmsAuthUrlAddress || environment.urlAddress;
 
   constructor() { }
 
   public getBaseUrl(route: string | any): string {
     if (typeof route !== 'string') return this.urlAddress;
     const routeLower = route.toLowerCase();
+
+    // Priority 0: Employee API routes
+    if (routeLower.includes('api/employee/') || routeLower.includes('employeebasicdetaillist')) {
+      return this.essUrlAddress;
+    }
 
     // Priority 1: CAB/Salary Migrated Routes
     if (routeLower.includes('company-branch/') ||

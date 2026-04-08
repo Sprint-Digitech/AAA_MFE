@@ -4,18 +4,19 @@
 
 export const environment = {
   production: true,
-  urlAddress: 'https://fovesttastag.in/Auth/sdapi',
-  biometricAddress: 'https://fovesttastag.in/employee/sdapi',
-  ESSBaseUrl: 'https://fovesttastag.in/employee/sdapi',
-  cnbUrlAddress: 'https://fovesttastag.in/salary/sdapi',
-  salaryUrlAddress: 'https://fovesttastag.in/salary/sdapi',
-  reportsUrl: 'https://fovesttastag.in/salary/sdapi',
-  reimbursementUrl: 'https://fovesttastag.in/salary/sdapi',
-  EssUrlAddress: 'https://fovesttastag.in/employee/sdapi',
-  masterUrlAddress: 'https://fovesttastag.in/master/sdapi',
-  hrmsAuthZUrlAddress: 'https://fovesttastag.in/hrmsauthz/sdapi',
+  urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+  biometricAddress: 'https://test.fovestta.com/employee/sdapi',
+  ESSBaseUrl: 'https://test.fovestta.com/employee/sdapi',
+  cnbUrlAddress: 'https://test.fovestta.com/salary/sdapi',
+  salaryUrlAddress: 'https://test.fovestta.com/salary/sdapi',
+  reportsUrl: 'https://test.fovestta.com/salary/sdapi',
+  reimbursementUrl: 'https://test.fovestta.com/salary/sdapi',
+  EssUrlAddress: 'https://test.fovestta.com/employee/sdapi',
+  masterUrlAddress: 'https://test.fovestta.com/master/sdapi',
+  hrmsAuthZUrlAddress: 'https://test.fovestta.com/hrmsauthz/sdapi',
   wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
   wmsUrlAddress: 'https://fovesttastag.in/wms/sdapi',
+  wmsAuthUrlAddress: 'https://fovesttastag.in/Auth/sdapi',
 };
 
 // Alternative for development with TLS issues:

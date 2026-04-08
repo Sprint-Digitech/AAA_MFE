@@ -380,11 +380,11 @@ export class LoginComponent implements OnInit {
                                         this.loading = false;
                                     },
                                     error: () => {
-                                        console.error('Error fetching setup status - defaulting to dashboard');
+                                        console.error('Error fetching setup status - defaulting to initial-setup');
                                         if (window !== window.parent) {
-                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/dashboard';
+                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/initial-setup';
                                         } else {
-                                            this.router.navigate(['/dashboard'], {
+                                            this.router.navigate(['/initial-setup'], {
                                                 replaceUrl: true,
                                             });
                                         }

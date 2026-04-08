@@ -223,17 +223,15 @@ export class EditMenuRoleMappingComponent {
 
             this.editRoleFormLoaded = true;
 
-            // Get list of already mapped menu IDs
-            this.selectedMenuIds =
-              data[0].roleMaster?.menuRoleMappings.map((m: any) => m.menuID) ||
-              [];
+            // Get list of already mapped menu IDs directly from the data array
+            this.selectedMenuIds = data.map((m: any) => m.menuID);
             if (!Array.isArray(this.selectedMenuIds)) {
               this.selectedMenuIds = [];
             }
 
             // Create a map of existing mappings with their menuRoleMappingId
             const existingMappings = new Map();
-            data[0].roleMaster?.menuRoleMappings.forEach((mapping: any) => {
+            data.forEach((mapping: any) => {
               existingMappings.set(mapping.menuID, mapping.menuRoleMappingId);
             });
 

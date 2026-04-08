@@ -128,9 +128,10 @@ export class LoginContainerComponent implements OnInit {
 
     // In production, we point to the folder and use the hash for the route
     // e.g. https://.../Auth/dist/#/login
+    const v = '20260405';
     const fullUrl = isLocal
       ? `${normalizedBase}/${cleanPath}${search}`
-      : `${normalizedBase}/#/${cleanPath}${search}`;
+      : `${normalizedBase}/?v=${v}#/${cleanPath}${search}`;
 
     if (this.mfeUrl !== fullUrl) {
       console.log('Shell LoginContainer updating iframe target:', fullUrl);

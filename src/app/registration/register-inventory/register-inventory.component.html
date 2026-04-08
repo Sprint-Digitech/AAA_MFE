@@ -277,6 +277,16 @@
                     </option>
                   </select>
                 </div>
+
+                <!-- Currency -->
+                <div class="form-field">
+                  <label class="field-label">Currency <span class="required-asterisk">*</span></label>
+                  <select [formControl]="currencyControl" class="native-select"
+                    [class.select-error]="currencyControl.invalid && currencyControl.touched">
+                    <option *ngFor="let opt of currencyOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  </select>
+                  <span class="field-error-msg" *ngIf="currencyControl.invalid && currencyControl.touched">This field is required</span>
+                </div>
               </div>
 
               <div class="button-divider"></div>

@@ -77,7 +77,7 @@ export class AccountService {
 
   environment = {
     production: true,
-    urlAddress: 'https://fovesttastag.in/Auth/sdapi',
+    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
     wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
   };
 
@@ -125,7 +125,10 @@ export class AccountService {
   }
 
   step(endpoint: string, params: any): Observable<any> {
-    const url = `${this.environment.urlAddress}/api/${endpoint}`;
+    const baseUrl = endpoint.includes('InitialSetup/')
+      ? this.envUrl.hrmsAuthZUrlAddress
+      : this.environment.urlAddress;
+    const url = `${baseUrl}/api/${endpoint}`;
     return this.http.get(url, { params });
   }
 
@@ -220,8 +223,9 @@ export class AccountService {
     route: string,
     body: UserForRegistrationDto,
     customHeaders?: { [key: string]: string },
+    baseUrl?: string,
   ) => {
-    const url = this.createCompleteRoute(route, this.environment.urlAddress);
+    const url = this.createCompleteRoute(route, baseUrl || this.environment.urlAddress);
 
     // Add custom headers if provided
     // Registration requests skip timeout entirely - they can take as long as needed
@@ -300,9 +304,9 @@ export class AccountService {
     return this.http.get<any[]>(url, { headers });
   }
 
-  createWmsCompany(companyName: string, companyCode: string, tenantSchema: string): Observable<any> {
+  createWmsCompany(companyName: string, companyCode: string, tenantSchema: string, currency: string = 'INR'): Observable<any> {
     const url = `${this.envUrl.wmsAuthZUrlAddress}/api/Tenants/CreateCompany`;
-    const body = { companyName, companyCode, tenantSchema };
+    const body = { companyName, companyCode, tenantSchema, currency };
     return this.http.post<any>(url, body).pipe(
       catchError(() => of(null))
     );

@@ -601,6 +601,7 @@ export class RegisterInventoryComponent {
       timeformat: ['12-hour'],
       timezone: ['IST (Indian Standard Time, UTC+5:30)'],
       displayFormat: ['Hours:Minutes:Seconds'],
+      currency: ['INR', Validators.required],
     });
 
     this.packageFormGroup = this._formBuilder.group({
@@ -672,6 +673,24 @@ export class RegisterInventoryComponent {
   }
   get displayFormatControl() {
     return this.companyFormGroup.get('displayFormat') as FormControl;
+  }
+  get currencyControl() {
+    return this.companyFormGroup.get('currency') as FormControl;
+  }
+
+  get currencyOptionsForDropdown() {
+    return [
+      { label: 'INR — Indian Rupee (₹)', value: 'INR' },
+      { label: 'USD — US Dollar ($)', value: 'USD' },
+      { label: 'EUR — Euro (€)', value: 'EUR' },
+      { label: 'GBP — British Pound (£)', value: 'GBP' },
+      { label: 'JPY — Japanese Yen (¥)', value: 'JPY' },
+      { label: 'AED — UAE Dirham (د.إ)', value: 'AED' },
+      { label: 'SGD — Singapore Dollar (S$)', value: 'SGD' },
+      { label: 'CAD — Canadian Dollar (C$)', value: 'CAD' },
+      { label: 'AUD — Australian Dollar (A$)', value: 'AUD' },
+      { label: 'MYR — Malaysian Ringgit (RM)', value: 'MYR' },
+    ];
   }
 
   // Step 3: Review getters
@@ -835,8 +854,9 @@ export class RegisterInventoryComponent {
 
     // For critical operations like company registration, don't use takeUntil
     // This ensures the request completes even if component is destroyed
+    const currency = formValues.currency || 'INR';
     this.accountService
-      .createWmsCompany(companyName, companyCode, tenantSchema)
+      .createWmsCompany(companyName, companyCode, tenantSchema, currency)
       .pipe(
         finalize(() => {
           console.log('Company registration request finalized');
@@ -1029,7 +1049,7 @@ export class RegisterInventoryComponent {
       // For critical operations like registration, don't use takeUntil
       // This ensures the request completes even if component is destroyed
       this.registrationSubscription = this.accountService
-        .registerUser(apiUrl, payload)
+        .registerUser(apiUrl, payload, undefined, this.accountService.envUrl.wmsAuthUrlAddress)
         .pipe(
           finalize(() => {
             console.log(
@@ -1168,7 +1188,7 @@ export class RegisterInventoryComponent {
         'X-Tenant-Schema': 'dbo',
       });
 
-      const url = `${this.accountService.envUrl.hrmsAuthZUrlAddress}/api/Tenants/CheckCompanyNameExists?companyName=${encodeURIComponent(
+      const url = `${this.accountService.envUrl.wmsAuthZUrlAddress}/api/Tenants/CheckCompanyNameExists?companyName=${encodeURIComponent(
         companyName
       )}`;
       return this.http.get<{ exists: boolean }>(url, { headers }).pipe(

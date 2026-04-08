@@ -3,7 +3,7 @@ import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 
 export const productLoginGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const router = inject(Router);
-  const product = route.queryParamMap.get('product') || localStorage.getItem('productType') || '';
+  const product = route.queryParamMap.get('product') || '';
 
   if (product.toLowerCase() === 'wms') {
     return router.createUrlTree(['/login-inventory']);

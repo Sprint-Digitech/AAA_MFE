@@ -82,7 +82,8 @@ export const routes: Routes = [
             { path: 'addMenuMaster', loadComponent: () => import('./registration/add-menu-master/add-menu-master.component').then(m => m.AddMenuMasterComponent) },
             { path: 'updateMenuMaster/:menuID', loadComponent: () => import('./registration/add-menu-master/add-menu-master.component').then(m => m.AddMenuMasterComponent) },
             { path: 'MenuRoleMapping', loadComponent: () => import('./registration/menu-role-mapping/menu-role-mapping.component').then(m => m.MenuRoleMappingComponent) },
-            { path: 'addMenuRoleMapping', loadComponent: () => import('./registration/edit-menu-role-mapping/edit-menu-role-mapping.component').then(m => m.EditMenuRoleMappingComponent) }
+            { path: 'addMenuRoleMapping', loadComponent: () => import('./registration/edit-menu-role-mapping/edit-menu-role-mapping.component').then(m => m.EditMenuRoleMappingComponent) },
+            { path: 'editMenuRoleMapping/:roleID', loadComponent: () => import('./registration/edit-menu-role-mapping/edit-menu-role-mapping.component').then(m => m.EditMenuRoleMappingComponent) }
         ]
     },
     {
@@ -117,6 +118,22 @@ export const routes: Routes = [
         path: 'updateEsiCalculationMonthLimit/:id', loadComponent: () => import('./registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component').then(m => m.AddEsiCalculationMonthLimitComponent)
     },
     {
+        // Employee MFE payRoll routes (must come before salary matcher)
+        path: 'payRoll/salaryreport',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Employee Basic Details Report' }
+    },
+    {
+        path: 'payRoll/extensionReport',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Extension Report' }
+    },
+    {
+        path: 'payRoll/manpowerReport',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Manpower Report' }
+    },
+    {
         // Salary & Master Data MFE
         matcher: (url) => {
             if (url.length === 0) return null;
@@ -140,7 +157,7 @@ export const routes: Routes = [
                     'employeeannualbonus', 'employeectc', 'addemployeectc',
                     'updateemployeectc', 'employeectcdetails', 'ctcemployee',
                     'employeeattendance', 'addemployeeattendancebysheet',
-                    'appraisel-letter'
+                    'appraisel-letter', 'employeetdslist'
                 ];
                 if (salaryEmployeeSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
