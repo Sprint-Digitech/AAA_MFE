@@ -12,6 +12,7 @@ export class EnvironmentUrlService {
   public wmsAuthZUrlAddress: string = (environment as any).wmsAuthZUrlAddress || environment.urlAddress;
   public wmsUrlAddress: string = (environment as any).wmsUrlAddress || environment.urlAddress;
   public wmsAuthUrlAddress: string = (environment as any).wmsAuthUrlAddress || environment.urlAddress;
+  public wmsIntegrationUrl: string = (environment as any).wmsIntegrationUrl || 'http://localhost:8095';
 
   constructor() { }
 

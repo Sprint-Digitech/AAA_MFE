@@ -17,6 +17,8 @@ export const environment = {
   wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
   wmsUrlAddress: 'https://fovesttastag.in/wms/sdapi',
   wmsAuthUrlAddress: 'https://fovesttastag.in/Auth/sdapi',
+  // POS SaaS integration service — update this URL when the WMS Integration Service is deployed
+  wmsIntegrationUrl: 'http://localhost:8095',
 };
 
 // Alternative for development with TLS issues:
