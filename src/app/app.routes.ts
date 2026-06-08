@@ -217,6 +217,7 @@ export const routes: Routes = [
             }
         ]
     },
+
   // ✅ INVENTORY — Bas yeh add karo
     {
         matcher: (url) => {

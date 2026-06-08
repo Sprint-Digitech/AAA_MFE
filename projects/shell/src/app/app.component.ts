@@ -53,7 +53,8 @@ export class AppComponent implements OnInit {
     'ESS Portal': 'man_4',
     Gratuity: 'work_history',
     Arrear: 'history',
-    Dashboard: 'dashboard'
+    Dashboard: 'dashboard',
+    'Go to Progress': 'speed'
   };
 
   constructor(
@@ -160,6 +161,15 @@ export class AppComponent implements OnInit {
       if (storedMenus && storedMenus !== 'undefined') {
         this.menus = JSON.parse(storedMenus);
       }
+
+      // Automatically add Progress Tracker to the menu
+      if (!this.menus.find(m => m.menuDisplayName === 'Go to Progress')) {
+        this.menus.splice(1, 0, {
+          menuDisplayName: 'Go to Progress',
+          menuPath: '', // Empty path as it opens externally
+          submenu: null
+        });
+      }
     } catch (e) {
       console.warn('Session data parse error', e);
     }
@@ -231,6 +241,20 @@ export class AppComponent implements OnInit {
     if (!this.isExpanded) {
       this.isExpanded = true;
       this.isSidebarCollapsed = false;
+    }
+
+    if (menu.menuDisplayName === 'Go to Progress') {
+      event.preventDefault();
+      const isLocal = window.location.hostname === 'localhost';
+      const progressMfe = isLocal ? 'http://localhost:4205' : 'https://test.fovestta.com/ProgressTracker/dist';
+      let url = `${progressMfe}/#/dashboard/employee`;
+      const token = sessionStorage.getItem('token');
+      if (token) {
+        const parsedToken = token.startsWith('{') ? JSON.parse(token) : token;
+        url += `?token=${parsedToken}`;
+      }
+      window.open(url, '_blank');
+      return;
     }
 
     if (this.hasSubmenu(menu)) {
