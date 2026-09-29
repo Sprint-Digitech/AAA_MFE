@@ -108,7 +108,8 @@ export class AppComponent implements OnInit, OnDestroy {
     'ESS Portal': 'man_4',
     Gratuity: 'work_history',
     Arrear: 'history',
-    Dashboard: 'dashboard'
+    Dashboard: 'dashboard',
+    'Go to Progress': 'speed'
   };
 
   constructor(private router: Router,
@@ -265,6 +266,15 @@ export class AppComponent implements OnInit, OnDestroy {
     if (storedMenus) {
       this.menus = JSON.parse(storedMenus);
     }
+
+    if (this.menus && !this.menus.find(m => m.menuDisplayName === 'Go to Progress')) {
+      this.menus.splice(1, 0, {
+        menuDisplayName: 'Go to Progress',
+        menuPath: '', // Empty path as it opens externally
+        submenu: null
+      });
+    }
+
     if (storedUser) {
       this.user = JSON.parse(storedUser);
       this.setUserDetails(this.user);
@@ -633,6 +643,34 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.isExpanded) {
       this.isExpanded = true;
       this.isSidebarCollapsed = false;
+    }
+
+    if (menu.menuDisplayName === 'Go to Progress') {
+      event.preventDefault();
+      const isLocal = window.location.hostname === 'localhost';
+      // const progressMfe = isLocal ? 'http://localhost:4205' : 'https://test.fovestta.com/ProgressTracker/dist';
+      const progressMfe = isLocal ? 'http://localhost:4205' : 'https://localhost:7274/auth/sdapi/api/Account/Login';
+      let url = `${progressMfe}/#/dashboard/employee`;
+      const token = sessionStorage.getItem('token');
+      if (token) {
+        let parsedToken = token;
+        if (token.startsWith('{')) {
+          parsedToken = JSON.parse(token);
+        } else if (token.startsWith('"') && token.endsWith('"')) {
+          parsedToken = token.substring(1, token.length - 1);
+        }
+        url += `?token=${parsedToken}`;
+      }
+      url += `&userName=${encodeURIComponent(this.userDetails.name || '')}`;
+      url += `&userRole=${encodeURIComponent(this.userDetails.role || '')}`;
+      url += `&userEmail=${encodeURIComponent(this.userDetails.email || '')}`;
+
+      const normalizedUser = this.normalizeEmployee(this.user);
+      const employeeId = normalizedUser.employeeId || this.user?.userId || '';
+      url += `&employeeId=${encodeURIComponent(employeeId)}`;
+
+      window.open(url, '_blank');
+      return;
     }
 
     if (menu.submenu && menu.submenu.length > 0) {

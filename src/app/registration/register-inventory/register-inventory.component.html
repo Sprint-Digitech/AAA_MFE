@@ -289,6 +289,37 @@
                 </div>
               </div>
 
+              <!-- POS Integration Selection (optional) -->
+              <div class="pos-integration-section">
+                <h3 class="pos-section-title">POS Integration <span class="optional-badge">Optional</span></h3>
+                <p class="pos-section-subtitle">Select a point-of-sale type to automatically link your warehouse inventory with a POS system.</p>
+
+                <div class="pos-type-cards">
+                  <div *ngFor="let opt of posTypeOptions"
+                       class="pos-type-card"
+                       [class.pos-card-selected]="posTypeControl.value === opt.value"
+                       (click)="selectPosType(opt.value)">
+                    <span class="pos-card-icon">{{ opt.icon }}</span>
+                    <div class="pos-card-body">
+                      <strong>{{ opt.label }}</strong>
+                      <p>{{ opt.description }}</p>
+                    </div>
+                    <span class="pos-card-check" *ngIf="posTypeControl.value === opt.value">✓</span>
+                  </div>
+
+                  <div class="pos-type-card pos-card-none"
+                       [class.pos-card-selected]="posTypeControl.value === null"
+                       (click)="selectPosType(null)">
+                    <span class="pos-card-icon">⊘</span>
+                    <div class="pos-card-body">
+                      <strong>Skip for now</strong>
+                      <p>No POS integration — set up later if needed</p>
+                    </div>
+                    <span class="pos-card-check" *ngIf="posTypeControl.value === null">✓</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="button-divider"></div>
               <div class="button-row">
                 <button mat-stroked-button (click)="prevStep()" class="back-button">Back</button>
@@ -322,6 +353,9 @@
                                 </li>
                                 <li class="info"><strong>Industry:</strong> <span>
                                         {{companyFormGroup.get('industry')?.value}}</span>
+                                </li>
+                                <li class="info"><strong>POS Integration:</strong>
+                                    <span>{{ selectedPosLabel }}</span>
                                 </li>
                             </ul>
                         </div>

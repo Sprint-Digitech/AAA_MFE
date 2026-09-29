@@ -110,6 +110,7 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
     const almsMfeBasePath = isLocal ? 'http://localhost:4205' : 'https://attendance.bubnaadvertising.com/ALMS/dist';
     const employeeMfeBasePath = isLocal ? 'http://localhost:4207' : 'https://attendance.bubnaadvertising.com/Employee/dist';
     const notificationMfeBasePath = isLocal ? 'http://localhost:4208' : 'https://attendance.bubnaadvertising.com/Notification/dist';
+    const progressTrackerMfeBasePath = isLocal ? 'http://localhost:4204' : 'https://attendance.bubnaadvertising.com/ProgressTracker/dist';
 
     let relativePath = '';
     let hashSearch = '';
@@ -153,6 +154,8 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
 
     const almsModules = ['alms', 'ess', 'attendance', 'employeeselfservice'];
     const almsEmployeeSubPaths = ['employeebiometric'];
+    
+    const progressTrackerModules = ['progress-tracker', 'dashboard', 'tasks', 'projects', 'kpi', 'goals', 'reviews'];
 
     // Route Mapping Logic
     if (
@@ -172,6 +175,8 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
       mfeBaseUrl = notificationMfeBasePath;
     } else if (primaryPath === 'employee') {
       mfeBaseUrl = employeeMfeBasePath;
+    } else if (progressTrackerModules.includes(primaryPath)) {
+      mfeBaseUrl = progressTrackerMfeBasePath;
     } else {
       mfeBaseUrl = authMfeBasePath;
     }
@@ -182,7 +187,7 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
     const pathLower = cleanPath.toLowerCase();
 
     // Strip redundant folder segments from the path before appending to MFE base
-    const folderSegments = ['/auth/dist', '/salary/dist', '/employee/dist', '/alms/dist', '/notification/dist'];
+    const folderSegments = ['/auth/dist', '/salary/dist', '/employee/dist', '/alms/dist', '/notification/dist', '/progresstracker/dist'];
 
     for (const segment of folderSegments) {
       if (pathLower.startsWith(segment)) {

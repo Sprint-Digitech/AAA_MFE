@@ -2049,3 +2049,101 @@ fv-dropdown {
     }
   }
 }
+/* ── POS Integration Section ─────────────────────────────────────────────── */
+.pos-integration-section {
+  margin: 24px 0 8px;
+
+  .pos-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #151d48;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .optional-badge {
+    font-size: 11px;
+    font-weight: 500;
+    background: #e8f0fe;
+    color: #1967d2;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .pos-section-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 16px;
+  }
+}
+
+.pos-type-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pos-type-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: #006aff;
+    box-shadow: 0 0 0 3px rgba(0, 106, 255, 0.08);
+  }
+
+  &.pos-card-selected {
+    border-color: #006aff;
+    background: #f0f5ff;
+    box-shadow: 0 0 0 3px rgba(0, 106, 255, 0.12);
+  }
+
+  &.pos-card-none {
+    border-style: dashed;
+    opacity: 0.75;
+
+    &.pos-card-selected {
+      opacity: 1;
+      border-style: solid;
+    }
+  }
+
+  .pos-card-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+  }
+
+  .pos-card-body {
+    flex: 1;
+
+    strong {
+      font-size: 13px;
+      color: #151d48;
+      display: block;
+    }
+
+    p {
+      font-size: 11px;
+      color: #6b7280;
+      margin: 2px 0 0;
+    }
+  }
+
+  .pos-card-check {
+    font-size: 16px;
+    color: #006aff;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+}

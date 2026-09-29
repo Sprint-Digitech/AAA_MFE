@@ -24,6 +24,8 @@ export const environment = {
   salaryMfeUrl: 'https://app.fovestta.com/Salary/dist/',
   almsMfeUrl: 'https://app.fovestta.com/ALMS/dist/',
   authMfeUrl: 'https://app.fovestta.com/Auth/dist',
+  // POS SaaS integration service — update this URL when the WMS Integration Service is deployed
+  wmsIntegrationUrl: 'http://localhost:8095',
 };
 
 // Alternative for development with TLS issues:

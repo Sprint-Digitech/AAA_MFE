@@ -28,7 +28,7 @@
       <nav class="sidebar-nav">
         <div class="menu-item" *ngFor="let item of menus" [class.active]="isSubmenuOpen(item.menuDisplayName)">
           <div class="menu-item-content" (click)="onMenuClick($event, item)"
-            [routerLink]="!hasSubmenu(item) ? item.menuPath : null" routerLinkActive="active">
+            [routerLink]="(!hasSubmenu(item) && item.menuDisplayName !== 'Go to Progress') ? item.menuPath : null" routerLinkActive="active">
             <span class="icon">
               <mat-icon>{{ getIcon(item.menuDisplayName) }}</mat-icon>
             </span>

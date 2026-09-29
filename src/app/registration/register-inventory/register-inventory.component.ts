@@ -108,6 +108,12 @@ export class RegisterInventoryComponent {
   backgroundImage: string =
     "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/background-inventory.avif')";
 
+  readonly posTypeOptions = [
+    { value: 1, label: 'Restaurant / Food & Beverage', description: 'Table management, kitchen orders, raw-material deduction', icon: '🍽️' },
+    { value: 2, label: 'Grocery / Supermarket', description: 'Barcode scanning, weight-based items, quick checkout', icon: '🛒' },
+    { value: 3, label: 'Showroom / Retail', description: 'Product variants, quotations, display management', icon: '🏬' },
+  ];
+
   accountFormGroup!: FormGroup;
   companyFormGroup!: FormGroup;
   packageFormGroup!: FormGroup;
@@ -602,6 +608,7 @@ export class RegisterInventoryComponent {
       timezone: ['IST (Indian Standard Time, UTC+5:30)'],
       displayFormat: ['Hours:Minutes:Seconds'],
       currency: ['INR', Validators.required],
+      posType: [null],
     });
 
     this.packageFormGroup = this._formBuilder.group({
@@ -676,6 +683,16 @@ export class RegisterInventoryComponent {
   }
   get currencyControl() {
     return this.companyFormGroup.get('currency') as FormControl;
+  }
+  get posTypeControl() {
+    return this.companyFormGroup.get('posType') as FormControl;
+  }
+  get selectedPosLabel(): string {
+    const v = this.companyFormGroup.get('posType')?.value;
+    return this.posTypeOptions.find(o => o.value === v)?.label ?? 'None — skip POS setup';
+  }
+  selectPosType(value: number | null): void {
+    this.companyFormGroup.patchValue({ posType: value });
   }
 
   get currencyOptionsForDropdown() {
@@ -1067,17 +1084,20 @@ export class RegisterInventoryComponent {
               this.notificationService.showSuccess('Registration successful');
 
               // Send company data and wait for it to complete before navigating
+              const tenantSchema = this.decryptedData
+                ? 'demo'
+                : this.generateTenantSchema(companyName);
               this.sendCompaniesData(
                 this.companyFormGroup.value,
                 companyName,
                 () => {
-                  // Navigation callback - only navigate after company registration completes
-                  console.log(
-                    'Company registration completed, navigating to login'
-                  );
-                  setTimeout(() => {
-                    this.router.navigate(['/login-inventory']);
-                  }, 500);
+                  // Navigation callback - only navigate after company registration + POS provisioning
+                  console.log('Company registration completed, provisioning POS if selected');
+                  this.provisionPosIntegration(tenantSchema).finally(() => {
+                    setTimeout(() => {
+                      this.router.navigate(['/login-inventory']);
+                    }, 500);
+                  });
                 }
               );
             } catch (error) {
@@ -1134,6 +1154,33 @@ export class RegisterInventoryComponent {
       this.notificationService.showError(
         'Please fill all required fields before proceeding'
       );
+    }
+  }
+
+  private async provisionPosIntegration(tenantSchema: string): Promise<void> {
+    const posType = this.companyFormGroup.get('posType')?.value;
+    if (!posType) return;
+
+    const payload = {
+      wmsTenantId: tenantSchema,
+      wmsUserId: '',
+      tenantName: this.accountFormGroup.value.companyName,
+      subdomain: tenantSchema,
+      adminEmail: this.accountFormGroup.value.email,
+      adminPassword: this.accountFormGroup.value.password,
+      adminFirstName: this.accountFormGroup.value.firstName,
+      adminLastName: this.accountFormGroup.value.lastName,
+      contactPhone: this.accountFormGroup.value.phoneNumber,
+      posType,
+    };
+
+    try {
+      await this.http
+        .post(`${this.accountService.envUrl.wmsIntegrationUrl}/api/wms-integration/provision-tenant`, payload)
+        .toPromise();
+      this.notificationService.showSuccess(`${this.selectedPosLabel} POS system set up successfully!`);
+    } catch {
+      this.notificationService.showInfo('WMS account created. Contact support to complete POS setup.');
     }
   }
 
