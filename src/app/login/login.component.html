@@ -31,6 +31,35 @@
     <div class="right-section">
       <mat-card class="login-card">
         <mat-card-content>
+
+          <!-- 2FA OTP Verification -->
+          <ng-container *ngIf="requiresTwoFactor; else normalLogin">
+            <div class="login-header">
+              <h1>Verify Identity</h1>
+            </div>
+            <p style="color:#555; font-size:14px; margin-bottom:20px;">
+              A 6-digit verification code has been sent to <strong>{{ twoFactorEmail }}</strong>.
+            </p>
+            <div class="form-group">
+              <label>Verification Code</label>
+              <mat-form-field class="user-id-field" appearance="outline">
+                <input matInput [(ngModel)]="otpCode" placeholder="Enter 6-digit code" maxlength="6" type="text" />
+              </mat-form-field>
+            </div>
+            <button mat-raised-button class="login-button" type="button"
+              [disabled]="verifyingOtp" (click)="verifyOtp()"
+              style="background-color:#006AFF; color:#FFFFFF; font-family:Poppins;">
+              {{ verifyingOtp ? 'Verifying...' : 'Verify Code' }}
+            </button>
+            <p style="margin-top:12px; font-size:13px; color:#666;">
+              Didn't receive the code?
+              <a href="#" (click)="requiresTwoFactor=false; $event.preventDefault()" style="color:#006AFF;">Go back</a>
+            </p>
+            <div *ngIf="error" class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+          </ng-container>
+
+          <!-- Normal Login Form -->
+          <ng-template #normalLogin>
           <div class="login-header">
             <h1>Login</h1>
           </div>
@@ -69,7 +98,8 @@
               <a routerLink="/forgot-password">Forgot Password?</a>
             </div>
 
-            <button mat-raised-button class="login-button" type="submit" [disabled]="loading" (click)="submit()"
+            <button mat-raised-button class="login-button" type="submit" [disabled]="loading"
+              (click)="submit()"
               style="background-color: #006AFF; color:#FFFFFF; font-family: Poppins;">
               {{ loading ? 'Logging in...' : 'Login' }}
             </button>
@@ -83,6 +113,8 @@
               {{ error }}
             </div>
           </form>
+          </ng-template>
+
         </mat-card-content>
       </mat-card>
     </div>

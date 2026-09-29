@@ -1,22 +1,29 @@
-// This file can be replaced during build by using the `fileReplacements` array.
+﻿// This file can be replaced during build by using the `fileReplacements` array.
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
   production: true,
-  urlAddress: 'https://test.fovestta.com/Auth/sdapi',
-  biometricAddress: 'https://test.fovestta.com/employee/sdapi',
-  ESSBaseUrl: 'https://test.fovestta.com/employee/sdapi',
-  cnbUrlAddress: 'https://test.fovestta.com/salary/sdapi',
-  salaryUrlAddress: 'https://test.fovestta.com/salary/sdapi',
-  reportsUrl: 'https://test.fovestta.com/salary/sdapi',
-  reimbursementUrl: 'https://test.fovestta.com/salary/sdapi',
-  EssUrlAddress: 'https://test.fovestta.com/employee/sdapi',
-  masterUrlAddress: 'https://test.fovestta.com/master/sdapi',
-  hrmsAuthZUrlAddress: 'https://test.fovestta.com/hrmsauthz/sdapi',
-  wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
-  wmsUrlAddress: 'https://fovesttastag.in/wms/sdapi',
-  wmsAuthUrlAddress: 'https://fovesttastag.in/Auth/sdapi',
+  domain: 'https://app.fovestta.com',
+  urlAddress: 'https://app.fovestta.com/Auth/sdapi',
+  biometricAddress: 'https://app.fovestta.com/Employee/sdapi',
+  ESSBaseUrl: 'https://app.fovestta.com/Employee/sdapi',
+  cnbUrlAddress: 'https://app.fovestta.com/Salary/sdapi',
+  salaryUrlAddress: 'https://app.fovestta.com/Salary/sdapi',
+  reportsUrl: 'https://app.fovestta.com/Salary/sdapi',
+  reimbursementUrl: 'https://app.fovestta.com/Salary/sdapi',
+  EssUrlAddress: 'https://app.fovestta.com/Employee/sdapi',
+  masterUrlAddress: 'https://app.fovestta.com/master/sdapi',
+  hrmsAuthZUrlAddress: 'https://app.fovestta.com/Hrmsauthz/sdapi',
+  wmsAuthZUrlAddress: 'https://app.fovestta.com/Hrmsauthz/sdapi',
+  wmsUrlAddress: 'https://app.fovestta.com/wms/sdapi',
+  wmsAuthUrlAddress: 'https://app.fovestta.com/Auth/sdapi',
+  almsUrlAddress: 'https://app.fovestta.com/alms/sdapi',
+  chatUrlAddress: 'https://app.fovestta.com/chat/sdapi',
+  employeeMfeUrl: 'https://app.fovestta.com/Employee/dist/',
+  salaryMfeUrl: 'https://app.fovestta.com/Salary/dist/',
+  almsMfeUrl: 'https://app.fovestta.com/ALMS/dist/',
+  authMfeUrl: 'https://app.fovestta.com/Auth/dist',
 };
 
 // Alternative for development with TLS issues:

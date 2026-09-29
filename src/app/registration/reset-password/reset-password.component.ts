@@ -335,13 +335,24 @@ export class ResetPasswordComponent {
         next: () => {
           this.isLoading = false;
           this.notificationService.showSuccess('Password reset successfully');
-          this.router.navigate(['/authentication/welcome-user']);
+          this.router.navigate(['/login']);
         },
         error: (err) => {
           this.isLoading = false;
-          this.notificationService.showError(
-            err?.error || 'Reset password failed',
-          );
+          let msg = 'Reset password failed';
+          try {
+            const body = typeof err.error === 'string' ? JSON.parse(err.error) : err.error;
+            if (Array.isArray(body)) {
+              msg = body.map((e: any) => e.description || e.message || String(e)).join(', ');
+            } else if (body?.description) {
+              msg = body.description;
+            } else if (body?.message) {
+              msg = body.message;
+            } else if (typeof body === 'string' && body.trim()) {
+              msg = body;
+            }
+          } catch { }
+          this.notificationService.showError(msg);
         },
       });
   }

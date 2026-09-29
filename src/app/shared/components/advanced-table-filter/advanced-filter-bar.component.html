@@ -1,0 +1,60 @@
+<div class="adv-filter-wrapper" *ngIf="columns.length">
+  <button class="adv-filter-toggle" type="button" (click)="isOpen = !isOpen">
+    <span>Filters</span>
+    <span class="adv-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+    <span class="adv-filter-arrow" [class.open]="isOpen">▾</span>
+  </button>
+
+  <div class="adv-filter-panel" *ngIf="isOpen">
+    <div class="adv-filter-add">
+      <select [(ngModel)]="pendingField" (ngModelChange)="addFilterRow($event)">
+        <option value="" disabled selected>+ Add filter on column...</option>
+        <option *ngFor="let col of availableColumns" [value]="col.field">{{ col.header }}</option>
+      </select>
+      <button type="button" class="adv-filter-clear" *ngIf="rows.length" (click)="clearAll()">Clear all</button>
+    </div>
+
+    <div class="adv-filter-row" *ngFor="let row of rows; let i = index">
+      <span class="adv-filter-label">{{ getHeader(row.field) }}</span>
+
+      <ng-container [ngSwitch]="row.type">
+        <div class="adv-filter-enum" *ngSwitchCase="'enum'">
+          <label class="adv-filter-checkbox" *ngFor="let opt of getOptions(row.field)">
+            <input type="checkbox" [checked]="row.selected?.has(toKey(opt.value))"
+              (change)="toggleEnumValue(row, opt.value)" />
+            {{ opt.label }}
+          </label>
+        </div>
+
+        <ng-container *ngSwitchCase="'number'">
+          <select [(ngModel)]="row.operator" (ngModelChange)="applyFilters()">
+            <option *ngFor="let op of OPERATORS.number" [value]="op.value">{{ op.label }}</option>
+          </select>
+          <input type="number" [(ngModel)]="row.value" (ngModelChange)="applyFilters()" placeholder="Value" />
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'date'">
+          <select [(ngModel)]="row.operator" (ngModelChange)="applyFilters()">
+            <option *ngFor="let op of OPERATORS.date" [value]="op.value">{{ op.label }}</option>
+          </select>
+          <input type="date" [(ngModel)]="row.value" (ngModelChange)="applyFilters()" />
+          <input type="date" *ngIf="row.operator === 'between'" [(ngModel)]="row.value2"
+            (ngModelChange)="applyFilters()" />
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <select [(ngModel)]="row.operator" (ngModelChange)="applyFilters()">
+            <option *ngFor="let op of OPERATORS.text" [value]="op.value">{{ op.label }}</option>
+          </select>
+          <input type="text" [(ngModel)]="row.value" (ngModelChange)="applyFilters()" placeholder="Value" />
+        </ng-container>
+      </ng-container>
+
+      <button type="button" class="adv-filter-remove" (click)="removeRow(i)" title="Remove filter">✕</button>
+    </div>
+
+    <div class="adv-filter-empty" *ngIf="!rows.length">
+      No filters applied. Use "+ Add filter" to filter by a column.
+    </div>
+  </div>
+</div>

@@ -42,6 +42,9 @@
 					},
 					"configurations": {
 						"production": {
+							"optimization": {
+								"fonts": { "inline": false }
+							},
 							"budgets": [
 								{
 									"type": "initial",
@@ -61,6 +64,31 @@
 							"optimization": false,
 							"extractLicenses": false,
 							"sourceMap": true
+						},
+						"bubna": {
+							"optimization": {
+								"fonts": { "inline": false }
+							},
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2MB",
+									"maximumError": "5MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "100kB",
+									"maximumError": "200kB"
+								}
+							],
+							"outputHashing": "all",
+							"extraWebpackConfig": "webpack.prod.config.js",
+							"fileReplacements": [
+								{
+									"replace": "src/app/_helpers/environment.ts",
+									"with": "src/app/_helpers/environment.bubna.ts"
+								}
+							]
 						}
 					},
 					"defaultConfiguration": "production"
@@ -74,6 +102,10 @@
 						},
 						"development": {
 							"buildTarget": "login:build:development"
+						},
+						"bubna": {
+							"buildTarget": "login:build:bubna",
+							"extraWebpackConfig": "webpack.prod.config.js"
 						}
 					},
 					"defaultConfiguration": "development",
@@ -172,6 +204,9 @@
 					},
 					"configurations": {
 						"production": {
+							"optimization": {
+								"fonts": { "inline": false }
+							},
 							"budgets": [
 								{
 									"type": "initial",

@@ -1,10 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+﻿import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable, forkJoin } from 'rxjs';
 import { EmployeeEligibilityDto } from '../../_models/employeeEligibilityDto.model';
 import { EligibilityCriteriaDto } from '../../_models/eligibilityCriteriaDto.model';
 import { ApprovalRequestEligibilityDto } from '../../_models/approvalRequestEligibilityDto.model';
 import { ApprovalResponseEligibilityDto } from '../../_models/approvalResponseEligibilityDto.model';
+import { environment as appEnv } from '../../_helpers/environment';
 
 
 interface BonusEligibilityRequest {
@@ -70,7 +71,7 @@ export class EmployeeEligibilityService {
   private baseUrl: string;
   environment = {
     production: false,
-    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+    urlAddress: appEnv.urlAddress,
   };
   constructor(
     private http: HttpClient,

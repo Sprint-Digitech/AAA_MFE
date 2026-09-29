@@ -38,6 +38,14 @@
   </div>
 
 </div> -->
-<div class="main" style="margin-top: 55px;">
-  <lib-add-update-form *ngIf="addRolesFormLoaded" [config]="addRolesFormConfig"></lib-add-update-form>
+<div class="main" style="margin-top: 10px;">
+  <lib-add-update-form *ngIf="addRolesFormLoaded" [config]="addRolesFormConfig" (validationError)="onValidationError($event)"></lib-add-update-form>
+  <div *ngIf="addRolesFormLoaded" style="display:flex; gap:12px; margin-top:10px; padding: 0 10px 10px;">
+    <button class="btn btn-primary" (click)="submitDirectly()" style="padding:8px 20px; background:#006aff; color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer;">
+      {{ isEditMode ? 'Update' : 'Submit' }}
+    </button>
+    <button class="btn" (click)="goBack()" style="padding:8px 20px; background:#303030; color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer;">
+      Back
+    </button>
+  </div>
 </div>

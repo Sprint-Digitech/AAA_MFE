@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -17,7 +17,8 @@ import { AccountService } from '../../shared/services/account.service';
   templateUrl: './add-menu-master.component.html',
   styleUrls: ['./add-menu-master.component.scss'],
 })
-export class AddMenuMasterComponent {
+export class AddMenuMasterComponent implements AfterViewInit {
+  @ViewChild(AddUpdateFormComponent) addFormRef?: AddUpdateFormComponent;
   menuList: any;
   // url for showing parent path or other path
   selectedBaseURL: string = 'http://localhost:4200/sprintdigitech/#/';
@@ -66,6 +67,26 @@ export class AddMenuMasterComponent {
     private route: ActivatedRoute,
     private accountService: AccountService,
   ) {}
+  ngAfterViewInit(): void {}
+
+  submitDirectly(): void {
+    const form = this.addFormRef?.form;
+    if (!form) {
+      this.notificationService.showError('Form not initialized.');
+      return;
+    }
+    form.markAllAsTouched();
+    if (form.invalid) {
+      this.notificationService.showError('Please fill all required fields.');
+      return;
+    }
+    this.sendData1(form.getRawValue());
+  }
+
+  onValidationError(message: string): void {
+    this.notificationService.showError(message || 'Please fill all required fields.');
+  }
+
   // this lifecycle use for loanding get api
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -378,6 +399,10 @@ export class AddMenuMasterComponent {
           path = '/attendance/source-master';
           parent = 'Attendance & Leave';
           break;
+        case 'DeviceMaster':
+          path = '/attendance/device-master';
+          parent = 'Attendance & Leave';
+          break;
         case 'Monthly':
           path = '/perquisites/perquisiteHead';
           parent = 'perquisites';
@@ -655,6 +680,7 @@ export class AddMenuMasterComponent {
           ],
         },
       ],
+      disableSubmit: true,
       submitLabel: this.isEditMode ? 'Update' : 'Submit',
       resetLabel: 'Reset',
       cancelLabel: 'Back',

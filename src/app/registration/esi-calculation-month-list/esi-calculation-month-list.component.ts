@@ -4,13 +4,14 @@ import { ResponsibilityService } from '../../shared/services/responsibility.serv
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 import { AccountService } from '../../shared/services/account.service';
 import { UtilityService } from '../../shared/services/utility.service';
 import { BranchFilterService } from "../../shared/services/branch-filter.service";
 @Component({
   standalone: true,
   selector: 'app-esi-calculation-month-list',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './esi-calculation-month-list.component.html',
   styleUrl: './esi-calculation-month-list.component.scss'
 })

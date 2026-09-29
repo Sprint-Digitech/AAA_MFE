@@ -64,7 +64,7 @@
     </aside>
 
     <!-- Main Content Box -->
-    <div class="main-container" (click)="closeSubmenus(); showUserDropdown = false">
+    <div class="main-container" (click)="onMainContainerClick()">
         <app-loader></app-loader>
         <!-- Header (SD Nemo Style) -->
         <header class="header" *ngIf="!isLoginPage">
@@ -72,7 +72,7 @@
                 <div class="search-box">
                     <mat-icon>search</mat-icon>
                     <input type="text" placeholder="Search employees..." [(ngModel)]="globalSearchTerm"
-                        (input)="onHeaderInput(globalSearchTerm)" (focus)="openGlobalSearchResults()" />
+                        (ngModelChange)="onHeaderInput($event)" (focus)="openGlobalSearchResults()" />
                     <button type="button" class="clear-search-btn" *ngIf="globalSearchTerm"
                         (click)="clearGlobalSearch()">
                         <mat-icon>close</mat-icon>
@@ -133,6 +133,12 @@
             </div>
 
             <div class="header-right">
+                <app-company-switcher></app-company-switcher>
+
+                <app-notification-bell></app-notification-bell>
+
+                <lib-chat-icon *ngIf="chatConfig" [config]="chatConfig" [contacts]="chatContacts"></lib-chat-icon>
+
                 <button type="button" class="user-profile" (click)="onUserClick($event)">
                     <div class="avatar">{{ userInitials }}</div>
                 </button>
@@ -166,6 +172,31 @@
                                 </div>
                             </div>
 
+                            <!-- Change Password -->
+                            <button type="button" class="user-menu__change-pwd-btn"
+                                (click)="onChangePasswordClick(); $event.stopPropagation()">
+                                <mat-icon>lock_reset</mat-icon>
+                                <span>Change Password</span>
+                            </button>
+
+                            <div class="user-menu__cp-form" *ngIf="showChangePassword" (click)="$event.stopPropagation()">
+                                <input type="password" class="cp-input" placeholder="Current Password"
+                                    [(ngModel)]="cpForm.currentPassword" autocomplete="current-password" />
+                                <input type="password" class="cp-input" placeholder="New Password"
+                                    [(ngModel)]="cpForm.newPassword" autocomplete="new-password" />
+                                <input type="password" class="cp-input" placeholder="Confirm New Password"
+                                    [(ngModel)]="cpForm.confirmPassword" autocomplete="new-password" />
+                                <div class="cp-error" *ngIf="changePasswordError">{{ changePasswordError }}</div>
+                                <div class="cp-success" *ngIf="changePasswordSuccess">{{ changePasswordSuccess }}</div>
+                                <div class="cp-actions">
+                                    <button class="cp-btn cp-btn--cancel" (click)="cancelChangePassword()">Cancel</button>
+                                    <button class="cp-btn cp-btn--save" (click)="submitChangePassword()"
+                                        [disabled]="changePasswordLoading">
+                                        {{ changePasswordLoading ? 'Saving...' : 'Save' }}
+                                    </button>
+                                </div>
+                            </div>
+
                             <button type="button" class="user-menu__signout"
                                 (click)="logout(); $event.stopPropagation()" (mouseenter)="onSignoutHover(true)"
                                 (mouseleave)="onSignoutHover(false)">
@@ -183,4 +214,5 @@
             <router-outlet></router-outlet>
         </main>
     </div>
+  <app-ai-agent *ngIf="!isLoginPage"></app-ai-agent>
 </div>

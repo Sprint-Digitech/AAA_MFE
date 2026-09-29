@@ -1,0 +1,427 @@
+﻿<div class="uam-page">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <mat-icon class="page-header__icon">manage_accounts</mat-icon>
+      <div>
+        <h2 class="page-header__title">User Access Management</h2>
+        <p class="page-header__sub">Manage employee roles and system access</p>
+      </div>
+    </div>
+    <button class="btn-primary" (click)="openAdd()">
+      <mat-icon>add</mat-icon> Assign Role
+    </button>
+  </div>
+
+  <!-- ── Inline Filter Row ─────────────────────────────────────────────────── -->
+  <div class="filter-card">
+    <p class="filter-card-title">Filter Employees</p>
+    <div class="filter-row">
+      <div class="filter-col">
+        <label class="filter-label">Branch</label>
+        <select class="filter-select" [(ngModel)]="filterBranch">
+          <option value="">All</option>
+          <option *ngFor="let b of branchOptions" [value]="b">{{ b }}</option>
+        </select>
+      </div>
+      <div class="filter-col">
+        <label class="filter-label">Department</label>
+        <select class="filter-select" [(ngModel)]="filterDept">
+          <option value="">All</option>
+          <option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option>
+        </select>
+      </div>
+      <div class="filter-col">
+        <label class="filter-label">Designation</label>
+        <select class="filter-select" [(ngModel)]="filterDesig">
+          <option value="">All</option>
+          <option *ngFor="let g of designOptions" [value]="g">{{ g }}</option>
+        </select>
+      </div>
+      <div class="filter-col filter-btn-col">
+        <button class="btn-search" (click)="onSearch()">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Employee Roles Table ───────────────────────────────────────────────── -->
+  <div class="uam-card">
+    <div class="emp-table-header">
+      <div class="table-section-header" style="margin:0">
+        <span class="table-section-title">Employee Roles</span>
+        <span class="record-count">/ Total: {{ empDataArray.length }}</span>
+      </div>
+      <button class="btn-bulk-reset"
+        [disabled]="selectedRows.length === 0"
+        (click)="bulkResetPassword()">
+        <mat-icon>lock_reset</mat-icon>
+        Reset Password
+        <span class="selection-badge" *ngIf="selectedRows.length > 0">({{ selectedRows.length }} selected)</span>
+      </button>
+    </div>
+
+    <!-- Page size selector -->
+    <div class="table-controls">
+      <label class="page-size-label">Show
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-select">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+        entries
+      </label>
+    </div>
+
+    <div class="custom-table-wrap">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th class="col-check">
+              <input type="checkbox" [checked]="allSelected" (change)="toggleSelectAll($event)">
+            </th>
+            <th>#</th>
+            <th>Emp Code</th>
+            <th>Emp Name</th>
+            <th>Email</th>
+            <th>Branch</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Last Email Sent</th>
+            <th>Roles</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of paginatedData; let i = index; trackBy: trackByEmpId" [class.row-selected]="isSelected(row)">
+            <td class="col-check">
+              <input type="checkbox" [checked]="isSelected(row)" (change)="toggleRow(row)">
+            </td>
+            <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+            <td>{{ row.employeeCode }}</td>
+            <td>{{ row.employeeName }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.departmentName }}</td>
+            <td>{{ row.designationName }}</td>
+            <td>{{ row.lastEmailSentDisplay }}</td>
+            <td>
+              <div class="role-badges" *ngIf="row.roles?.length; else noBadge">
+                <span class="role-badge" *ngFor="let r of row.roles">{{ r }}</span>
+              </div>
+              <ng-template #noBadge><span class="no-role-text">—</span></ng-template>
+            </td>
+            <td class="action-cell">
+              <button class="btn-edit-row" (click)="openRoleEditor(row)" title="Edit Roles">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="btn-set-password-row" (click)="openSetPassword(row)" title="Set Password">
+                <mat-icon>lock</mat-icon>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="empDataArray.length === 0">
+            <td colspan="11" class="empty-row">No employees found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="paginator" *ngIf="empDataArray.length > 0">
+      <span class="paginator-info">
+        Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ minVal(currentPage * pageSize, empDataArray.length) }} of {{ empDataArray.length }}
+      </span>
+      <div class="paginator-btns">
+        <button class="page-btn" (click)="changePage(1)" [disabled]="currentPage === 1">«</button>
+        <button class="page-btn" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+        <button class="page-btn" *ngFor="let p of visiblePages" (click)="changePage(p)"
+          [class.page-active]="p === currentPage">{{ p }}</button>
+        <button class="page-btn" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">›</button>
+        <button class="page-btn" (click)="changePage(totalPages)" [disabled]="currentPage === totalPages">»</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Employees Without Roles ────────────────────────────────────────────── -->
+  <ng-container *ngIf="noRolesDataArray.length > 0">
+    <div class="table-section-header warning-header">
+      <mat-icon class="warn-icon">warning</mat-icon>
+      <span class="table-section-title">Employees Without Roles</span>
+      <span class="record-count">/ Total: {{ noRolesDataArray.length }}</span>
+    </div>
+    <lib-nemo-reusable-tbl
+      [showSearch]="false"
+      [dataSource]="noRolesDataArray"
+      [columns]="noRolesColumns"
+      [showDeleteOption]="false"
+      [showEditOption]="true"
+      [showDetailsOption]="false"
+      (editAction)="openRoleEditor($event)">
+    </lib-nemo-reusable-tbl>
+  </ng-container>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     Role Edit Modal
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showRoleModal" (click)="closeRoleEditor()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h4 class="modal-title">Edit Roles</h4>
+        <p class="modal-subtitle">{{ editingEmployee?.employeeName }}</p>
+      </div>
+      <button type="button" class="modal-close" (click)="closeRoleEditor()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="needsEmail; else roleSelectStep">
+      <p class="modal-emp-info">
+        <mat-icon class="info-icon">badge</mat-icon> {{ editingEmployee?.employeeCode }}
+      </p>
+
+      <div class="modal-note">
+        <mat-icon class="info-icon">info</mat-icon>
+        This employee has no email on file. Add one before assigning roles — it's needed to create their login and send notifications.
+      </div>
+
+      <p class="section-label" style="margin-top:16px">Email Address</p>
+      <input type="email" class="emp-modal-search" [(ngModel)]="newEmployeeEmail"
+        placeholder="Enter employee email…" (keyup.enter)="saveEmployeeEmail()">
+    </div>
+
+    <ng-template #roleSelectStep>
+      <div class="modal-body">
+        <p class="modal-emp-info">
+          <mat-icon class="info-icon">badge</mat-icon> {{ editingEmployee?.employeeCode }}
+          &nbsp;·&nbsp;
+          <mat-icon class="info-icon">mail</mat-icon> {{ editingEmployee?.email }}
+        </p>
+
+        <p class="section-label">Select Roles:</p>
+        <div class="role-checkboxes">
+          <label *ngFor="let role of availableRoles" class="role-checkbox-item"
+            [class.role-checked]="hasRole(role)">
+            <input type="checkbox" [checked]="hasRole(role)" (change)="toggleRole(role)">
+            <span class="role-name">{{ role }}</span>
+            <mat-icon class="check-icon" *ngIf="hasRole(role)">check</mat-icon>
+          </label>
+        </div>
+
+        <div class="modal-note">
+          <mat-icon class="info-icon">info</mat-icon>
+          An email notification will be sent to the employee with their updated roles upon saving.
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-ghost" (click)="closeRoleEditor()">Cancel</button>
+      <ng-container *ngIf="needsEmail; else roleSaveBtn">
+        <button type="button" class="btn-primary" (click)="saveEmployeeEmail()" [disabled]="isSavingEmail">
+          <mat-icon *ngIf="isSavingEmail" class="spin">refresh</mat-icon>
+          <mat-icon *ngIf="!isSavingEmail">arrow_forward</mat-icon>
+          {{ isSavingEmail ? 'Saving...' : 'Save & Continue' }}
+        </button>
+      </ng-container>
+      <ng-template #roleSaveBtn>
+        <button type="button" class="btn-primary" (click)="saveRoles()" [disabled]="isSavingRoles">
+          <mat-icon *ngIf="isSavingRoles" class="spin">refresh</mat-icon>
+          <mat-icon *ngIf="!isSavingRoles">send</mat-icon>
+          {{ isSavingRoles ? 'Saving...' : 'Save & Notify' }}
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     Set Password Modal
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showSetPasswordModal" (click)="closeSetPassword()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h4 class="modal-title">Set Password</h4>
+        <p class="modal-subtitle">{{ setPasswordEmployee?.employeeName }}</p>
+      </div>
+      <button type="button" class="modal-close" (click)="closeSetPassword()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-emp-info">
+        <mat-icon class="info-icon">badge</mat-icon> {{ setPasswordEmployee?.employeeCode }}
+        &nbsp;·&nbsp;
+        <mat-icon class="info-icon">mail</mat-icon> {{ setPasswordEmployee?.email }}
+      </p>
+
+      <p class="section-label">New Password</p>
+      <div class="password-input-wrap">
+        <input
+          [type]="setPasswordShowNew ? 'text' : 'password'"
+          class="password-input"
+          placeholder="Enter new password"
+          [(ngModel)]="setPasswordValue"
+          autocomplete="new-password">
+        <button type="button" class="btn-toggle-visibility" (click)="setPasswordShowNew = !setPasswordShowNew" tabindex="-1">
+          <mat-icon>{{ setPasswordShowNew ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </div>
+
+      <p class="section-label" style="margin-top:16px">Confirm Password</p>
+      <div class="password-input-wrap">
+        <input
+          [type]="setPasswordShowConfirm ? 'text' : 'password'"
+          class="password-input"
+          placeholder="Confirm new password"
+          [(ngModel)]="setPasswordConfirm"
+          autocomplete="new-password">
+        <button type="button" class="btn-toggle-visibility" (click)="setPasswordShowConfirm = !setPasswordShowConfirm" tabindex="-1">
+          <mat-icon>{{ setPasswordShowConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </div>
+      <p class="password-mismatch-hint" *ngIf="setPasswordConfirm && setPasswordValue !== setPasswordConfirm">
+        <mat-icon class="info-icon" style="color:#dc2626">error_outline</mat-icon>
+        Passwords do not match
+      </p>
+
+      <div class="modal-note" style="margin-top:16px">
+        <mat-icon class="info-icon">info</mat-icon>
+        The employee's password will be updated immediately. No email will be sent.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-ghost" (click)="closeSetPassword()">Cancel</button>
+      <button type="button" class="btn-primary" (click)="saveSetPassword()" [disabled]="isSettingPassword">
+        <mat-icon *ngIf="isSettingPassword" class="spin">refresh</mat-icon>
+        <mat-icon *ngIf="!isSettingPassword">lock_reset</mat-icon>
+        {{ isSettingPassword ? 'Saving...' : 'Set Password' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HRMSAuthZ Assign Role Modal
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-panel assign-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Assign Role to Employees</h3>
+      <button class="modal-close" (click)="closeModal()"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <div class="modal-body assign-modal-body">
+
+      <!-- ── Step 1: Employee Selection ──────────────────────────────────── -->
+      <p class="section-label">
+        Select Employees
+        <span class="hint" *ngIf="selectedModalEmployees.length">&nbsp;· {{ selectedModalEmployees.length }} selected</span>
+      </p>
+      <input type="text" class="emp-modal-search" [(ngModel)]="empModalSearch"
+        placeholder="Search by name, code or email…">
+
+      <div class="emp-modal-list">
+        <!-- Select-all header row -->
+        <div class="emp-modal-row emp-modal-header-row">
+          <input type="checkbox" [checked]="allModalEmpSelected" (change)="toggleSelectAllModalEmp($event)">
+          <span class="emp-col-code"><b>Code</b></span>
+          <span class="emp-col-name"><b>Name</b></span>
+          <span class="emp-col-email"><b>Email</b></span>
+        </div>
+        <!-- Employee rows -->
+        <div class="emp-modal-row" *ngFor="let emp of filteredModalEmployees"
+          [class.emp-modal-row--selected]="isModalEmpSelected(emp)"
+          (click)="toggleModalEmployee(emp)">
+          <input type="checkbox" [checked]="isModalEmpSelected(emp)" (click)="$event.stopPropagation()">
+          <span class="emp-col-code">{{ emp.employeeCode }}</span>
+          <span class="emp-col-name">{{ emp.employeeName }}</span>
+          <span class="emp-col-email">{{ emp.email }}</span>
+        </div>
+        <div class="emp-modal-empty" *ngIf="filteredModalEmployees.length === 0">No employees found.</div>
+      </div>
+
+      <!-- ── Step 2: Role ─────────────────────────────────────────────────── -->
+      <p class="section-label" style="margin-top:16px">Role & Access Scope</p>
+
+      <form [formGroup]="form">
+        <div class="assign-form-grid">
+          <!-- Role -->
+          <div class="assign-form-field">
+            <label class="assign-field-label">HRMS Role *</label>
+            <select class="assign-select" formControlName="hrmsRoleId">
+              <option value="">— Select Role —</option>
+              <option *ngFor="let r of roles" [value]="r.hrmsRoleId">{{ r.roleDisplayName || r.roleName }}</option>
+            </select>
+            <span class="assign-error" *ngIf="form.get('hrmsRoleId')?.touched && form.get('hrmsRoleId')?.hasError('required')">Required</span>
+          </div>
+
+          <!-- Group -->
+          <div class="assign-form-field">
+            <label class="assign-field-label">Group</label>
+            <select class="assign-select" formControlName="hrmsGroupId">
+              <option value="">— All Groups —</option>
+              <option *ngFor="let g of hierarchy" [value]="g.groupId">{{ g.groupName }}</option>
+            </select>
+          </div>
+
+          <!-- Company -->
+          <div class="assign-form-field" *ngIf="availableCompanies.length">
+            <label class="assign-field-label">Company</label>
+            <select class="assign-select" formControlName="hrmsCompanyId">
+              <option value="">— All Companies —</option>
+              <option *ngFor="let c of availableCompanies" [value]="c.companyId">{{ c.companyName }}</option>
+            </select>
+          </div>
+
+          <!-- Branch -->
+          <div class="assign-form-field" *ngIf="availableBranches.length">
+            <label class="assign-field-label">Branch</label>
+            <select class="assign-select" formControlName="hrmsBranchId">
+              <option value="">— All Branches —</option>
+              <option *ngFor="let b of availableBranches" [value]="b.branchId">{{ b.branchName }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Department Restriction -->
+        <div class="form-section" *ngIf="departments.length">
+          <p class="assign-field-label" style="margin-bottom:8px">
+            Department Restriction <span class="hint">(leave blank = all)</span>
+          </p>
+          <div class="chip-list" *ngIf="selectedDeptNames.length">
+            <span class="chip" *ngFor="let name of selectedDeptNames">
+              {{ name }}
+              <mat-icon class="chip-remove" (click)="removeDept(name)">cancel</mat-icon>
+            </span>
+          </div>
+          <div class="dept-pills">
+            <button type="button" class="dept-pill" *ngFor="let d of departments"
+              [class.dept-pill--active]="isDeptSelected(d)" (click)="toggleDept(d)">
+              {{ d.departmentName }}
+            </button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeModal()">Cancel</button>
+      <button class="btn-primary" (click)="save()" [disabled]="isSaving">
+        <mat-icon *ngIf="isSaving" class="spin">refresh</mat-icon>
+        <mat-icon *ngIf="!isSaving">check</mat-icon>
+        {{ isSaving ? 'Assigning…' : 'Assign Role' }}
+      </button>
+    </div>
+
+  </div>
+</div>

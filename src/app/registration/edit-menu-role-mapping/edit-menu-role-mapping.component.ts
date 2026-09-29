@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
   FormBuilder,
   FormControl,
   FormGroup,
+  FormsModule,
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,11 +29,12 @@ interface MenuItem {
 }
 @Component({
   selector: 'app-edit-menu-role-mapping',
-  imports: [AddUpdateFormComponent, MatCheckboxModule, CommonModule],
+  imports: [AddUpdateFormComponent, MatCheckboxModule, CommonModule, FormsModule],
   templateUrl: './edit-menu-role-mapping.component.html',
   styleUrls: ['./edit-menu-role-mapping.component.scss'],
 })
 export class EditMenuRoleMappingComponent {
+  @ViewChild(AddUpdateFormComponent) addFormRef?: AddUpdateFormComponent;
   addRolemenuForm!: FormGroup;
   menuList: any[] = [];
   menuListRole: any[] = [];
@@ -48,6 +50,9 @@ export class EditMenuRoleMappingComponent {
   groupedMenuCategories: any[] = [];
   editRoleFormLoaded = false;
   isEditMode = false;
+  assignedEmployees: any[] = [];
+  newEmployeeEmail: string = '';
+  assigningEmployee = false;
   mapRolesFormConfig: FormConfig = {
     formTitle: 'Map Roles',
     maxColsPerRow: 5,
@@ -69,6 +74,7 @@ export class EditMenuRoleMappingComponent {
         ],
       },
     ],
+    disableSubmit: true,
     submitLabel: 'Save',
     resetLabel: 'Reset',
     cancelLabel: 'Back',
@@ -186,7 +192,7 @@ export class EditMenuRoleMappingComponent {
       // Remove duplicates based on menuID (use a Map to ensure uniqueness)
       const uniqueMenus = Array.from(
         new Map(
-          data.map((menu: any) => [menu.menuMaster?.menuID, menu]),
+          data.map((menu: any) => [menu.menuID, menu]),
         ).values(),
       );
 
@@ -196,7 +202,7 @@ export class EditMenuRoleMappingComponent {
       // Map through the unique fetched menu list and add access status
       this.menuList = uniqueMenus.map((menu: any) => ({
         ...menu,
-        access: selectedMenuIds.includes(menu.menuMaster?.menuID), // Set access based on form's MenuID values
+        access: selectedMenuIds.includes(menu.menuID),
       }));
     });
   }
@@ -206,10 +212,10 @@ export class EditMenuRoleMappingComponent {
       this.service
         .get(`api/Roles/Getmenumapping?roleId=${this.roleID}`)
         .subscribe((data: any) => {
-          if (data && data[0]?.roleMaster) {
+          if (data && data[0]?.roleID) {
             this.addRolemenuForm.patchValue({
-              RoleID: data[0].roleMaster?.roleID,
-              roleName: data[0].roleMaster?.roleName,
+              RoleID: data[0].roleID,
+              roleName: data[0].roleName,
             });
 
             // Update form config with role name
@@ -218,10 +224,11 @@ export class EditMenuRoleMappingComponent {
               this.mapRolesFormConfig.sections[0]?.fields
             ) {
               this.mapRolesFormConfig.sections[0].fields[0].value =
-                data[0].roleMaster?.roleName || '';
+                data[0].roleName || '';
             }
 
             this.editRoleFormLoaded = true;
+            this.loadAssignedEmployees();
 
             // Get list of already mapped menu IDs directly from the data array
             this.selectedMenuIds = data.map((m: any) => m.menuID);
@@ -238,6 +245,15 @@ export class EditMenuRoleMappingComponent {
             // Load ALL menus from menuListMaster (like in add mode) but mark mapped ones as checked
             this.loadAllMenusForEdit(existingMappings);
           } else {
+            // No existing mappings yet — still show all menus unchecked so user can select
+            this.addRolemenuForm.patchValue({ RoleID: this.roleID });
+            const roleInfo = this.roleList.find((r: any) => r.roleID === this.roleID);
+            if (roleInfo && this.mapRolesFormConfig.sections?.[0]?.fields) {
+              this.mapRolesFormConfig.sections[0].fields[0].value = roleInfo.roleName || '';
+            }
+            this.editRoleFormLoaded = true;
+            this.loadAssignedEmployees();
+            this.loadAllMenusForAdd();
           }
         });
     }
@@ -500,6 +516,7 @@ export class EditMenuRoleMappingComponent {
           ],
         },
       ],
+      disableSubmit: true,
       submitLabel: 'Save',
       resetLabel: 'Reset',
       cancelLabel: 'Back',
@@ -821,7 +838,7 @@ export class EditMenuRoleMappingComponent {
       roleID: m.roleID,
     }));
 
-    this.service.post('api/Roles/Updatemenumapping', bulkPayload).subscribe(
+    this.service.update('api/Roles/Updatemenumapping', { menuRoleMappings: bulkPayload }).subscribe(
       () => {
         this.notificationService.showSuccess('Mappings saved successfully!');
         this.router.navigate(['/MenuMaster/MenuRoleMapping']);
@@ -844,6 +861,62 @@ export class EditMenuRoleMappingComponent {
           v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       },
+    );
+  }
+
+  saveMappings(): void {
+    const formValue = this.addFormRef?.form?.getRawValue() || {};
+    this.sendData(formValue);
+  }
+
+  loadAssignedEmployees(): void {
+    if (!this.roleID) return;
+    this.service.get('api/Roles/Getemployeerole').subscribe((data: any[]) => {
+      this.assignedEmployees = (data || []).filter(
+        (er: any) => er.roleID?.toLowerCase() === this.roleID?.toLowerCase()
+      );
+    }, () => {
+      this.assignedEmployees = [];
+    });
+  }
+
+  assignEmployee(): void {
+    const email = this.newEmployeeEmail.trim();
+    if (!email) {
+      this.notificationService.showError('Please enter an employee email.');
+      return;
+    }
+    if (!this.roleID) {
+      this.notificationService.showError('Role ID not available.');
+      return;
+    }
+    this.assigningEmployee = true;
+    this.service.post('api/Roles/Createemployeerole', { email, roleID: this.roleID }).subscribe(
+      () => {
+        this.notificationService.showSuccess(`Employee "${email}" assigned to this role.`);
+        this.newEmployeeEmail = '';
+        this.assigningEmployee = false;
+        this.loadAssignedEmployees();
+      },
+      (error: any) => {
+        console.error('Assign employee error:', error);
+        this.notificationService.showError('Failed to assign employee. Please try again.');
+        this.assigningEmployee = false;
+      }
+    );
+  }
+
+  removeEmployeeFromRole(email: string): void {
+    if (!this.roleID) return;
+    this.service.delete(`api/Roles/DeleteEmployeeRole?email=${encodeURIComponent(email)}&roleId=${this.roleID}`).subscribe(
+      () => {
+        this.notificationService.showSuccess(`Employee "${email}" removed from this role.`);
+        this.loadAssignedEmployees();
+      },
+      (error: any) => {
+        console.error('Remove employee error:', error);
+        this.notificationService.showError('Failed to remove employee. Please try again.');
+      }
     );
   }
 

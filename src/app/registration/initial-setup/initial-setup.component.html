@@ -34,7 +34,7 @@
               <span *ngIf="!stepCompletion[i]" class="step-number">{{ i + 1 }}</span>
             </div>
             <div class="step-content">
-              <span class="step-label">{{ step.label }}</span>
+              <span class="step-label">{{ step.label }}<span *ngIf="step.optional" class="optional-tag"> (Optional)</span></span>
               <span class="step-status" *ngIf="stepCompletion[i]" class="completed-text">Completed</span>
               <span class="step-status" *ngIf="!stepCompletion[i]" class="next-step-text">Next Step →</span>
             </div>

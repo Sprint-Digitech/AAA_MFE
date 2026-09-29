@@ -4,11 +4,12 @@ import { ResponsibilityService } from '../../shared/services/responsibility.serv
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 @Component({
   standalone: true,
   selector: 'app-responsibility-list',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './responsibility-list.component.html',
   styleUrls: ['./responsibility-list.component.scss'],
 })

@@ -1,4 +1,4 @@
-* {
+﻿* {
     box-sizing: border-box;
 }
 
@@ -19,6 +19,11 @@ body {
 
 mat-icon {
     font-family: "Material Icons" !important;
+}
+
+/* Hide the form title heading inside lib-add-update-form */
+.form-container .form-header {
+    display: none !important;
 }
 
 /* Force hide all page-level scrollbars */
@@ -258,6 +263,53 @@ mat-icon {
         display: inline-block !important;
         text-align: center !important;
     }
+}
+
+/* ============================================
+   Sticky Header â€” lib-nemo-reusable-tbl (global)
+   The library sets overflow-x:auto which forces overflow-y:auto per CSS spec,
+   making .table-wrapper the scroll container. max-height creates actual overflow.
+   scrollbar overrides are needed because the library explicitly hides its scrollbar.
+   ============================================ */
+lib-nemo-reusable-tbl .table-wrapper {
+    max-height: 550px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+}
+
+lib-nemo-reusable-tbl .table-wrapper::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+lib-nemo-reusable-tbl thead tr {
+    background: #0072b1 !important;
+    background-color: #0072b1 !important;
+}
+
+lib-nemo-reusable-tbl thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    background: #0072b1 !important;
+    background-color: #0072b1 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+lib-nemo-reusable-tbl thead th .sort-icons {
+    gap: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+}
+
+lib-nemo-reusable-tbl thead th .sort-icons .material-symbols-outlined {
+    font-size: 14px !important;
+    line-height: 0.7 !important;
+    display: block !important;
+    overflow: hidden !important;
 }
 
 /* ============================================

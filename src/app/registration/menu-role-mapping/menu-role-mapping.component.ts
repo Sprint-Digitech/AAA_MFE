@@ -9,11 +9,12 @@ import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 @Component({
   standalone: true,
   selector: 'app-menu-role-mapping',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './menu-role-mapping.component.html',
   styleUrls: ['./menu-role-mapping.component.scss'],
 })
@@ -78,12 +79,12 @@ export class MenuRoleMappingComponent {
       // Format the data to extract relevant fields
       let formattedData = this.menuRollMapping.map((item: any) => ({
         menuRoleMappingId: item.menuRoleMappingId,
-        roleID: item.roleMaster?.roleID || 'N/A', // Handle cases where roleID might be missing
-        roleName: item.roleMaster?.roleName || 'N/A', // Handle cases where roleName might be missing
-        menuName: item.menuMaster?.menuName || 'N/A', // Handle cases where menuName might be missing
-        menuParentId: item.menuMaster?.menuParentId, // Get parent menu ID to identify parent menus
-        srNo: item.srNo, // Maintain the serial number
-        status: item.status, // Maintain the formatted status
+        roleID: item.roleID || 'N/A',
+        roleName: item.roleName || 'N/A',
+        menuName: item.menuName || 'N/A',
+        menuParentId: item.menuParentId,
+        srNo: item.srNo,
+        status: item.status,
       }));
 
       // Group by roleID and aggregate only parent menu names

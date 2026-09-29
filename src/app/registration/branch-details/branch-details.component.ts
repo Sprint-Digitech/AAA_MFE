@@ -1,4 +1,6 @@
 import { ChangeDetectorRef, Component, Injectable, OnInit, ViewChild } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -125,6 +127,7 @@ export class BranchDetailsComponent implements OnInit {
   overtimeFormConfig!: FormConfig;
   contactFormConfig!: FormConfig;
   leaveEncashmentFormConfig!: FormConfig;
+  dateTimeFormConfig!: FormConfig;
 
   // Manual Data Tracking for Fallback (Internal use)
   manualContactData: any = {};
@@ -133,13 +136,22 @@ export class BranchDetailsComponent implements OnInit {
   manualAddressData: any = {};
   manualOvertimeData: any = {};
   manualLeaveData: any = {};
+  manualDateTimeData: any = {};
 
   addressId: string | undefined;
   contactId: string | undefined;
   statutoryId: string | undefined;
   taxId: string | undefined;
   overtimeId: string | undefined;
+  almsOvertimeId: string | null = null;
+  cabOvertimeId: string | null = null;
+  // OT-hours bank is an ALMS-only table (no HRMSAuthZ/CAB copies to fan out to),
+  // so it gets its own id tracking separate from overtimeId/almsOvertimeId/cabOvertimeId above.
+  overtimeBankSettingId: string | null = null;
+  leaveTypeOptions: { label: string; value: string }[] = [];
   leaveId: string | undefined;
+  dateTimeSettingsId: string | undefined;
+  isTimezoneCustom: boolean = false;
 
   addressDataLoaded: boolean = false;
   contactDataLoaded: boolean = false;
@@ -147,6 +159,7 @@ export class BranchDetailsComponent implements OnInit {
   statutoryDataLoaded: boolean = false;
   taxDataLoaded: boolean = false;
   leaveDataLoaded: boolean = false;
+  dateTimeDataLoaded: boolean = false;
 
   initializeStatutoryConfig(initialValues?: any) {
     console.log('[BRANCH_DETAILS] initializeStatutoryConfig - v22.4', initialValues);
@@ -156,7 +169,7 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!statutoryId;
 
     this.statutoryFormConfig = {
-      formTitle: isUpdate ? 'Update Statutory Details' : 'New Statutory Details',
+      formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 4,
       hideSubmit: false,
@@ -260,6 +273,19 @@ export class BranchDetailsComponent implements OnInit {
               colSpan: 2,
             },
             {
+              name: 'pfCalculationBasis',
+              label: 'PF Calculation Basis',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Basic', value: 'Basic' },
+                { label: 'Gross Earning', value: 'GrossEarning' },
+              ],
+              value: initialValues?.pfCalculationBasis || 'Basic',
+              onChange: (val: any) => (this.manualStatutoryData.pfCalculationBasis = val),
+              colSpan: 2,
+            },
+            {
               name: 'pfOverridableEmployee',
               label: 'Is PF Overridable at Emp Level',
               type: 'radio',
@@ -271,6 +297,20 @@ export class BranchDetailsComponent implements OnInit {
               value: initialValues?.pfOverridableEmployee || 'Yes',
               onChange: (val: any) =>
                 (this.manualStatutoryData.pfOverridableEmployee = val),
+              colSpan: 2,
+            },
+            {
+              name: 'pfCeilingProrateByAttendance',
+              label: 'Prorate PF Ceiling by Attendance',
+              type: 'radio',
+              layout: 'horizontal',
+              options: [
+                { label: 'Yes', value: 'Yes' },
+                { label: 'No', value: 'No' },
+              ],
+              value: initialValues?.pfCeilingProrateByAttendance || 'No',
+              onChange: (val: any) =>
+                (this.manualStatutoryData.pfCeilingProrateByAttendance = val),
               colSpan: 2,
             },
             {
@@ -419,7 +459,7 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!taxId;
 
     this.taxDeductorFormConfig = {
-      formTitle: isUpdate ? 'Update Tax Deductor' : 'New Tax Deductor',
+      formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 2,
       hideSubmit: false,
@@ -531,7 +571,7 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!leaveId;
 
     this.leaveEncashmentFormConfig = {
-      formTitle: isUpdate ? 'Update Leave Encashment' : 'New Leave Encashment',
+      formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 2,
       hideSubmit: false,
@@ -603,6 +643,214 @@ export class BranchDetailsComponent implements OnInit {
     };
   }
 
+  // Date & Time Settings FormConfig - branch-scoped (moved here from company settings).
+  // The timezone is auto-derived server-side from the branch's address (country/state)
+  // whenever the branch has no explicit override - see getBranchDateTimeSettings() below
+  // for how that's surfaced, and onDateTimeFormSubmit() for how a save marks it custom.
+  static readonly TIMEZONE_OPTIONS = [
+    { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
+    { label: 'Asia/Kolkata (India, UTC+5:30)', value: 'Asia/Kolkata' },
+    { label: 'Asia/Dubai (UAE, UTC+4:00)', value: 'Asia/Dubai' },
+    { label: 'Asia/Riyadh (Saudi Arabia, UTC+3:00)', value: 'Asia/Riyadh' },
+    { label: 'Asia/Singapore (UTC+8:00)', value: 'Asia/Singapore' },
+    { label: 'Asia/Kuala_Lumpur (Malaysia, UTC+8:00)', value: 'Asia/Kuala_Lumpur' },
+    { label: 'Asia/Bangkok (Thailand, UTC+7:00)', value: 'Asia/Bangkok' },
+    { label: 'Asia/Dhaka (Bangladesh, UTC+6:00)', value: 'Asia/Dhaka' },
+    { label: 'Asia/Shanghai (China, UTC+8:00)', value: 'Asia/Shanghai' },
+    { label: 'Asia/Tokyo (Japan, UTC+9:00)', value: 'Asia/Tokyo' },
+    { label: 'Europe/London (UK, UTC+0:00)', value: 'Europe/London' },
+    { label: 'Europe/Berlin (Germany, UTC+1:00)', value: 'Europe/Berlin' },
+    { label: 'Europe/Paris (France, UTC+1:00)', value: 'Europe/Paris' },
+    { label: 'America/New_York (US Eastern)', value: 'America/New_York' },
+    { label: 'America/Chicago (US Central)', value: 'America/Chicago' },
+    { label: 'America/Denver (US Mountain)', value: 'America/Denver' },
+    { label: 'America/Los_Angeles (US Pacific)', value: 'America/Los_Angeles' },
+    { label: 'America/Anchorage (US Alaska)', value: 'America/Anchorage' },
+    { label: 'Pacific/Honolulu (US Hawaii)', value: 'Pacific/Honolulu' },
+    { label: 'America/Toronto (Canada Eastern)', value: 'America/Toronto' },
+    { label: 'America/Vancouver (Canada Pacific)', value: 'America/Vancouver' },
+    { label: 'Australia/Sydney (UTC+10:00/11:00)', value: 'Australia/Sydney' },
+    { label: 'Australia/Perth (UTC+8:00)', value: 'Australia/Perth' },
+    { label: 'Africa/Johannesburg (UTC+2:00)', value: 'Africa/Johannesburg' },
+    { label: 'Africa/Cairo (UTC+2:00)', value: 'Africa/Cairo' },
+    { label: 'Pacific/Auckland (New Zealand)', value: 'Pacific/Auckland' },
+  ];
+
+  initializeDateTimeConfig(initialValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeDateTimeConfig', initialValues);
+    const settingsId = initialValues?.companySettingsId;
+    this.dateTimeSettingsId = settingsId || undefined;
+    this.isTimezoneCustom = !!initialValues?.isTimezoneCustom;
+    const isUpdate = !!settingsId;
+
+    this.manualDateTimeData = {
+      dateFormat: initialValues?.dateFormat || 'dd-MM-yyyy',
+      dateSeparator: initialValues?.dateSeparator || '-',
+      timeFormat: initialValues?.timeFormat || 'HH:mm',
+      timeDisplayFormat: initialValues?.timeDisplayFormat || 'HH:mm',
+      timezone: initialValues?.timezone || 'UTC',
+      adjustForDST: !!initialValues?.adjustForDST,
+    };
+
+    this.dateTimeFormConfig = {
+      formTitle: '',
+      submitLabel: isUpdate ? 'Update Details' : 'Save Details',
+      maxColsPerRow: 2,
+      hideSubmit: false,
+      hideCancel: false,
+      onSubmit: (data: any) => {
+        this.onDateTimeFormSubmit(data, this.dateTimeSettingsId);
+      },
+      onCancel: () => {
+        this.getBranchDateTimeSettings();
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name: 'timezone',
+              label: this.isTimezoneCustom
+                ? 'Timezone'
+                : 'Timezone (auto-detected from branch address - not yet overridden)',
+              type: 'select',
+              colSpan: 2,
+              options: BranchDetailsComponent.TIMEZONE_OPTIONS,
+              value: initialValues?.timezone || 'UTC',
+              onChange: (val: any) => (this.manualDateTimeData.timezone = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'dateFormat',
+              label: 'Date Format',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'DD/MM/YYYY', value: 'dd/MM/yyyy' },
+                { label: 'MM/DD/YYYY', value: 'MM/dd/yyyy' },
+                { label: 'YYYY/MM/DD', value: 'yyyy/MM/dd' },
+                { label: 'DD-MM-YYYY', value: 'dd-MM-yyyy' },
+                { label: 'DD.MM.YYYY', value: 'dd.MM.yyyy' },
+              ],
+              value: initialValues?.dateFormat || 'dd-MM-yyyy',
+              onChange: (val: any) => (this.manualDateTimeData.dateFormat = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'dateSeparator',
+              label: 'Date Field Separator',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: '/', value: '/' },
+                { label: '-', value: '-' },
+                { label: '.', value: '.' },
+              ],
+              value: initialValues?.dateSeparator || '-',
+              onChange: (val: any) => (this.manualDateTimeData.dateSeparator = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'timeFormat',
+              label: 'Time Format',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: '12-hour', value: '12-hour' },
+                { label: '24-hour', value: '24-hour' },
+              ],
+              value: initialValues?.timeFormat || '24-hour',
+              onChange: (val: any) => (this.manualDateTimeData.timeFormat = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'timeDisplayFormat',
+              label: 'Time Display Format',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Hours:Minutes:Seconds', value: 'HH:mm:ss' },
+                { label: 'Hours:Minutes', value: 'HH:mm' },
+              ],
+              value: initialValues?.timeDisplayFormat || 'HH:mm',
+              onChange: (val: any) => (this.manualDateTimeData.timeDisplayFormat = val),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+            {
+              name: 'adjustForDST',
+              label: 'Adjust DST',
+              type: 'radio',
+              layout: 'horizontal',
+              colSpan: 2,
+              value: initialValues?.adjustForDST ? 'true' : 'false',
+              options: [
+                { label: 'Active', value: 'true' },
+                { label: 'Inactive', value: 'false' },
+              ],
+              onChange: (val: any) =>
+                (this.manualDateTimeData.adjustForDST = val === 'true'),
+              validations: [{ type: 'required', message: 'Required' }],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  getBranchDateTimeSettings() {
+    if (!this.companyBranchId && this.route.snapshot.params['id']) {
+      this.companyBranchId = this.route.snapshot.params['id'];
+    }
+
+    this.dateTimeDataLoaded = false;
+
+    this.reposotory
+      .get(`api/company-branch/GetCompanySettingst?companyBranchId=${this.companyBranchId}`)
+      .subscribe({
+        next: (data: any) => {
+          const settings = Array.isArray(data) && data.length > 0 ? data[0] : null;
+          this.initializeDateTimeConfig(settings);
+          this.dateTimeDataLoaded = true;
+        },
+        error: () => {
+          this.notificationService.showError('Error loading date & time settings');
+          this.initializeDateTimeConfig(null);
+          this.dateTimeDataLoaded = true;
+        },
+      });
+  }
+
+  onDateTimeFormSubmit(data: any, id?: any) {
+    const payload: any = {
+      CompanySettingsId: id || this.dateTimeSettingsId || undefined,
+      CompanyBranchID: this.companyBranchId,
+      DateFormat: data.dateFormat,
+      DateSeparator: data.dateSeparator,
+      TimeFormat: data.timeFormat,
+      TimeDisplayFormat: data.timeDisplayFormat,
+      Timezone: data.timezone,
+      AdjustForDST: data.adjustForDST === 'true' || data.adjustForDST === true,
+    };
+
+    const isUpdate = !!payload.CompanySettingsId;
+    const apiCall = isUpdate
+      ? this.reposotory.update('api/company-branch/UpdateCompanySettingst', payload)
+      : this.reposotory.post('api/company-branch/CreateCompanySettingst', payload);
+
+    apiCall.subscribe({
+      next: () => {
+        this.notificationService.showSuccess(
+          `Date & Time settings ${isUpdate ? 'updated' : 'saved'} successfully`,
+        );
+        this.getBranchDateTimeSettings();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.notificationService.showError(
+          err.error?.message || 'Error saving date & time settings',
+        );
+      },
+    });
+  }
+
   // Helper method to safely convert value to string and trim
   safeTrim(value: any): string {
     return String(value || '').trim();
@@ -639,6 +887,7 @@ export class BranchDetailsComponent implements OnInit {
     { field: 'companyCinNo', header: '  CIN No.' },
     { field: 'companyPfNo', header: ' PF No.' },
     { field: 'pfCalculation', header: 'PF Calculate On' },
+    { field: 'pfCalculationBasis', header: 'PF Calculation Basis' },
     {
       field: 'pfOverridableEmployee',
       header: 'PF Overridable At Employee Level',
@@ -767,7 +1016,6 @@ export class BranchDetailsComponent implements OnInit {
     this.getBranchStatutory();
     this.getDetails();
     this.getTaxDeductor();
-    this.getBranchOT();
     this.getLeaveEncashment();
     this.getEmployeeList();
     this.selectedIndex = this.selectedTab.pageSelectedTab;
@@ -787,7 +1035,7 @@ export class BranchDetailsComponent implements OnInit {
 
     this.manualAddressData = { ...initialValues };
     this.addressFormConfig = {
-      formTitle: isUpdate ? 'Update Address' : 'New Address',
+      formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 2,
       hideSubmit: false,
@@ -882,7 +1130,7 @@ export class BranchDetailsComponent implements OnInit {
 
   fetchCountries(): void {
     // NEW API: Fetch Countries (No parentId, level = "country")
-    this.reposotory.get('api/company-branch/Location?level=country').subscribe({
+    this.reposotory.get('api/ReferenceData/GetLocations?level=country').subscribe({
       next: (data: any[]) => {
         // Filter for active status (status === 1)
         this.countries = data.filter((item) => item.status === 1);
@@ -963,7 +1211,7 @@ export class BranchDetailsComponent implements OnInit {
   loadStatesForConfig(countryId: string, preselectStateId?: string) {
     this.reposotory
       .get(
-        `api/company-branch/Location?parentLocationId=${countryId}&level=state`,
+        `api/ReferenceData/GetLocations?parentId=${countryId}&level=state`,
       )
       .subscribe((data: any[]) => {
         const activeStates = data.filter(
@@ -990,7 +1238,7 @@ export class BranchDetailsComponent implements OnInit {
   loadCitiesForConfig(stateId: string) {
     // NEW API: Fetch Cities (parentId = stateId, level = "city")
     this.reposotory
-      .get(`api/company-branch/Location?parentLocationId=${stateId}&level=city`)
+      .get(`api/ReferenceData/GetLocations?parentId=${stateId}&level=city`)
       .subscribe((data: any[]) => {
         const activeCities = data.filter((c) => c.status === 1);
         const options = activeCities.map((c) => ({
@@ -1030,7 +1278,7 @@ export class BranchDetailsComponent implements OnInit {
             if (address.countryId) {
               this.reposotory
                 .get(
-                  `api/company-branch/Location?parentLocationId=${address.countryId}&level=state`,
+                  `api/ReferenceData/GetLocations?parentId=${address.countryId}&level=state`,
                 )
                 .subscribe((stateData: any[]) => {
                   const stateOptions = stateData
@@ -1042,7 +1290,7 @@ export class BranchDetailsComponent implements OnInit {
                   if (address.stateId) {
                     this.reposotory
                       .get(
-                        `api/company-branch/Location?parentLocationId=${address.stateId}&level=city`,
+                        `api/ReferenceData/GetLocations?parentId=${address.stateId}&level=city`,
                       )
                       .subscribe((cityData: any[]) => {
                         const cityOptions = cityData
@@ -1122,11 +1370,44 @@ export class BranchDetailsComponent implements OnInit {
     });
   }
 
-  initializeOvertimeConfig(initialValues?: any) {
-    console.log('[BRANCH_DETAILS] initializeOvertimeConfig - Raw Data:', initialValues);
+  initializeOvertimeConfig(initialValues?: any, otBankValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeOvertimeConfig - Raw Data:', initialValues, otBankValues);
     const otId = initialValues?.branchOvertimeSettingID || initialValues?.BranchOvertimeSettingID || initialValues?.id || initialValues?.Id;
     this.overtimeId = otId || null;
-    this.manualOvertimeData = { ...initialValues };
+    // Seed manualOvertimeData with API values; onChange handlers keep it in sync
+    this.manualOvertimeData = {
+      otDailyLimit: initialValues?.otDailyLimit ?? '',
+      otWeeklyLimit: initialValues?.otWeeklyLimit ?? '',
+      otMonthlyLimit: initialValues?.otMonthlyLimit ?? '',
+      otQuarterlyLimit: initialValues?.otQuarterlyLimit ?? '',
+      otAnuualyLimit: initialValues?.otAnuualyLimit ?? '',
+      overTimeWorkingDay: initialValues?.overTimeWorkingDay ?? '',
+      normalOTRate: initialValues?.normalOTRate ?? '',
+      holidayOTRate: initialValues?.holidayOTRate ?? '',
+      otRateBasis: initialValues?.normalOTRateMultiplierBase === 'Gross' ? 'Gross' : 'BasicDA',
+      overtimeConfiguration: initialValues?.branchOTHoursRule ?? '',
+      workkingHours: initialValues?.workkingHours ?? '',
+      status: String(UtilityService.normalizeStatus(initialValues?.status)),
+      // Fixed + Dynamic OT (manufacturing use case). isOvertimeAllowed/
+      // isDynamicOTAllowed default true so a first-time save of an existing
+      // branch's settings doesn't accidentally turn its OT off.
+      isOvertimeAllowed: initialValues?.isOvertimeAllowed ?? true,
+      isFixedOTAllowed: initialValues?.isFixedOTAllowed ?? false,
+      fixedOTDailyHours: initialValues?.fixedOTDailyHours ?? '',
+      fixedOTRate: initialValues?.fixedOTRate ?? '',
+      fixedOTRateBasis: initialValues?.fixedOTRateMultiplierBase === 'Gross' ? 'Gross' : 'BasicDA',
+      isDynamicOTAllowed: initialValues?.isDynamicOTAllowed ?? true,
+      // OT-hours bank (Feature 1) - a separate ALMS-only setting, seeded from its
+      // own fetch (otBankValues) rather than initialValues (BranchOvertimeSetting).
+      isOvertimeBankEnabled: otBankValues?.isEnabled ?? false,
+      halfDayHoursThreshold: otBankValues?.halfDayHoursThreshold ?? '',
+      fullDayHoursThreshold: otBankValues?.fullDayHoursThreshold ?? '',
+      maxBalanceHours: otBankValues?.maxBalanceHours ?? '',
+      otBankRedemptionRequiresApproval: otBankValues?.redemptionRequiresApproval ?? true,
+      dispositionMode: otBankValues?.dispositionMode || 'CarryForwardMonth',
+      carryForwardMaxHours: otBankValues?.carryForwardMaxHours ?? '',
+      otRedemptionLeaveTypeMasterId: otBankValues?.otRedemptionLeaveTypeMasterId || otBankValues?.OtRedemptionLeaveTypeMasterId || '',
+    };
     const isUpdate = !!otId;
 
     // Use normalizeStatus for reliable 1/0 mapping
@@ -1134,10 +1415,10 @@ export class BranchDetailsComponent implements OnInit {
     console.log('[BRANCH_DETAILS] Overtime ID:', otId, 'isUpdate:', isUpdate, 'Normalized Status:', currentStatus);
 
     this.overtimeFormConfig = {
-      formTitle: isUpdate ? 'Update Overtime' : 'New Overtime',
+      formTitle: '',
       maxColsPerRow: 4,
-      hideSubmit: false,
-      hideCancel: false,
+      hideSubmit: true,
+      hideCancel: true,
       onSubmit: (data: any) => {
         this.onOvertimeFormSubmit(data, this.overtimeId);
       },
@@ -1153,67 +1434,60 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Daily Limit',
               type: 'number',
               colSpan: 1,
-              placeholder: 'e.g,1=1hours',
-              value: initialValues?.otDailyLimit || '',
-              validations: [
-                { type: 'required', message: 'Required' },
-                { type: 'max', value: 24, message: 'Max 24 hrs' },
-              ],
+              placeholder: 'e.g. 4 (hours)',
+              value: initialValues?.otDailyLimit ?? '',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otDailyLimit = val; },
             },
             {
               name: 'otWeeklyLimit',
               label: 'Weekly Limit',
               type: 'number',
               colSpan: 1,
-              placeholder: 'e.g,1=1hours',
-              value: initialValues?.otWeeklyLimit || '',
-              validations: [
-                { type: 'required', message: 'Required' },
-                { type: 'max', value: 168, message: 'Max 168 hrs' },
-              ],
+              placeholder: 'e.g. 20 (hours)',
+              value: initialValues?.otWeeklyLimit ?? '',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otWeeklyLimit = val; },
             },
             {
               name: 'otMonthlyLimit',
               label: 'Monthly Limit',
               type: 'number',
               colSpan: 1,
-              placeholder: 'e.g,1=1hours',
-              value: initialValues?.otMonthlyLimit || '',
-              validations: [
-                { type: 'required', message: 'Required' },
-                { type: 'max', value: 672, message: 'Max 672 hrs' },
-              ],
+              placeholder: 'e.g. 80 (hours)',
+              value: initialValues?.otMonthlyLimit ?? '',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otMonthlyLimit = val; },
             },
             {
               name: 'otQuarterlyLimit',
               label: 'Quarterly Limit',
               type: 'number',
-              placeholder: 'e.g,1=1hours',
+              placeholder: 'e.g. 240 (hours)',
               colSpan: 1,
-              value: initialValues?.otQuarterlyLimit || '',
-              validations: [
-                { type: 'required', message: 'Required' },
-              ],
+              value: initialValues?.otQuarterlyLimit ?? '',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otQuarterlyLimit = val; },
             },
             {
               name: 'otAnuualyLimit',
               label: 'Annual Limit',
               type: 'number',
-              placeholder: 'e.g,1=1hours',
+              placeholder: 'e.g. 960 (hours)',
               colSpan: 1,
-              value: initialValues?.otAnuualyLimit || '',
-              validations: [
-                { type: 'required', message: 'Required' },
-              ],
+              value: initialValues?.otAnuualyLimit ?? '',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otAnuualyLimit = val; },
             },
             {
               name: 'overTimeWorkingDay',
               label: 'Working Days',
               type: 'number',
               colSpan: 1,
-              placeholder: 'e.g,25 = 25 working days',
-              value: initialValues?.overTimeWorkingDay || '',
+              placeholder: 'e.g. 26',
+              value: initialValues?.overTimeWorkingDay ?? '',
               validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.overTimeWorkingDay = val; },
             },
           ],
         },
@@ -1225,18 +1499,33 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Normal Rate Multiplier',
               type: 'number',
               colSpan: 2,
-              value: initialValues?.normalOTRate || '',
+              value: initialValues?.normalOTRate ?? '',
               placeholder: 'e.g., 1.5 = 1.5x Normal Wage',
               validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.normalOTRate = val; },
             },
             {
               name: 'holidayOTRate',
               label: 'Holiday Rate Multiplier',
               type: 'number',
               colSpan: 2,
-              value: initialValues?.holidayOTRate || '',
+              value: initialValues?.holidayOTRate ?? '',
               placeholder: 'e.g., 2.0 = 2x Normal Wage',
               validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.holidayOTRate = val; },
+            },
+            {
+              name: 'otRateBasis',
+              label: 'OT Rate Basis',
+              type: 'select',
+              colSpan: 2,
+              options: [
+                { label: 'Basic + DA', value: 'BasicDA' },
+                { label: 'Gross Wages (Total Earnings)', value: 'Gross' },
+              ],
+              value: initialValues?.normalOTRateMultiplierBase === 'Gross' ? 'Gross' : 'BasicDA',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.otRateBasis = val; },
             },
           ],
         },
@@ -1248,16 +1537,18 @@ export class BranchDetailsComponent implements OnInit {
               label: 'OT Eligibility (minutes)',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.branchOTHoursRule || '',
+              value: initialValues?.branchOTHoursRule ?? '',
               validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.overtimeConfiguration = val; },
             },
             {
               name: 'workkingHours',
               label: 'Branch Work Hours',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.workkingHours || '',
+              value: initialValues?.workkingHours ?? '',
               validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.workkingHours = val; },
             },
             {
               name: 'status',
@@ -1270,6 +1561,169 @@ export class BranchDetailsComponent implements OnInit {
                 { label: 'Inactive', value: '0' },
               ],
               value: String(currentStatus),
+              onChange: (val: any) => { this.manualOvertimeData.status = val; },
+            },
+          ],
+        },
+        {
+          title: 'Fixed & Dynamic Overtime',
+          fields: [
+            {
+              name: 'isOvertimeAllowed',
+              label: 'Overtime Allowed',
+              type: 'toggle',
+              colSpan: 1,
+              value: initialValues?.isOvertimeAllowed ?? true,
+              onChange: (val: any) => { this.manualOvertimeData.isOvertimeAllowed = val; },
+            },
+            {
+              name: 'isFixedOTAllowed',
+              label: 'Fixed OT Allowed',
+              type: 'toggle',
+              colSpan: 1,
+              value: initialValues?.isFixedOTAllowed ?? false,
+              hint: 'A fixed daily OT slab that auto-processes with no daily approval (e.g. 3 hours/day).',
+              onChange: (val: any) => { this.manualOvertimeData.isFixedOTAllowed = val; },
+            },
+            {
+              name: 'fixedOTDailyHours',
+              label: 'Fixed OT Daily Hours',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g. 3 (hours)',
+              value: initialValues?.fixedOTDailyHours ?? '',
+              disabled: (group: any) => !group.get('isFixedOTAllowed')?.value,
+              required: (group: any) => !!group.get('isFixedOTAllowed')?.value,
+              validations: [{ type: 'required', message: 'Required when Fixed OT is allowed' }],
+              onChange: (val: any) => { this.manualOvertimeData.fixedOTDailyHours = val; },
+            },
+            {
+              name: 'fixedOTRate',
+              label: 'Fixed OT Rate Multiplier',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g., 1.0 = 1x Normal Wage',
+              value: initialValues?.fixedOTRate ?? '',
+              disabled: (group: any) => !group.get('isFixedOTAllowed')?.value,
+              required: (group: any) => !!group.get('isFixedOTAllowed')?.value,
+              validations: [{ type: 'required', message: 'Required when Fixed OT is allowed' }],
+              onChange: (val: any) => { this.manualOvertimeData.fixedOTRate = val; },
+            },
+            {
+              name: 'fixedOTRateBasis',
+              label: 'Fixed OT Rate Basis',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Basic + DA', value: 'BasicDA' },
+                { label: 'Gross Wages (Total Earnings)', value: 'Gross' },
+              ],
+              value: initialValues?.fixedOTRateMultiplierBase === 'Gross' ? 'Gross' : 'BasicDA',
+              disabled: (group: any) => !group.get('isFixedOTAllowed')?.value,
+              onChange: (val: any) => { this.manualOvertimeData.fixedOTRateBasis = val; },
+            },
+            {
+              name: 'isDynamicOTAllowed',
+              label: 'Dynamic OT Allowed',
+              type: 'toggle',
+              colSpan: 1,
+              value: initialValues?.isDynamicOTAllowed ?? true,
+              hint: 'OT worked beyond the fixed daily hours goes to the normal approval queue at the Normal/Holiday rates above.',
+              onChange: (val: any) => { this.manualOvertimeData.isDynamicOTAllowed = val; },
+            },
+          ],
+        },
+        {
+          title: 'OT Bank / Leave Conversion',
+          fields: [
+            {
+              name: 'isOvertimeBankEnabled',
+              label: 'OT Bank Enabled',
+              type: 'toggle',
+              colSpan: 1,
+              value: otBankValues?.isEnabled ?? false,
+              hint: 'Approved OT hours (all types) accrue into a bank employees can redeem for a half/full day off.',
+              onChange: (val: any) => { this.manualOvertimeData.isOvertimeBankEnabled = val; },
+            },
+            {
+              name: 'halfDayHoursThreshold',
+              label: 'Half-Day Threshold (Hours)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g. 3',
+              value: otBankValues?.halfDayHoursThreshold ?? '',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              required: (group: any) => !!group.get('isOvertimeBankEnabled')?.value,
+              validations: [{ type: 'required', message: 'Required when OT Bank is enabled' }],
+              onChange: (val: any) => { this.manualOvertimeData.halfDayHoursThreshold = val; },
+            },
+            {
+              name: 'fullDayHoursThreshold',
+              label: 'Full-Day Threshold (Hours)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g. 6',
+              value: otBankValues?.fullDayHoursThreshold ?? '',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              required: (group: any) => !!group.get('isOvertimeBankEnabled')?.value,
+              validations: [{ type: 'required', message: 'Required when OT Bank is enabled' }],
+              onChange: (val: any) => { this.manualOvertimeData.fullDayHoursThreshold = val; },
+            },
+            {
+              name: 'maxBalanceHours',
+              label: 'Max Balance (Hours)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'Optional - leave blank for no cap',
+              value: otBankValues?.maxBalanceHours ?? '',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              onChange: (val: any) => { this.manualOvertimeData.maxBalanceHours = val; },
+            },
+            {
+              name: 'otBankRedemptionRequiresApproval',
+              label: 'Redemption Requires Approval',
+              type: 'toggle',
+              colSpan: 1,
+              value: otBankValues?.redemptionRequiresApproval ?? true,
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              onChange: (val: any) => { this.manualOvertimeData.otBankRedemptionRequiresApproval = val; },
+            },
+            {
+              name: 'dispositionMode',
+              label: 'Unredeemed Balance',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Carry Forward Monthly', value: 'CarryForwardMonth' },
+                { label: 'Carry Forward Yearly', value: 'CarryForwardYear' },
+                { label: 'Lapse Every Month', value: 'Lapse' },
+              ],
+              value: otBankValues?.dispositionMode || 'CarryForwardMonth',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              onChange: (val: any) => { this.manualOvertimeData.dispositionMode = val; },
+            },
+            {
+              name: 'carryForwardMaxHours',
+              label: 'Carry-Forward Cap (Hours)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'Optional - leave blank for no cap',
+              value: otBankValues?.carryForwardMaxHours ?? '',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value || group.get('dispositionMode')?.value === 'Lapse',
+              onChange: (val: any) => { this.manualOvertimeData.carryForwardMaxHours = val; },
+            },
+            {
+              name: 'otRedemptionLeaveTypeMasterId',
+              label: 'Redemption Leave Type',
+              type: 'select',
+              colSpan: 1,
+              options: this.leaveTypeOptions,
+              value: otBankValues?.otRedemptionLeaveTypeMasterId || otBankValues?.OtRedemptionLeaveTypeMasterId || '',
+              hint: 'A redeemed OT-bank day is recorded as leave under this type - pick a leave type created specifically for this (e.g. "OT Leave").',
+              disabled: (group: any) => !group.get('isOvertimeBankEnabled')?.value,
+              required: (group: any) => !!group.get('isOvertimeBankEnabled')?.value,
+              validations: [{ type: 'required', message: 'Required when OT Bank is enabled' }],
+              onChange: (val: any) => { this.manualOvertimeData.otRedemptionLeaveTypeMasterId = val; },
             },
           ],
         },
@@ -1288,31 +1742,65 @@ export class BranchDetailsComponent implements OnInit {
 
     this.overtimeDataLoaded = false;
 
-    this.reposotory
-      .get(
-        `api/company-branch/GetBranchOvertimeSetting?branchId=${this.companyBranchId}`,
-      )
-      .subscribe({
-        next: (data) => {
-          if (data && data.length > 0) {
-            // Edit Mode
-            const overtimeData = data[0];
-            // // Map API field 'branchOTHoursRule' to our form name 'overtimeConfiguration'
-            // overtimeData.overtimeConfiguration =
-            //   overtimeData?.branchOTHoursRule;
-            this.initializeOvertimeConfig(overtimeData);
-          } else {
-            // Add Mode
-            this.initializeOvertimeConfig(null);
-          }
-          this.overtimeDataLoaded = true;
-        },
-        error: () => {
-          this.notificationService.showError('Error loading overtime config');
-          this.initializeOvertimeConfig(null);
-          this.overtimeDataLoaded = true;
-        },
-      });
+    // The OT-hours bank (Feature 1) is a separate, ALMS-only table with no
+    // HRMSAuthZ/CAB copies, and its leave-type picker needs the branch's leave
+    // types too - all three are fetched together so initializeOvertimeConfig()
+    // only ever runs once with everything it needs, rather than a second call
+    // later re-seeding the form from a mismatched object (manualOvertimeData
+    // uses different field names than the raw API responses for a few fields,
+    // e.g. otRateBasis vs normalOTRateMultiplierBase).
+    forkJoin({
+      main: this.reposotory.get(`api/company-branch/GetBranchOvertimeSetting?branchId=${this.companyBranchId}`).pipe(catchError(() => of(null))),
+      otBank: this.reposotory.get(`api/AttendenceSource/GetOvertimeBankSettings?branchID=${this.companyBranchId}`).pipe(catchError(() => of(null))),
+      leaveTypes: this.reposotory.get('api/AttendenceSource/GetLeaveMasters').pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ main, otBank, leaveTypes }: any) => {
+        const emptyGuid = '00000000-0000-0000-0000-000000000000';
+        this.leaveTypeOptions = (leaveTypes || [])
+          .filter((lt: any) => !lt.branchId || lt.branchId === emptyGuid || lt.branchId === this.companyBranchId)
+          .map((lt: any) => ({ label: lt.leaveTypeName, value: lt.leaveTypeMasterId }));
+
+        const otBankSetting = otBank && otBank.length > 0 ? otBank[0] : null;
+        this.overtimeBankSettingId = otBankSetting?.overtimeBankSettingID || otBankSetting?.OvertimeBankSettingID || null;
+
+        const overtimeData = main && main.length > 0 ? main[0] : null;
+        this.initializeOvertimeConfig(overtimeData, otBankSetting);
+        this.overtimeDataLoaded = true;
+
+        // Fetch ALMS OT ID for sync
+        this.reposotory
+          .get(`api/AttendenceSource/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`)
+          .subscribe({
+            next: (almsData: any) => {
+              if (almsData && almsData.length > 0) {
+                this.almsOvertimeId = almsData[0].branchOvertimeSettingID || almsData[0].BranchOvertimeSettingID || null;
+              } else {
+                this.almsOvertimeId = null;
+              }
+            },
+            error: () => { this.almsOvertimeId = null; }
+          });
+        // Fetch CAB (Salary service) OT ID for sync - this is the copy the actual
+        // salary/OT-pay calculation reads from, and was never being written to at all.
+        this.reposotory
+          .get(`api/Salary/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`)
+          .subscribe({
+            next: (cabData: any) => {
+              if (cabData && cabData.length > 0) {
+                this.cabOvertimeId = cabData[0].branchOvertimeSettingID || cabData[0].BranchOvertimeSettingID || null;
+              } else {
+                this.cabOvertimeId = null;
+              }
+            },
+            error: () => { this.cabOvertimeId = null; }
+          });
+      },
+      error: () => {
+        this.notificationService.showError('Error loading overtime config');
+        this.initializeOvertimeConfig(null);
+        this.overtimeDataLoaded = true;
+      },
+    });
   }
 
   // ---------------------------------------------------------
@@ -1333,14 +1821,20 @@ export class BranchDetailsComponent implements OnInit {
       OTQuarterlyLimit: parseFloat(String(data.otQuarterlyLimit || 0)) || 0,
       OTAnuualyLimit: parseFloat(String(data.otAnuualyLimit || 0)) || 0,
       OverTimeWorkingDay: parseFloat(String(data.overTimeWorkingDay || 0)) || 0,
-      NormalOTRateMultiplierBase: 'Normal Wage',
+      NormalOTRateMultiplierBase: data.otRateBasis === 'Gross' ? 'Gross' : 'BasicDA',
       NormalOTRate: parseFloat(data.normalOTRate) || 1.0,
-      HolidayOTRateMultiplierBase: 'Normal Wage',
+      HolidayOTRateMultiplierBase: data.otRateBasis === 'Gross' ? 'Gross' : 'BasicDA',
       HolidayOTRate: parseFloat(data.holidayOTRate) || 1.0,
       BookKeeping: '',
       BranchOTHoursRule: parseFloat(String(data.overtimeConfiguration || 0)) || 0,
       WorkkingHours: parseFloat(String(data.workkingHours || 0)) || 0,
       Status: UtilityService.normalizeStatus(data.status),
+      IsOvertimeAllowed: !!data.isOvertimeAllowed,
+      IsFixedOTAllowed: !!data.isFixedOTAllowed,
+      FixedOTDailyHours: data.isFixedOTAllowed ? (parseFloat(String(data.fixedOTDailyHours)) || null) : null,
+      FixedOTRateMultiplierBase: data.isFixedOTAllowed ? (data.fixedOTRateBasis === 'Gross' ? 'Gross' : 'BasicDA') : null,
+      FixedOTRate: data.isFixedOTAllowed ? (parseFloat(String(data.fixedOTRate)) || null) : null,
+      IsDynamicOTAllowed: !!data.isDynamicOTAllowed,
     };
 
     const isUpdate = !!this.overtimeId;
@@ -1361,6 +1855,75 @@ export class BranchDetailsComponent implements OnInit {
         this.notificationService.showSuccess(
           `Overtime ${isUpdate ? 'updated' : 'saved'} successfully`,
         );
+        // Sync same data to ALMS DB so shift-master picks it up
+        const almsPayload: any = { ...payload };
+        if (this.almsOvertimeId) {
+          almsPayload.BranchOvertimeSettingID = this.almsOvertimeId;
+          this.reposotory.update('api/AttendenceSource/UpdateBranchOverTimeSetting', almsPayload).subscribe({
+            next: () => {
+              console.log('[BRANCH_DETAILS] ALMS overtime sync: updated');
+              this.verifyOvertimeFanOutApplied('Attendance service', `api/AttendenceSource/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`, payload);
+            },
+            error: (e: HttpErrorResponse) => {
+              console.error('[BRANCH_DETAILS] ALMS overtime sync error:', e);
+              // ALMS holds the copy the real-time/attendance overtime calculator
+              // actually reads - a silent console-only failure here previously let
+              // admins believe the new limits/rates were live everywhere when the
+              // attendance side was still on stale settings.
+              this.notificationService.showError(
+                `Attendance-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
+              );
+            }
+          });
+        } else {
+          delete almsPayload.BranchOvertimeSettingID;
+          this.reposotory.post('api/AttendenceSource/CreateBranchOverTimeSetting', almsPayload).subscribe({
+            next: () => {
+              console.log('[BRANCH_DETAILS] ALMS overtime sync: created');
+              this.almsOvertimeId = null; // will be refreshed on next getBranchOT
+              this.verifyOvertimeFanOutApplied('Attendance service', `api/AttendenceSource/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`, payload);
+            },
+            error: (e: HttpErrorResponse) => {
+              console.error('[BRANCH_DETAILS] ALMS overtime sync error:', e);
+              this.notificationService.showError(
+                `Attendance-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
+              );
+            }
+          });
+        }
+        // Sync same data to CAB (Salary service) DB too - this is the copy
+        // salary-proceess's OT-pay calculation actually reads from at salary time.
+        const cabPayload: any = { ...payload };
+        if (this.cabOvertimeId) {
+          cabPayload.BranchOvertimeSettingID = this.cabOvertimeId;
+          this.reposotory.update('api/Salary/UpdateBranchOvertimeSetting', cabPayload).subscribe({
+            next: () => {
+              console.log('[BRANCH_DETAILS] CAB overtime sync: updated');
+              this.verifyOvertimeFanOutApplied('Salary service', `api/Salary/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`, payload);
+            },
+            error: (e: HttpErrorResponse) => {
+              console.error('[BRANCH_DETAILS] CAB overtime sync error:', e.status, e.error, e.message);
+              this.notificationService.showError(
+                `Salary-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Actual overtime pay will NOT use these rates until this is fixed.`
+              );
+            }
+          });
+        } else {
+          delete cabPayload.BranchOvertimeSettingID;
+          this.reposotory.post('api/Salary/CreateBranchOvertimeSetting', cabPayload).subscribe({
+            next: () => {
+              console.log('[BRANCH_DETAILS] CAB overtime sync: created');
+              this.cabOvertimeId = null; // will be refreshed on next getBranchOT
+              this.verifyOvertimeFanOutApplied('Salary service', `api/Salary/GetBranchOvertimeSettings?branchID=${this.companyBranchId}`, payload);
+            },
+            error: (e: HttpErrorResponse) => {
+              console.error('[BRANCH_DETAILS] CAB overtime sync error:', e.status, e.error, e.message);
+              this.notificationService.showError(
+                `Salary-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Actual overtime pay will NOT use these rates until this is fixed.`
+              );
+            }
+          });
+        }
         this.getBranchOT(); // Refresh data
       },
       error: (err: HttpErrorResponse) => {
@@ -1369,6 +1932,43 @@ export class BranchDetailsComponent implements OnInit {
           err.error?.message || 'Error saving overtime',
         );
       },
+    });
+  }
+
+  // A successful sync HTTP call only means the write was accepted, not that the
+  // service actually persisted the Fixed/Dynamic values it was sent - reads them
+  // back and warns if they don't match, so a stale ALMS/CAB copy of these
+  // specific fields can't silently cause auto-approved Fixed OT hours to go
+  // un-priced, or hours that should require Dynamic approval to auto-process.
+  private verifyOvertimeFanOutApplied(serviceLabel: string, getUrl: string, expected: any): void {
+    this.reposotory.get(getUrl).subscribe({
+      next: (data: any) => {
+        const saved = data && data.length > 0 ? data[0] : null;
+        if (!saved) return;
+
+        const mismatches: string[] = [];
+        const check = (label: string, expectedVal: any, actualVal: any) => {
+          if ((expectedVal ?? null) === null && (actualVal ?? null) === null) return;
+          if (String(expectedVal ?? '') !== String(actualVal ?? '')) {
+            mismatches.push(label);
+          }
+        };
+
+        check('Overtime Allowed', expected.IsOvertimeAllowed, saved.isOvertimeAllowed);
+        check('Fixed OT Allowed', expected.IsFixedOTAllowed, saved.isFixedOTAllowed);
+        check('Fixed OT Daily Hours', expected.FixedOTDailyHours, saved.fixedOTDailyHours);
+        check('Fixed OT Rate', expected.FixedOTRate, saved.fixedOTRate);
+        check('Dynamic OT Allowed', expected.IsDynamicOTAllowed, saved.isDynamicOTAllowed);
+
+        if (mismatches.length > 0) {
+          this.notificationService.showError(
+            `${serviceLabel}'s overtime settings are out of sync with what you just saved (${mismatches.join(', ')}). Re-save to retry - this branch's OT behavior may not match what's shown here until it's fixed.`
+          );
+        }
+      },
+      error: () => {
+        // Already surfaced by the sync call's own error handler - avoid a duplicate toast.
+      }
     });
   }
 
@@ -1427,6 +2027,7 @@ export class BranchDetailsComponent implements OnInit {
             tradeNumber: '',
             eidNumber: '',
             pfCalculation: 'Max Limit as per Act',
+            pfCalculationBasis: 'Basic',
             pfOverridableEmployee: 'Yes',
             isPfExpensesIncludeInCTC: 'Yes',
             isPfExpensesOverridableAtEmployeeLevel: 'Yes',
@@ -1517,6 +2118,10 @@ export class BranchDetailsComponent implements OnInit {
       }
       this.originalData[section] = UtilityService.deepClone(this.dataSource[0]);
       this.isFormDirty[section] = false;
+    } else if (section === 'overtime') {
+      this.getBranchOT();
+    } else if (section === 'dateTime') {
+      this.getBranchDateTimeSettings();
     }
   }
 
@@ -1891,6 +2496,7 @@ export class BranchDetailsComponent implements OnInit {
       overtime: 'Overtime Configuration',
       leaveEncashment: 'Leave Encashment System Configuration',
       weeklyOff: 'Weekly Off Configuration',
+      dateTime: 'Date & Time Settings',
     };
     return titles[section] || section;
   }
@@ -1996,7 +2602,7 @@ export class BranchDetailsComponent implements OnInit {
     const isUpdate = !!contactId;
 
     this.contactFormConfig = {
-      formTitle: isUpdate ? 'Update Branch Contact' : 'New Branch Contact',
+      formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
       maxColsPerRow: 2,
       hideSubmit: false,
@@ -2042,7 +2648,7 @@ export class BranchDetailsComponent implements OnInit {
             {
               name: 'secondaryEmailId',
               label: 'Secondary Email',
-              type: 'email',
+              type: 'text',
               colSpan: 1,
               value: initialValues?.secondaryEmailId || '',
               onChange: (val: any) => (this.manualContactData.secondaryEmailId = val),
@@ -2065,8 +2671,8 @@ export class BranchDetailsComponent implements OnInit {
                 { type: 'required', message: 'Required' },
                 {
                   type: 'pattern',
-                  value: '^[0-9]{10,15}$',
-                  message: 'Enter valid mobile',
+                  value: '^[+]?[0-9][\\s\\-0-9]{8,17}$',
+                  message: 'Enter valid mobile (digits only, 10-15 digits)',
                 },
               ],
             },
@@ -2105,6 +2711,117 @@ export class BranchDetailsComponent implements OnInit {
         },
       ],
     };
+  }
+
+  onOvertimeSave() {
+    const d = this.manualOvertimeData;
+    const requiredFields: { key: string; label: string }[] = [
+      { key: 'otDailyLimit', label: 'Daily Limit' },
+      { key: 'otWeeklyLimit', label: 'Weekly Limit' },
+      { key: 'otMonthlyLimit', label: 'Monthly Limit' },
+      { key: 'otQuarterlyLimit', label: 'Quarterly Limit' },
+      { key: 'otAnuualyLimit', label: 'Annual Limit' },
+      { key: 'overTimeWorkingDay', label: 'Working Days' },
+      { key: 'normalOTRate', label: 'Normal Rate Multiplier' },
+      { key: 'holidayOTRate', label: 'Holiday Rate Multiplier' },
+      { key: 'overtimeConfiguration', label: 'OT Eligibility (minutes)' },
+      { key: 'workkingHours', label: 'Branch Work Hours' },
+    ];
+    const missing = requiredFields.find(f => {
+      const num = parseFloat(String(d[f.key]));
+      return isNaN(num) || num <= 0;
+    });
+    if (missing) {
+      this.notificationService.showError(`${missing.label} is required.`);
+      return;
+    }
+
+    // Fixed OT fields are only required when the branch actually opts into Fixed OT.
+    if (d.isFixedOTAllowed) {
+      const fixedFields: { key: string; label: string }[] = [
+        { key: 'fixedOTDailyHours', label: 'Fixed OT Daily Hours' },
+        { key: 'fixedOTRate', label: 'Fixed OT Rate Multiplier' },
+      ];
+      const missingFixed = fixedFields.find(f => {
+        const num = parseFloat(String(d[f.key]));
+        return isNaN(num) || num <= 0;
+      });
+      if (missingFixed) {
+        this.notificationService.showError(`${missingFixed.label} is required when Fixed OT is allowed.`);
+        return;
+      }
+    }
+
+    // OT Bank fields are only required when the branch actually enables it.
+    if (d.isOvertimeBankEnabled) {
+      const otBankFields: { key: string; label: string }[] = [
+        { key: 'halfDayHoursThreshold', label: 'Half-Day Threshold (Hours)' },
+        { key: 'fullDayHoursThreshold', label: 'Full-Day Threshold (Hours)' },
+      ];
+      const missingOtBank = otBankFields.find(f => {
+        const num = parseFloat(String(d[f.key]));
+        return isNaN(num) || num <= 0;
+      });
+      if (missingOtBank) {
+        this.notificationService.showError(`${missingOtBank.label} is required when the OT Bank is enabled.`);
+        return;
+      }
+      if (!d.otRedemptionLeaveTypeMasterId) {
+        this.notificationService.showError('A Redemption Leave Type is required when the OT Bank is enabled.');
+        return;
+      }
+    }
+
+    this.onOvertimeFormSubmit(d, this.overtimeId);
+    this.saveOvertimeBankSetting(d);
+  }
+
+  // OT Bank is a separate, ALMS-only table (no HRMSAuthZ/CAB fan-out needed) -
+  // saved independently of onOvertimeFormSubmit()'s BranchOvertimeSetting fan-out.
+  saveOvertimeBankSetting(d: any): void {
+    if (!d.isOvertimeBankEnabled && !this.overtimeBankSettingId) {
+      // Never enabled and nothing saved yet - nothing to do.
+      return;
+    }
+
+    const payload: any = {
+      CompanyBranchId: this.companyBranchId,
+      OvertimeBankSettingID: this.overtimeBankSettingId || undefined,
+      IsEnabled: !!d.isOvertimeBankEnabled,
+      HalfDayHoursThreshold: parseFloat(String(d.halfDayHoursThreshold)) || 0,
+      FullDayHoursThreshold: parseFloat(String(d.fullDayHoursThreshold)) || 0,
+      MaxBalanceHours: d.maxBalanceHours ? (parseFloat(String(d.maxBalanceHours)) || null) : null,
+      RedemptionRequiresApproval: d.otBankRedemptionRequiresApproval !== false,
+      DispositionMode: d.dispositionMode || 'CarryForwardMonth',
+      CarryForwardMaxHours: d.carryForwardMaxHours ? (parseFloat(String(d.carryForwardMaxHours)) || null) : null,
+      OtRedemptionLeaveTypeMasterId: d.otRedemptionLeaveTypeMasterId || undefined,
+      Status: 1,
+    };
+
+    const isUpdate = !!this.overtimeBankSettingId;
+    const apiCall = isUpdate
+      ? this.reposotory.update('api/AttendenceSource/UpdateOvertimeBankSetting', payload)
+      : this.reposotory.post('api/AttendenceSource/CreateOvertimeBankSetting', payload);
+
+    apiCall.subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`OT Bank setting ${isUpdate ? 'updated' : 'saved'} successfully`);
+        this.getBranchOT();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.notificationService.showError(
+          err.error?.message || err.error?.Message || 'Error saving OT Bank setting'
+        );
+      },
+    });
+  }
+
+  onFormValidationError(message: string) {
+    this.notificationService.showError(message || 'Please fill all required fields correctly.');
+  }
+
+  onContactValidationError(message: string) {
+    this.notificationService.showError(message || 'Please fill all required fields correctly.');
   }
 
   onContactFormSubmit(data: any, id?: string) {
@@ -2211,6 +2928,8 @@ export class BranchDetailsComponent implements OnInit {
         data.pfCalculation === 'Max Limit as per Act'
           ? 'Max'
           : data.pfCalculation || 'Max',
+      PfCalculationBasis: data.pfCalculationBasis || 'Basic',
+      PfCeilingProrateByAttendance: data.pfCeilingProrateByAttendance === 'Yes',
       PfOverridableEmployee: data.pfOverridableEmployee || 'Yes',
       isPfExpensesIncludeInCTC: data.isPfExpensesIncludeInCTC === 'Yes',
       isPfExpensesOverridableAtEmployeeLevel:
@@ -2243,6 +2962,27 @@ export class BranchDetailsComponent implements OnInit {
         );
         this.getBranchStatutory();
         this.isFormDirty['statutory'] = false;
+
+        // Cascade this branch's PF ceiling proration policy to every employee who hasn't
+        // individually overridden it - otherwise only brand-new employees created after
+        // this point would ever pick up the change, and every existing employee's record
+        // would silently stay stuck at whatever was true when it was last saved.
+        this.reposotory
+          .update(
+            `api/EmployeeMaster/BulkSyncPfCeilingProrateByAttendance?companyBranchId=${this.companyBranchId}&pfCeilingProrateByAttendance=${payload.PfCeilingProrateByAttendance}`,
+            {},
+          )
+          .subscribe({
+            next: (syncRes: any) => {
+              console.log('[BRANCH_DETAILS] PF ceiling proration bulk sync:', syncRes);
+              if (syncRes?.updatedCount > 0) {
+                this.notificationService.showSuccess(
+                  `Applied to ${syncRes.updatedCount} employee(s) using the company default.`,
+                );
+              }
+            },
+            error: (e) => console.error('[BRANCH_DETAILS] PF ceiling proration bulk sync error:', e),
+          });
       },
       error: (err) => {
         console.error('[BRANCH_DETAILS] Statutory API Error:', err);
@@ -2260,37 +3000,57 @@ export class BranchDetailsComponent implements OnInit {
 
     this.reposotory
       .get(`api/company-branch/GetCompanyStatutory/?companyBranchId=${this.id}`)
-      .subscribe((data) => {
-        this.branchStatutoryList = data.map((item: any, index: number) => {
-          const pfCalculationValue =
-            item.pfCalculation === 'Max'
-              ? 'Max Limit as per Act'
-              : item.pfCalculation || 'Max Limit as per Act';
-          return {
-            ...item,
-            srNo: index + 1,
-            status: UtilityService.normalizeStatus(item.status),
-            tradeNumber: item.tradeNumber || '',
-            eidNumber: item.eidNumber || '',
-            pfCalculation: pfCalculationValue,
-            pfOverridableEmployee: UtilityService.statusToYesNo(
-              item.pfOverridableEmployee,
-            ),
-            isPfExpensesIncludeInCTC: UtilityService.statusToYesNo(
-              item.isPfExpensesIncludeInCTC,
-            ),
-            isPfExpensesOverridableAtEmployeeLevel:
-              UtilityService.statusToYesNo(
-                item.isPfExpensesOverridableAtEmployeeLevel,
+      .subscribe({
+        next: (data) => {
+          this.branchStatutoryList = data.map((item: any, index: number) => {
+            const pfCalculationValue =
+              item.pfCalculation === 'Max'
+                ? 'Max Limit as per Act'
+                : item.pfCalculation || 'Max Limit as per Act';
+            return {
+              ...item,
+              srNo: index + 1,
+              status: UtilityService.normalizeStatus(item.status),
+              tradeNumber: item.tradeNumber || '',
+              eidNumber: item.eidNumber || '',
+              pfCalculation: pfCalculationValue,
+              pfOverridableEmployee: UtilityService.statusToYesNo(
+                item.pfOverridableEmployee,
               ),
-          };
-        });
-        this.dataSource1 = this.branchStatutoryList;
-        if (this.dataSource1.length > 0) {
-          this.initializeStatutoryConfig(this.dataSource1[0]);
-        } else {
+              // Not routed through statusToYesNo() - its underlying normalizeStatus()
+              // defaults null/undefined to "Yes" (fine for the older Yes-by-default fields
+              // above, wrong here). This is a brand-new nullable field with no legacy data,
+              // so an unset value must default to "No" - otherwise every existing branch
+              // that has never touched this setting would silently start prorating PF
+              // ceilings, changing payroll for clients who never opted in.
+              pfCeilingProrateByAttendance:
+                item.pfCeilingProrateByAttendance === true ? 'Yes' : 'No',
+              isPfExpensesIncludeInCTC: UtilityService.statusToYesNo(
+                item.isPfExpensesIncludeInCTC,
+              ),
+              isPfExpensesOverridableAtEmployeeLevel:
+                UtilityService.statusToYesNo(
+                  item.isPfExpensesOverridableAtEmployeeLevel,
+                ),
+            };
+          });
+          this.dataSource1 = this.branchStatutoryList;
+          if (this.dataSource1.length > 0) {
+            this.initializeStatutoryConfig(this.dataSource1[0]);
+          } else {
+            this.initializeStatutoryConfig(null);
+          }
+        },
+        error: (err) => {
+          // Without this handler, a failed request left statutoryFormConfig permanently
+          // undefined — the form silently rendered as an empty box with no visible error,
+          // no way to tell a real failure apart from "this branch just has no statutory
+          // record yet". Log it and still initialize a blank editable form so a brand-new
+          // company isn't blocked from entering its statutory details for the first time.
+          console.error('[BRANCH_DETAILS] Failed to load company statutory details', err);
+          this.dataSource1 = [];
           this.initializeStatutoryConfig(null);
-        }
+        },
       });
   }
 
@@ -2313,7 +3073,7 @@ export class BranchDetailsComponent implements OnInit {
   }
 
   getEmployeeList(): void {
-    this.reposotory.get('api/Employee/EmployeeBasicDetailList').subscribe({
+    this.reposotory.get('api/AttendencesSource/EmployeeBasicDetailList').subscribe({
       next: (data) => {
         this.employeeList = data
           .filter(

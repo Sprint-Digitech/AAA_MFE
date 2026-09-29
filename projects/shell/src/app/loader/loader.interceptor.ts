@@ -5,9 +5,11 @@ import {
   HttpHandler,
   HttpEvent,
 } from '@angular/common/http';
-import { Observable, timer } from 'rxjs';
+import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { LoaderService } from './loader.service';
+
+const LOADER_DELAY_MS = 80;
 
 @Injectable()
 export class LoaderInterceptor implements HttpInterceptor {
@@ -22,11 +24,18 @@ export class LoaderInterceptor implements HttpInterceptor {
       return next.handle(newReq);
     }
 
-    this.loaderService.show();
+    let shown = false;
+    const showTimer = setTimeout(() => {
+      shown = true;
+      this.loaderService.show();
+    }, LOADER_DELAY_MS);
 
     return next.handle(req).pipe(
       finalize(() => {
-        this.loaderService.hide();
+        clearTimeout(showTimer);
+        if (shown) {
+          this.loaderService.hide();
+        }
       })
     );
   }

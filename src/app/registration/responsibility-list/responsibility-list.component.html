@@ -1,7 +1,7 @@
-<div style="margin-top:55px">
-  <lib-nemo-reusable-tbl appGlobalTableSearch [showAddButton]="true" [addButtonLabel]="'Add Responsibility'"
+﻿<div style="margin-top: 10px;">
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [showAddButton]="true" [addButtonLabel]="'Add Responsibility'"
     (onAdd)="addResponsibility()" [searchResultTitle]="'Responsibility List'" [columns]="columns"
-    [dataSource]="dataArray" [rowsPerPage]="10" [tableWidth]="'100%'" [showSearch]="true" [showActions]="true"
+    [dataSource]="dataArray" [rowsPerPage]="10" [tableWidth]="'100%'" [showSearch]="false" [showActions]="true"
     [showEditOption]="true" [showDeleteOption]="true" [showDetailsOption]="false" (editAction)="onEditRow($event)"
     (deleteAction)="deleteList($event)" (search)="onSearch($event)">
   </lib-nemo-reusable-tbl>

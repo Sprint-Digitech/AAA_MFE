@@ -63,7 +63,7 @@
         <div class="search-box">
           <mat-icon>search</mat-icon>
           <input type="text" placeholder="Search..." [(ngModel)]="globalSearchTerm"
-            (input)="onSearchInput(globalSearchTerm)">
+            (ngModelChange)="onSearchInput($event)">
         </div>
       </div>
 
@@ -122,4 +122,7 @@
       <router-outlet></router-outlet>
     </main>
   </div>
+
+  <!-- HRMS AI Agent chat widget (visible on all non-login pages) -->
+  <app-ai-agent *ngIf="!isLoginPage"></app-ai-agent>
 </div>

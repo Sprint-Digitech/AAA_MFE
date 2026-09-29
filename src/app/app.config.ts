@@ -10,6 +10,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 
 import { TenantInterceptor } from './_helpers/tenant-interceptor';
+import { CompanyInterceptor } from './_helpers/company-interceptor';
 import { ErrorInterceptor } from './_helpers/error-interceptor';
 import { LoaderInterceptor } from './loader/loader.interceptor';
 import { TokenRefreshInterceptor } from './_helpers/token-refresh.interceptor';
@@ -38,6 +39,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: TenantInterceptor,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: CompanyInterceptor,
       multi: true,
     },
     {

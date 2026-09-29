@@ -171,7 +171,8 @@ export class AddBranchComponent implements OnInit {
     this.branchData.get('api/Currency/Currency').subscribe({
       next: (data: any[]) => {
         this.currencies = data.filter((currency) => currency.status === 1);
-        this.showCurrencyError = this.currencies.length === 0;
+        // In edit mode the branch already has a currency; never block the form
+        this.showCurrencyError = this.currencies.length === 0 && !this.isEditMode;
         if (this.isEditMode) {
           this.getBranchData();
         } else {
@@ -211,8 +212,19 @@ export class AddBranchComponent implements OnInit {
       )
       .subscribe({
         next: (data: any) => {
-          // Patch the form with existing data
           this.branchData_loaded = data[0];
+          // Ensure the branch's current currency is selectable even if inactive
+          if (this.branchData_loaded?.currencyId) {
+            const alreadyIncluded = this.currencies.some(
+              (c: any) => c.id === this.branchData_loaded.currencyId
+            );
+            if (!alreadyIncluded && this.branchData_loaded.currencyName) {
+              this.currencies = [
+                { id: this.branchData_loaded.currencyId, currencyName: this.branchData_loaded.currencyName },
+                ...this.currencies,
+              ];
+            }
+          }
           this.initializeFormConfig();
         },
         error: (error: HttpErrorResponse) => {

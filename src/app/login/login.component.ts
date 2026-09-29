@@ -7,8 +7,9 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AccountService } from '../shared/services/account.service';
+import { environment } from '../_helpers/environment';
 import { NotificationService } from '../shared/services/notification.service';
-import { BehaviorSubject, catchError, first, forkJoin, Observable, of } from 'rxjs';
+import { BehaviorSubject, catchError, first, forkJoin, map, Observable, of } from 'rxjs';
 import { LoaderService } from '../loader/loader.service';
 import { Login } from '../shared/services/account.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -82,6 +83,12 @@ export class LoginComponent implements OnInit {
     error = '';
     login$ = new BehaviorSubject<boolean>(false);
 
+    // 2FA state
+    requiresTwoFactor = false;
+    twoFactorEmail = '';
+    otpCode = '';
+    verifyingOtp = false;
+
     constructor(
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
@@ -99,16 +106,17 @@ export class LoginComponent implements OnInit {
             if (branchId) {
                 this.accountService.step('InitialSetup/GetStatus', { companyBranchId: branchId }).subscribe({
                     next: (res: any) => {
-                        if (res && res.isSetupComplete === false) {
-                            this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                        } else {
-                            // Land on initial-setup as requested by user ("as before")
-                            this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                        }
+                        this.resolvePostLoginDestination(user, res).subscribe((dest) => {
+                            this.router.navigate([dest], { replaceUrl: true });
+                        });
                     },
                     error: () => {
-                        console.error('InitialSetup status check failed - defaulting to initial-setup');
-                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                        // GetStatus 404s for any tenant that has no InitialSetupStatus row yet
+                        // (e.g. brand-new tenants) - still route through the salary-processed
+                        // check rather than defaulting straight past it.
+                        this.resolvePostLoginDestination(user, null).subscribe((dest) => {
+                            this.router.navigate([dest], { replaceUrl: true });
+                        });
                     }
                 });
             } else {
@@ -200,14 +208,14 @@ export class LoginComponent implements OnInit {
                                     if (branchId) {
                                         this.callInitialSetupStatus(branchId).subscribe({
                                             next: (res: any) => {
-                                                if (res && res.isSetupComplete === false) {
-                                                    this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                                                } else {
-                                                    this.router.navigate(['/initial-setup'], { replaceUrl: true });
-                                                }
+                                                this.resolvePostLoginDestination(finalUser, res).subscribe((dest) => {
+                                                    this.router.navigate([dest], { replaceUrl: true });
+                                                });
                                             },
                                             error: () => {
-                                                this.router.navigate(['/login']);
+                                                this.resolvePostLoginDestination(finalUser, null).subscribe((dest) => {
+                                                    this.router.navigate([dest], { replaceUrl: true });
+                                                });
                                             }
                                         });
                                     } else {
@@ -237,7 +245,8 @@ export class LoginComponent implements OnInit {
         console.log('--- Form Valid:', this.loginForm.valid);
         console.log('--- Loading Status:', this.loading);
 
-        this.loaderService.forceHide(); // Safety check
+        this.loaderService.forceHide();
+        if (this.loading) return; // already in progress
         this.submitted = true;
         this.error = '';
         if (this.loginForm.invalid) {
@@ -257,6 +266,15 @@ export class LoginComponent implements OnInit {
             .pipe(first())
             .subscribe({
                 next: (loginResponse) => {
+                    // Handle 2FA — show OTP entry form
+                    if (loginResponse?.requiresTwoFactor) {
+                        this.loading = false;
+                        this.requiresTwoFactor = true;
+                        this.twoFactorEmail = this.loginForm.value.email;
+                        this.notificationService.showSuccess('A verification code has been sent to your email.');
+                        return;
+                    }
+
                     const email = loginResponse?.employee?.email;
                     const tenantSchema = loginResponse?.employee?.tenantSchema;
 
@@ -321,7 +339,7 @@ export class LoginComponent implements OnInit {
                                     (branches.length === 1 ? branches[0].companyBranchName || null : null) ||
                                     null;
 
-                                const employeeId = userDetail.employeId ?? userDetail.EmployeeId ?? null;
+                                const employeeId = userDetail.employeId ?? userDetail.employeeId ?? userDetail.EmployeeId ?? null;
                                 const serviceType = (userDetail.serviceType || loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
                                 const isWmsOnly = serviceType === 'WMS_USER';
                                 const processedMenus = isWmsOnly ? [] : this.processMenus(results.menus ?? []);
@@ -368,27 +386,30 @@ export class LoginComponent implements OnInit {
 
                                 this.callInitialSetupStatus(branchId).subscribe({
                                     next: (res: any) => {
-                                        if (res && res.isSetupComplete === false) {
-                                            this.router.navigate(['/initial-setup'], {
+                                        if (Array.isArray(res)) {
+                                            // Admin user — no specific branch, GetStatus returned all statuses
+                                            this.router.navigate(['/company/admin-dashboard'], {
                                                 replaceUrl: true,
                                             });
+                                            this.loading = false;
                                         } else {
-                                            this.router.navigate(['/initial-setup'], {
-                                                replaceUrl: true,
+                                            this.resolvePostLoginDestination(finalUser, res).subscribe((dest) => {
+                                                this.router.navigate([dest], { replaceUrl: true });
+                                                this.loading = false;
                                             });
                                         }
-                                        this.loading = false;
                                     },
                                     error: () => {
-                                        console.error('Error fetching setup status - defaulting to initial-setup');
+                                        console.error('Error fetching setup status - defaulting to dashboard');
                                         if (window !== window.parent) {
-                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/initial-setup';
+                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/dashboard';
+                                            this.loading = false;
                                         } else {
-                                            this.router.navigate(['/initial-setup'], {
-                                                replaceUrl: true,
+                                            this.resolvePostLoginDestination(finalUser, null).subscribe((dest) => {
+                                                this.router.navigate([dest], { replaceUrl: true });
+                                                this.loading = false;
                                             });
                                         }
-                                        this.loading = false;
                                     },
                                 });
                             } else {
@@ -421,6 +442,99 @@ export class LoginComponent implements OnInit {
             });
     }
 
+    verifyOtp(): void {
+        if (!this.otpCode || this.otpCode.trim().length === 0) {
+            this.notificationService.showError('Please enter the verification code.');
+            return;
+        }
+        this.verifyingOtp = true;
+        this.error = '';
+
+        this.http.post<any>(
+            `${this.accountService.environment.urlAddress}/api/Account/VerifyTwoFactor`,
+            { email: this.twoFactorEmail, code: this.otpCode.trim() }
+        ).pipe(first()).subscribe({
+            next: (loginResponse) => {
+                const email = loginResponse?.employee?.email;
+                const tenantSchema = loginResponse?.employee?.tenantSchema;
+                const svcType = (loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
+
+                // Store token BEFORE forkJoin so JWT interceptor can attach it
+                // Use JSON.stringify to match how AccountService.login() stores the token
+                const token = loginResponse?.token || loginResponse?.Token;
+                if (token) {
+                    sessionStorage.setItem('token', JSON.stringify(token));
+                    sessionStorage.setItem('auth', token);
+                }
+                if (tenantSchema) {
+                    sessionStorage.setItem('tenantSchema', tenantSchema);
+                }
+
+                forkJoin({
+                    employeeLoginDetail: tenantSchema
+                        ? this.accountService.getEmployeeLoginDetail(email, tenantSchema).pipe(first())
+                        : this.accountService.logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`).pipe(first()),
+                    menus: (svcType !== 'WMS_USER' && tenantSchema)
+                        ? this.accountService.getMenusForUser(email, tenantSchema).pipe(first())
+                        : of([]),
+                    wmsPermissions: of(null),
+                    companyInfo: tenantSchema
+                        ? this.accountService.getCompanyInfoForTenant(tenantSchema).pipe(first(), catchError(() => of(null)))
+                        : of(null),
+                    branchInfo: tenantSchema
+                        ? this.accountService.getBranchesForTenant(tenantSchema).pipe(first(), catchError(() => of([])))
+                        : of([]),
+                }).subscribe({
+                    next: (results) => {
+                        const userDetail = results.employeeLoginDetail;
+                        if (userDetail) {
+                            const processedMenus = this.processMenus(results.menus ?? []);
+                            sessionStorage.setItem('menus', JSON.stringify(processedMenus));
+                            const userToStore = { ...userDetail, token, tenantSchema };
+                            sessionStorage.setItem('user', JSON.stringify(userToStore));
+                            this.accountService.setUser(userToStore);
+                            this.accountService.setMenuData(processedMenus);
+                            this.verifyingOtp = false;
+                            const branchId = userDetail.companyBranchId || userDetail.branchID || userDetail.branchId || '';
+                            if (branchId) {
+                                this.callInitialSetupStatus(branchId).subscribe({
+                                    next: (res: any) => {
+                                        this.resolvePostLoginDestination(userDetail, res).subscribe((dest) => {
+                                            this.router.navigate([dest], { replaceUrl: true });
+                                        });
+                                    },
+                                    error: () => {
+                                        this.resolvePostLoginDestination(userDetail, null).subscribe((dest) => {
+                                            this.router.navigate([dest], { replaceUrl: true });
+                                        });
+                                    }
+                                });
+                            } else {
+                                this.resolvePostLoginDestination(userDetail, null).subscribe((dest) => {
+                                    this.router.navigate([dest], { replaceUrl: true });
+                                });
+                            }
+                        } else {
+                            this.error = 'Failed to load user details.';
+                            this.verifyingOtp = false;
+                        }
+                    },
+                    error: (err) => {
+                        console.error('verifyOtp forkJoin error:', err);
+                        this.error = 'Failed to load user details after verification.';
+                        this.verifyingOtp = false;
+                    }
+                });
+            },
+            error: (err) => {
+                const msg = err?.error?.errors || err?.error?.message || 'Invalid verification code.';
+                this.error = typeof msg === 'string' ? msg : JSON.stringify(msg);
+                this.notificationService.showError(this.error);
+                this.verifyingOtp = false;
+            }
+        });
+    }
+
     private handleError(
         err: any,
         fallback: string = 'An error occurred'
@@ -428,6 +542,9 @@ export class LoginComponent implements OnInit {
         try {
             if (err?.status === 401) {
                 return 'Invalid User ID or Password';
+            }
+            if (err?.status === 405) {
+                return 'Login service rejected the request. Please contact support.';
             }
 
             if (err instanceof HttpErrorResponse) {
@@ -443,28 +560,90 @@ export class LoginComponent implements OnInit {
 
             if (err?.error?.errors) {
                 return typeof err.error.errors === 'string'
-                    ? err.error.errors
+                    ? this.toSafeErrorMessage(err.error.errors, fallback)
                     : fallback;
             }
             if (typeof err?.error === 'string') {
-                return err.error;
+                return this.toSafeErrorMessage(err.error, fallback);
             }
             if (err?.error?.Error?.Message) {
-                return err.error.Error.Message;
+                return this.toSafeErrorMessage(err.error.Error.Message, fallback);
             }
             if (err?.error?.message) {
-                return err.error.message;
+                return this.toSafeErrorMessage(err.error.message, fallback);
             }
             if (err?.message) {
-                return err.message;
+                return this.toSafeErrorMessage(err.message, fallback);
             }
         } catch { }
         return fallback;
     }
 
+    private toSafeErrorMessage(value: string, fallback: string): string {
+        if (!value) {
+            return fallback;
+        }
+        const looksLikeHtml = /<\s*(html|head|body|style|div|h\d|!doctype)\b/i.test(value);
+        if (looksLikeHtml) {
+            return fallback;
+        }
+        return value.length > 300 ? `${value.slice(0, 300)}...` : value;
+    }
+
+    // employeeRoleLoginDtos[].roleName is the correct/actual field on the
+    // logged-in user object app-wide (matches BranchFilterService.isAdmin()
+    // in this app and in Salary_MFE).
+    private isAdminOrHrUser(user: any): boolean {
+        const rawRoles = user?.employeeRoleLoginDtos;
+        const roles: any[] = Array.isArray(rawRoles) ? rawRoles : (rawRoles ? [rawRoles] : []);
+        return roles.some((r: any) => {
+            const name = (r?.roleName || '').toLowerCase();
+            return name === 'admin' || name.includes('hr');
+        });
+    }
+
+    // Admin/HR land on the company-wide Salary Dashboard after login instead
+    // of the regular employee self-service dashboard.
+    private postLoginDefaultRoute(user: any): string {
+        return this.isAdminOrHrUser(user) ? '/salary/salaryDashboard' : '/employeeSelfService/dashboard';
+    }
+
     private callInitialSetupStatus(branchId: string): Observable<any> {
         const params = { companyBranchId: branchId };
         return this.accountService.step('InitialSetup/GetStatus', params);
+    }
+
+    // Whether payroll has ever been run for this company - the Salary Dashboard
+    // has nothing to show until at least one month has been processed, so admins/
+    // HR should land on Initial Setup instead until then. Reuses the same
+    // "net paid > 0" endpoint that already powers the dashboard's own period
+    // filters, so this is consistent with what the dashboard would show.
+    // Fails open (treated as "has data") on error so an unrelated API hiccup
+    // never traps an otherwise-fully-set-up admin in the setup screen.
+    private hasProcessedSalary(): Observable<boolean> {
+        return this.http
+            .get<any[]>(`${(environment as any).cnbUrlAddress}/api/SalaryDashboard/GetAvailablePeriods`)
+            .pipe(
+                map((periods) => Array.isArray(periods) && periods.length > 0),
+                catchError(() => of(true)),
+            );
+    }
+
+    // Combines the two independent signals that setup isn't finished yet:
+    // the explicit InitialSetupStatus flag, and (new) whether any salary has
+    // ever been processed. Only checked for admin/HR - regular employees
+    // always go to their own ESS dashboard regardless of either signal.
+    private shouldShowInitialSetup(user: any, statusRes: any): Observable<boolean> {
+        if (!this.isAdminOrHrUser(user)) return of(false);
+        const setupIncomplete = !!(statusRes && !Array.isArray(statusRes) && statusRes.isSetupComplete === false);
+        if (setupIncomplete) return of(true);
+        return this.hasProcessedSalary().pipe(map((hasSalary) => !hasSalary));
+    }
+
+    private resolvePostLoginDestination(user: any, statusRes: any): Observable<string> {
+        return this.shouldShowInitialSetup(user, statusRes).pipe(
+            map((showSetup) => (showSetup ? '/initial-setup' : this.postLoginDefaultRoute(user))),
+        );
     }
 
     processMenus(menuData: any[]): any[] {

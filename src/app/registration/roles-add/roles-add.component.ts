@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
@@ -25,7 +25,8 @@ interface roleDto {
   templateUrl: './roles-add.component.html',
   styleUrls: ['./roles-add.component.scss'],
 })
-export class RolesAddComponent {
+export class RolesAddComponent implements AfterViewInit {
+  @ViewChild(AddUpdateFormComponent) addFormRef?: AddUpdateFormComponent;
   addRolesFormConfig!: FormConfig;
   addRolesFormLoaded: boolean = false;
   addRolesForm = new FormGroup({
@@ -55,6 +56,22 @@ export class RolesAddComponent {
     private location: Location,
     private route: ActivatedRoute,
   ) {}
+
+  ngAfterViewInit(): void {}
+
+  submitDirectly(): void {
+    const form = this.addFormRef?.form;
+    if (!form) {
+      this.notificationService.showError('Form not initialized.');
+      return;
+    }
+    form.markAllAsTouched();
+    if (form.invalid) {
+      this.notificationService.showError('Please fill all required fields.');
+      return;
+    }
+    this.sendData(form.getRawValue());
+  }
 
   ngOnInit() {
     this.route.params.subscribe((params) => {
@@ -132,6 +149,7 @@ export class RolesAddComponent {
           ],
         },
       ],
+      disableSubmit: true,
       submitLabel: this.isEditMode ? 'Update' : 'Submit',
       resetLabel: 'Reset',
       cancelLabel: 'Back',
@@ -313,6 +331,10 @@ export class RolesAddComponent {
         'Error in form. Please check all fields.',
       );
     }
+  }
+
+  onValidationError(message: string): void {
+    this.notificationService.showError(message || 'Please fill all required fields.');
   }
 
   goBack(): void {

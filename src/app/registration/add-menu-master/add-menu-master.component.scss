@@ -105,3 +105,7 @@ background-color: #003fb5; /* Darker blue on hover */
 .bold-text {
   font-weight: bold !important;
 }
+
+:host ::ng-deep lib-add-update-form .form-actions {
+  display: none !important;
+}

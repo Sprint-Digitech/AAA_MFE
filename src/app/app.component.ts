@@ -1,18 +1,27 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { lastValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { lastValueFrom, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { EmployeeService } from './shared/services/employee.service';
-import { RepositoryService } from './shared/services/repository.service';
+import { AccountService } from './shared/services/account.service';
 import { LoaderComponent } from './loader/loader/loader.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AiAgentComponent } from './ai-agent/ai-agent.component';
+import { CompanySwitcherComponent } from './shared/components/company-switcher/company-switcher.component';
+import { CompanySwitcherService } from './shared/services/company-switcher.service';
+import { RepositoryService } from './shared/services/repository.service';
+import { NotificationBellComponent } from './shared/components/notification-bell/notification-bell.component';
+import { ChatIconComponent, ChatWidgetConfig, EmployeeContact } from '@fovestta2/chat-widget-fovestta';
+import { EnvironmentUrlService } from './shared/services/environment-url.service';
+import { SecureTokenStorageService } from './shared/services/secure-token-storage.service';
 
 
 @Component({
@@ -30,12 +39,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     LoaderComponent,
     MatMenuModule,
     MatButtonModule,
-    MatTooltipModule
+    MatTooltipModule,
+    AiAgentComponent,
+    CompanySwitcherComponent,
+    NotificationBellComponent,
+    ChatIconComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  private menuSub?: Subscription;
   title = 'login';
   isLoginPage = true;
   isExpanded = true;
@@ -57,6 +71,13 @@ export class AppComponent implements OnInit {
   showUserDropdown = false;
   signoutHover = false;
 
+  // Change password
+  showChangePassword = false;
+  changePasswordLoading = false;
+  changePasswordError = '';
+  changePasswordSuccess = '';
+  cpForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+
   // User details
   private readonly emptyUserDetails = {
     name: '',
@@ -66,6 +87,11 @@ export class AppComponent implements OnInit {
     designation: '',
   };
   userDetails = { ...this.emptyUserDetails };
+
+  // Chat widget - see ChatWidgetConfig in @fovestta2/chat-widget-fovestta for why
+  // this is plain callbacks rather than passing our own services into the lib.
+  chatConfig: ChatWidgetConfig | null = null;
+  chatContacts: EmployeeContact[] = [];
 
 
   menuIcons: { [key: string]: string } = {
@@ -89,7 +115,12 @@ export class AppComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private globalSearchService: GlobalSearchService,
     private employeeService: EmployeeService,
-    private CompanyData: RepositoryService
+    private CompanyData: RepositoryService,
+    private accountService: AccountService,
+    private http: HttpClient,
+    private companySwitcherService: CompanySwitcherService,
+    private environmentUrlService: EnvironmentUrlService,
+    private secureTokenStorageService: SecureTokenStorageService
   ) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -161,6 +192,33 @@ export class AppComponent implements OnInit {
         this.globalSearchService.emit(event.data.term);
         this.cdr.detectChanges();
       }
+
+      if (event.data.type === 'COMPANY_SWITCHED' && event.data.company) {
+        console.log('[LOGIN_MFE] Received COMPANY_SWITCHED:', event.data.company);
+        this.companySwitcherService.applyExternal(event.data.company);
+        this.cdr.detectChanges();
+      }
+
+      if (event.data.type === 'REQUEST_ACTIVE_COMPANY') {
+        const active = this.companySwitcherService.active;
+        if (active && event.source) {
+          (event.source as Window).postMessage({ type: 'COMPANY_SWITCHED', company: active }, '*' as any);
+        }
+      }
+
+      // Embedded MFEs (Employee_MFE etc.) navigate internally via their own hash router without
+      // ever changing this shell's URL, so this.router.events (NavigationEnd) never fires for
+      // those transitions and the header search box was left showing the last-typed term no
+      // matter how far the user navigated inside the iframe. Each MFE already posts
+      // ROUTER_NAVIGATED on its own route changes (see Employee_MFE's app.component.ts) — piggyback
+      // on that to clear the search here too, same as the shell's own NavigationEnd handler does.
+      if (event.data.type === 'ROUTER_NAVIGATED') {
+        this.globalSearchTerm = '';
+        this.isGlobalSearchOpen = false;
+        this.globalEmployeeResults = [];
+        this.globalSearchService.emit('');
+        this.cdr.markForCheck();
+      }
     });
 
     // Request token from parent on load if in an iframe
@@ -170,7 +228,20 @@ export class AppComponent implements OnInit {
 
     this.loadUserData();
     this.hydrateUserDetailsFromSession();
+    this.initChatWidget();
+    // Restore cached logo immediately so there's no flash on page refresh
+    const cachedLogo = sessionStorage.getItem('companyLogo');
+    if (cachedLogo) { this.companies = cachedLogo; }
     this.getCompanies();
+
+    // Subscribe to menu data so sidebar updates whenever menus change
+    this.menuSub = this.accountService.menuData$.subscribe((menus) => {
+      this.menus = menus || [];
+      this.cdr.markForCheck();
+    });
+
+    // Re-fetch menus from API on startup so stale sessionStorage doesn't persist after role changes
+    this.accountService.reloadMenuData().subscribe();
 
     if (window !== window.parent) {
       document.body.classList.add('is-iframe');
@@ -181,6 +252,10 @@ export class AppComponent implements OnInit {
         this.logout(false);
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.menuSub?.unsubscribe();
   }
 
 
@@ -218,9 +293,13 @@ export class AppComponent implements OnInit {
   onHeaderInput(value: string): void {
     this.globalSearchTerm = value;
     const term = value.trim();
-    this.globalSearchService.emit(term); // ← ye rehne do, filter ke liye
+    this.globalSearchService.emit(term);
 
-    // Bas itna add karo — dropdown kabhi nahi dikhega
+    // Send search to all MFE iframes
+    document.querySelectorAll('iframe').forEach((iframe: HTMLIFrameElement) => {
+      iframe.contentWindow?.postMessage({ type: 'GLOBAL_SEARCH', term }, '*');
+    });
+
     this.isGlobalSearchOpen = false;
     this.globalEmployeeResults = [];
     this.isSearchingEmployees = false;
@@ -240,6 +319,12 @@ export class AppComponent implements OnInit {
     this.globalEmployeeResults = [];
     this.isGlobalSearchOpen = false;
     this.globalSearchService.emit('');
+
+    // Also clear the search inside embedded MFE iframes, otherwise their
+    // filtered dataset stays stuck on the last typed term.
+    document.querySelectorAll('iframe').forEach((iframe: HTMLIFrameElement) => {
+      iframe.contentWindow?.postMessage({ type: 'GLOBAL_SEARCH', term: '' }, '*');
+    });
   }
 
   navigateToEmployee(employee: any): void {
@@ -258,7 +343,50 @@ export class AppComponent implements OnInit {
     this.globalEmployeeResults = [];
     this.globalSearchTerm = '';
     this.globalSearchService.emit('');
+    document.querySelectorAll('iframe').forEach((iframe: HTMLIFrameElement) => {
+      iframe.contentWindow?.postMessage({ type: 'GLOBAL_SEARCH', term: '' }, '*');
+    });
     this.cdr.markForCheck();
+  }
+
+  private initChatWidget(): void {
+    this.chatConfig = {
+      chatBaseUrl: this.environmentUrlService.chatUrlAddress,
+      getAccessToken: () => this.secureTokenStorageService.getToken(),
+      getTenantSchema: () => sessionStorage.getItem('tenantSchema') || 'dbo',
+      getCurrentEmployeeId: () => this.resolveChatEmployeeId(),
+    };
+
+    // Best-effort "start new chat" contact list - a failed/slow fetch shouldn't
+    // block chat from working for existing conversations, only the picker.
+    // Hits Employee_Services directly (essUrlAddress), not RepositoryService.getCompany
+    // - that helper only knows how to route Auth/HRMSAuthZ routes, not EmployeeMaster.
+    const employeeListUrl = `${this.environmentUrlService.essUrlAddress}/api/EmployeeMaster/GetAllEmployeebasicdetails`;
+    this.http.get<any[]>(employeeListUrl).subscribe({
+      next: (data: any) => {
+        const list = Array.isArray(data) ? data : [];
+        this.chatContacts = list.map((item: any) => {
+          const normalized = this.normalizeEmployee(item);
+          return {
+            employeeId: normalized.employeeId,
+            firstName: normalized.employeeFirstName,
+            lastName: normalized.employeeLastName,
+          } as EmployeeContact;
+        }).filter((c: EmployeeContact) => !!c.employeeId);
+      },
+      error: (error) => console.error('Error fetching employee contacts for chat:', error),
+    });
+  }
+
+  private resolveChatEmployeeId(): string | null {
+    try {
+      const storedUser = sessionStorage.getItem('user');
+      if (!storedUser) return null;
+      const parsed = JSON.parse(storedUser);
+      return parsed?.id || parsed?.employeeId || parsed?.employeId || null;
+    } catch {
+      return null;
+    }
   }
 
   private normalizeEmployee(employee: any) {
@@ -316,6 +444,59 @@ export class AppComponent implements OnInit {
   onSignoutHover(hover: boolean): void {
     this.signoutHover = hover;
     this.cdr.markForCheck();
+  }
+
+  onChangePasswordClick(): void {
+    this.showChangePassword = !this.showChangePassword;
+    this.changePasswordError = '';
+    this.changePasswordSuccess = '';
+    this.cpForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  }
+
+  cancelChangePassword(): void {
+    this.showChangePassword = false;
+    this.changePasswordError = '';
+    this.changePasswordSuccess = '';
+    this.cpForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+  }
+
+  submitChangePassword(): void {
+    this.changePasswordError = '';
+    this.changePasswordSuccess = '';
+
+    const { currentPassword, newPassword, confirmPassword } = this.cpForm;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      this.changePasswordError = 'All fields are required.';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      this.changePasswordError = 'New passwords do not match.';
+      return;
+    }
+    if (newPassword.length < 6) {
+      this.changePasswordError = 'New password must be at least 6 characters.';
+      return;
+    }
+
+    this.changePasswordLoading = true;
+    const email = this.userDetails.email;
+    const url = `${this.accountService.environment.urlAddress}/api/Account/ChangePassword`;
+    this.http.post(url, { email, currentPassword, newPassword }, { responseType: 'text' }).subscribe({
+      next: () => {
+        this.changePasswordLoading = false;
+        this.changePasswordSuccess = 'Password changed successfully.';
+        this.cpForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+        setTimeout(() => {
+          this.showChangePassword = false;
+          this.changePasswordSuccess = '';
+        }, 2000);
+      },
+      error: (err: any) => {
+        this.changePasswordLoading = false;
+        const msg = err?.error || err?.message || 'Failed to change password.';
+        this.changePasswordError = typeof msg === 'string' ? msg : 'Failed to change password.';
+      }
+    });
   }
 
   logout(propagate: boolean = true): void {
@@ -474,6 +655,11 @@ export class AppComponent implements OnInit {
     }
   }
 
+  onMainContainerClick(): void {
+    this.closeSubmenus();
+    this.showUserDropdown = false;
+  }
+
   closeSubmenus() {
     this.openSubmenus.clear();
   }
@@ -492,6 +678,7 @@ export class AppComponent implements OnInit {
     // Close user dropdown if clicking outside
     if (!target.closest('.user-profile') && !target.closest('.user-profile-dropdown')) {
       this.showUserDropdown = false;
+      this.showChangePassword = false;
     }
   }
 
@@ -515,13 +702,23 @@ export class AppComponent implements OnInit {
     return this.companyName ? `${this.companyName} logo` : 'Fovesta Logo';
   }
   getCompanies = () => {
+    // GetCompany with no id returns every company in the tenant's group so this can
+    // pick the first one - previously expensive (~1.7MB/5-9s) because Companylogo held
+    // a full base64 blob per company; briefly routed through the my-companies endpoint
+    // instead to work around that, but that only returns companies a user has an
+    // explicit role assignment for, so it silently broke the header logo for ordinary
+    // employees without one. Now that Companylogo is a short URL (HRMSAuthZ backfilled
+    // + writes files instead of embedding blobs), GetCompany is cheap again and works
+    // for every logged-in user, admin or not - reverted to it.
     this.CompanyData.getCompany('api/company-branch/GetCompany').subscribe({
       next: (data: any) => {
         const companyRecord = Array.isArray(data)
           ? data.find((item: any) => item?.companyName || item?.CompanyName || item?.companylogo || item?.CompanyLogo)
           : null;
-        const logo = companyRecord?.companylogo || companyRecord?.CompanyLogo;
+        const logo = companyRecord?.companyLogo || companyRecord?.companylogo || companyRecord?.CompanyLogo;
         this.companies = this.resolveCompanyLogo(logo);
+        // Cache so next page load shows the right logo immediately without a flash
+        if (this.companies) { sessionStorage.setItem('companyLogo', this.companies); }
         this.companyName =
           companyRecord?.companyName ||
           companyRecord?.CompanyName ||

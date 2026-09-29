@@ -69,11 +69,22 @@ export class ErrorInterceptor implements HttpInterceptor {
           'GetDisbursementByMonthAndYear',
           'GetAllLeaveMaster',
           'CompanyList',
+          'company-branch',   // GetCompany / GetCompanyBranch called without token on login page
+          'GetCompany',
           'EmployeeBasic',
           'DepartmentList',
           'DesignationList',
           'GetAttendenc',
-          'GetEmployeeAttendanceSource',
+          'GetAttendanceSource',
+          'GetTeamAttendanceSummary',
+          'ShiftAllocationByemployeeId',
+          'GetBranchOvertimeSettings',
+          'GetMonthlyAttendance',
+          'GetEmployeeLeaveDetails',
+          'ShiftManagment',
+          'AttendenceSource',
+          'AttendanceSource',
+          'EmployeeBasicDetail'
         ];
 
         // Skip error notifications for image assets (404s on images are common and not critical)
@@ -83,8 +94,11 @@ export class ErrorInterceptor implements HttpInterceptor {
 
         // Check if this error should be skipped
         const shouldSkipError =
-          skipErrorApis.some((apiPath) => errorUrl.includes(apiPath)) ||
-          isImageAsset;
+          skipErrorApis.some((apiPath) =>
+            errorUrl.toLowerCase().includes(apiPath.toLowerCase())
+          ) || isImageAsset;
+
+
 
         // Handle specific error status codes - Only show errors for critical failures
         if (error.status === 404) {

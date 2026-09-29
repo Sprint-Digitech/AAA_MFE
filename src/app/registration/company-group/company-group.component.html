@@ -1,5 +1,13 @@
+﻿<div class="group-quick-actions">
+  <button type="button" class="btn-outline" (click)="goToAdminDashboard()">
+    Admin Dashboard
+  </button>
+  <button type="button" class="btn-outline" (click)="goToUserAccessManagement()">
+    User Access Management
+  </button>
+</div>
 <div style="margin-top: 10px;">
-  <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Company Group'" [showAddButton]="false"
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [searchResultTitle]="'Company Group'" [showAddButton]="false"
     [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'"
     (editAction)="onEditRow($event)" (deleteAction)="deleteCompanyGroup($event)" [showDeleteOption]="dltCompanyGroup"
     [showDetailsOption]="detailCompanyGroup"></lib-nemo-reusable-tbl>

@@ -117,7 +117,7 @@ export class WorkspaceComponent {
     this.overviewData.totalCompanies = this.companyData.length;
 
     this.overviewData.payrollComplete = this.companyData.filter(
-      (c) => c.payStatus?.toLowerCase() === 'completed',
+      (c) => c.payStatus?.toLowerCase() === 'complete',
     ).length;
 
     this.overviewData.inProgress = this.companyData.filter(
@@ -133,7 +133,6 @@ export class WorkspaceComponent {
     console.log('Overview Data:', this.overviewData);
   }
   openPayroll(emp: any) {
-    const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
     const currentTenantSchema = sessionStorage.getItem('tenantSchema'); // <--- ONLY sessionStorage!
     const email = emp?.email;
 
@@ -157,13 +156,15 @@ export class WorkspaceComponent {
         if (response?.token && response?.employee?.tenantSchema) {
           const newTenantSchema = response.employee.tenantSchema;
 
-          // Update sessionStorage only
-          sessionStorage.setItem('activeTenantSchema', newTenantSchema);
-          sessionStorage.setItem('tenant_token', response.token);
-
-          const updatedUser = { ...currentUser, tenantSchema: newTenantSchema };
-          sessionStorage.setItem('user', JSON.stringify(updatedUser));
-
+          // Deliberately NOT touching sessionStorage here. This runs in the
+          // CALLING tab (Abod's), before window.open() below - writing the
+          // target tenant's schema/user/token here corrupts the calling tab's
+          // own session (e.g. it silently switches the tab's own
+          // sessionStorage.user.tenantSchema to the target, breaking anything
+          // subsequently done from Abod's own tab, like "Add Existing
+          // Company"). It's also unnecessary: the new tab's WelcomeComponent
+          // rebuilds tenantSchema/user/menus/branches/company from scratch
+          // using only the tenant/email query params below.
           console.log('🟢 Switched to new tenant:', newTenantSchema);
 
           // Open new tab with tenant and email params
@@ -172,7 +173,18 @@ export class WorkspaceComponent {
             email: email,
           }).toString();
 
-          const url = `/dist/#/authentication/welcome-user?${queryParams}`;
+          // Build relative to the current deployment's base path (e.g. /Auth/dist/)
+          // rather than hardcoding it - a hardcoded leading slash resolves against
+          // the domain root and 404s whenever the app isn't mounted at the root.
+          // Target this app's own 'welcome' route (WelcomeComponent), which reads
+          // tenant/email query params and rebuilds the whole session (tenantSchema,
+          // user, menus, branches, company) from scratch before routing onward to
+          // /initial-setup. 'welcome-user' does not exist anywhere in the router -
+          // it's not this route, and not a route in the Salary MFE either (that
+          // name only coincidentally appears there as an unrelated submodule key
+          // in a path-forwarding matcher).
+          const basePath = window.location.href.split('#')[0];
+          const url = `${basePath}#/welcome?${queryParams}`;
           window.open(url, '_blank');
         } else {
           alert('Failed to switch tenant. Token not received.');

@@ -7,11 +7,12 @@ import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 @Component({
   standalone: true,
   selector: 'app-roles',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './roles.component.html',
   styleUrls: ['./roles.component.scss'],
 })

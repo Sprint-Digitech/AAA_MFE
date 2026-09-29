@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment as appEnv } from '../../_helpers/environment';
 @Injectable({
   providedIn: 'root',
 })
@@ -9,7 +10,7 @@ export class ResponsibilityService {
 
   environment = {
     production: false,
-    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+    urlAddress: appEnv.urlAddress,
   };
 
   private createCompleteRoute = (route: string, envAddress: string) => {

@@ -1,0 +1,152 @@
+<!-- Hidden file input -->
+<input #fileInput type="file" accept=".xlsx,.xls,.csv" style="display:none"
+  (change)="onFileSelected($event)">
+
+<!-- Floating Action Button — always shows F, never changes to X -->
+<button class="agent-fab" (click)="toggleChat()" [class.open]="isOpen" title="Fovestta AI">
+  <div class="fab-inner">
+    <span class="fab-logo">F</span>
+  </div>
+  <span class="fab-pulse" *ngIf="!isOpen"></span>
+</button>
+
+<!-- Chat Panel -->
+<div class="agent-panel" [class.visible]="isOpen">
+
+  <!-- Header -->
+  <div class="agent-header">
+    <div class="header-left">
+      <div class="avatar-wrap">
+        <span class="avatar-letter">F</span>
+        <span class="status-dot"></span>
+      </div>
+      <div>
+        <div class="agent-name">Fovestta <span class="agent-badge">AI</span></div>
+        <div class="agent-lang">
+          <span class="lang-dot"></span>
+          Online · EN · HI · Hinglish
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" (click)="clearChat()" title="Clear chat">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+      <button class="header-btn close-btn" (click)="toggleChat()" title="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="agent-messages">
+    <div *ngFor="let msg of messages" class="message-row"
+      [class.user-row]="msg.role === 'user'"
+      [class.bot-row]="msg.role === 'assistant'">
+
+      <!-- Bot avatar -->
+      <div class="bot-avatar" *ngIf="msg.role === 'assistant'">F</div>
+
+      <div class="bubble"
+        [class.user-bubble]="msg.role === 'user'"
+        [class.bot-bubble]="msg.role === 'assistant'">
+
+        <!-- Loading dots -->
+        <div *ngIf="msg.loading" class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- Message text -->
+        <span *ngIf="!msg.loading" style="white-space: pre-line">{{ msg.content }}</span>
+
+        <!-- Salary pending action buttons -->
+        <div class="action-buttons" *ngIf="!msg.loading && msg.salaryPending">
+          <button class="action-btn action-continue"
+            (click)="continueSalaryProcessing(msg.salaryPending!)"
+            [disabled]="isLoading">
+            <mat-icon>play_circle</mat-icon>
+            Continue with {{ msg.salaryPending.uploadedCount }} employees
+          </button>
+          <button class="action-btn action-correct"
+            (click)="requestCorrection(msg.salaryPending!)"
+            [disabled]="isLoading">
+            <mat-icon>edit</mat-icon>
+            Correct & Re-upload
+          </button>
+        </div>
+
+        <!-- Employee profile card -->
+        <div class="profile-card" *ngIf="!msg.loading && isProfileCard(msg.data)">
+          <div class="profile-field" *ngFor="let f of getProfileFields(msg.data)">
+            <span class="profile-label">{{ f.label }}</span>
+            <span class="profile-value">{{ f.value }}</span>
+          </div>
+          <button class="export-btn" style="margin-top:8px"
+            (click)="exportToExcel(msg.data, msg.intent)">
+            <mat-icon>download</mat-icon> Export Excel
+          </button>
+        </div>
+
+        <!-- Data table -->
+        <div class="data-table-wrapper" *ngIf="!msg.loading && hasTableData(msg.data)">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th *ngIf="getEmployeeName(msg.data[0])">Employee</th>
+                  <th *ngFor="let key of getTableKeys(msg.data)">{{ getTableHeader(key) }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of msg.data | slice:0:10">
+                  <td *ngIf="getEmployeeName(msg.data[0])">{{ getEmployeeName(row) }}</td>
+                  <td *ngFor="let key of getTableKeys(msg.data)">{{ getCellValueForKey(row, key) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <p class="table-note" *ngIf="msg.data.length > 10">
+              Showing 10 of {{ msg.data.length }} records
+            </p>
+            <button class="export-btn" (click)="exportToExcel(msg.data, msg.intent)">
+              <mat-icon>download</mat-icon> Export Excel
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div #messagesEnd></div>
+  </div>
+
+  <!-- File chip -->
+  <div class="file-chip" *ngIf="selectedFile">
+    <mat-icon class="file-icon">table_chart</mat-icon>
+    <span class="file-name">{{ selectedFile.name }}</span>
+    <span class="file-rows" *ngIf="parsedAttendanceRows.length">({{ parsedAttendanceRows.length }} rows)</span>
+    <span class="file-rows" *ngIf="parsedTdsRows.length">({{ parsedTdsRows.length }} TDS records)</span>
+    <button class="file-remove" (click)="clearFile()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Input Area -->
+  <div class="agent-input-area">
+    <button class="attach-btn" (click)="triggerFileInput()" title="Attach Excel" [disabled]="isLoading">
+      <mat-icon>attach_file</mat-icon>
+    </button>
+    <textarea
+      [(ngModel)]="userInput"
+      (keydown)="onKeydown($event)"
+      [placeholder]="inputPlaceholder"
+      rows="2"
+      [disabled]="isLoading"
+    ></textarea>
+    <button class="send-btn" (click)="sendMessage()"
+      [disabled]="isLoading || (!userInput.trim() && !selectedFile)">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+
+</div>

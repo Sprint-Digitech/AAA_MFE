@@ -1,5 +1,6 @@
-<div style="margin-top: 10px;">
-  <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Companies'" [showAddButton]="false"
+﻿<div style="margin-top: 10px;">
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [searchResultTitle]="'Companies'" [showAddButton]="true"
+    [addButtonLabel]="'Add Company'" (onAdd)="addCompany()"
     [columns]="columns" [dataSource]="dataArray" [rowsPerPage]="20" [tableWidth]="'100%'"
     [showDeleteOption]="onDeleteComapny" [showDetailsOption]="onDetailCompany" (editAction)="onEditRow($event)"
     (detailAction)="onDetailRow($event)" (deleteAction)="deleteCompany($event)">

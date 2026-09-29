@@ -1,0 +1,114 @@
+<div class="cs-wrapper" *ngIf="companies.length > 0">
+
+  <!-- Trigger button -->
+  <button class="cs-trigger"
+    [class.cs-trigger--active]="showDropdown"
+    [class.cs-trigger--single]="!canOpenDropdown"
+    (click)="toggleDropdown($event)"
+    [matTooltip]="!canOpenDropdown ? (active?.companyName ?? '') : ''"
+    matTooltipPosition="below">
+
+    <mat-icon class="cs-icon">business</mat-icon>
+
+    <span class="cs-label">
+      <span class="cs-company-name">{{ displayName }}</span>
+      <span class="cs-branch-name" *ngIf="activeBranchLabel">
+        <mat-icon class="cs-branch-icon">store</mat-icon>{{ activeBranchLabel }}
+      </span>
+      <span class="cs-role" *ngIf="active?.roleName && !activeBranchLabel">{{ active!.roleName }}</span>
+    </span>
+
+    <mat-icon class="cs-caret" *ngIf="canOpenDropdown">
+      {{ showDropdown ? 'expand_less' : 'expand_more' }}
+    </mat-icon>
+
+    <span class="cs-multi-badge" *ngIf="hasMultiple" [matTooltip]="companies.length + ' companies'">
+      {{ companies.length }}
+    </span>
+  </button>
+
+  <!-- Dropdown -->
+  <div class="cs-dropdown" *ngIf="showDropdown && canOpenDropdown" (click)="$event.stopPropagation()">
+
+    <!-- Company section — only when user has access to multiple companies -->
+    <ng-container *ngIf="canSwitchCompany">
+      <div class="cs-dropdown__header">
+        <mat-icon>corporate_fare</mat-icon>
+        <span>Switch Company</span>
+      </div>
+
+      <div class="cs-list">
+        <!-- All Companies option -->
+        <button class="cs-item" *ngIf="companies.length > 1"
+          [class.cs-item--active]="isAllSelected"
+          (click)="selectAll()">
+          <div class="cs-item__icon">
+            <mat-icon>{{ isAllSelected ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          </div>
+          <div class="cs-item__body">
+            <span class="cs-item__name">All Companies</span>
+          </div>
+          <mat-icon class="cs-item__check" *ngIf="isAllSelected">check</mat-icon>
+        </button>
+
+        <button class="cs-item"
+          *ngFor="let co of companies"
+          [class.cs-item--active]="isSelectedCompany(co)"
+          (click)="selectCompany(co)">
+
+          <div class="cs-item__icon">
+            <mat-icon>{{ isSelectedCompany(co) ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          </div>
+
+          <div class="cs-item__body">
+            <span class="cs-item__name">{{ co.companyName }}</span>
+            <span class="cs-item__meta">
+              <span *ngIf="co.companyCode" class="cs-item__code">{{ co.companyCode }}</span>
+              <span class="cs-item__role">{{ co.roleName }}</span>
+            </span>
+            <span class="cs-item__dept" *ngIf="co.departmentNames">
+              <mat-icon>folder</mat-icon> {{ co.departmentNames }}
+            </span>
+          </div>
+
+          <mat-icon class="cs-item__check" *ngIf="isSelectedCompany(co)">check</mat-icon>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Branch section — shown whenever the active company has multiple branches -->
+    <ng-container *ngIf="canSwitchBranch && active">
+      <div class="cs-branch-header" [class.cs-branch-header--top]="!canSwitchCompany">
+        <mat-icon>store</mat-icon>
+        <span>Switch Branch</span>
+        <span class="cs-branch-company-hint" *ngIf="canSwitchCompany">in {{ active.companyName }}</span>
+      </div>
+
+      <div class="cs-branch-list">
+
+        <!-- All Branches option -->
+        <button class="cs-branch-item"
+          [class.cs-branch-item--active]="isSelectedBranch(null)"
+          (click)="selectBranch(null, null)">
+          <mat-icon>{{ isSelectedBranch(null) ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          <span class="cs-branch-item__name">All Branches</span>
+          <mat-icon class="cs-item__check" *ngIf="isSelectedBranch(null)">check</mat-icon>
+        </button>
+
+        <!-- Individual branches -->
+        <button class="cs-branch-item"
+          *ngFor="let b of active.branches"
+          [class.cs-branch-item--active]="isSelectedBranch(b.hrmsbranchId)"
+          (click)="selectBranch(b.hrmsbranchId, b.branchName)">
+          <mat-icon>{{ isSelectedBranch(b.hrmsbranchId) ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          <span class="cs-branch-item__name">{{ b.branchName }}</span>
+          <span class="cs-branch-item__code" *ngIf="b.branchCode">{{ b.branchCode }}</span>
+          <mat-icon class="cs-item__check" *ngIf="isSelectedBranch(b.hrmsbranchId)">check</mat-icon>
+        </button>
+
+      </div>
+    </ng-container>
+
+  </div>
+
+</div>

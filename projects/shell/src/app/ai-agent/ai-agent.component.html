@@ -1,0 +1,87 @@
+<!-- Floating Action Button -->
+<button class="agent-fab" (click)="toggleChat()" [class.open]="isOpen" title="HRMS AI Agent">
+  <mat-icon>{{ isOpen ? 'close' : 'smart_toy' }}</mat-icon>
+</button>
+
+<!-- Chat Panel -->
+<div class="agent-panel" [class.visible]="isOpen">
+
+  <!-- Header -->
+  <div class="agent-header">
+    <div class="header-left">
+      <mat-icon class="bot-icon">smart_toy</mat-icon>
+      <div>
+        <div class="agent-name">HRMS AI Agent</div>
+        <div class="agent-lang">English · Hindi · Hinglish</div>
+      </div>
+    </div>
+    <button class="clear-btn" (click)="clearChat()" title="Clear chat">
+      <mat-icon>delete_sweep</mat-icon>
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="agent-messages">
+    <div
+      *ngFor="let msg of messages"
+      class="message-row"
+      [class.user-row]="msg.role === 'user'"
+      [class.bot-row]="msg.role === 'assistant'"
+    >
+      <div class="bubble" [class.user-bubble]="msg.role === 'user'" [class.bot-bubble]="msg.role === 'assistant'">
+
+        <!-- Loading dots -->
+        <div *ngIf="msg.loading" class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- Message text -->
+        <span *ngIf="!msg.loading" style="white-space: pre-line">{{ msg.content }}</span>
+
+        <!-- Data table (for report results) -->
+        <div class="data-table-wrapper" *ngIf="!msg.loading && hasTableData(msg.data)">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th *ngIf="getEmployeeName(msg.data[0])">Employee</th>
+                  <th *ngFor="let key of getTableKeys(msg.data)">{{ key }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of msg.data | slice:0:10">
+                  <td *ngIf="getEmployeeName(msg.data[0])">{{ getEmployeeName(row) }}</td>
+                  <td *ngFor="let key of getTableKeys(msg.data)">{{ getCellValue(row, key) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-note" *ngIf="msg.data.length > 10">
+            Showing 10 of {{ msg.data.length }} records
+          </p>
+        </div>
+
+      </div>
+    </div>
+    <div #messagesEnd></div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="agent-input-area">
+    <textarea
+      [(ngModel)]="userInput"
+      (keydown)="onKeydown($event)"
+      placeholder='Kuch poochein... e.g. "March salary report do"'
+      rows="2"
+      [disabled]="isLoading"
+    ></textarea>
+    <button
+      class="send-btn"
+      (click)="sendMessage()"
+      [disabled]="isLoading || !userInput.trim()"
+    >
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+
+</div>

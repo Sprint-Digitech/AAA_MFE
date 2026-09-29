@@ -8,11 +8,12 @@ import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 @Component({
   standalone: true,
   selector: 'app-company-group',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './company-group.component.html',
   styleUrls: ['./company-group.component.scss'],
 })
@@ -60,6 +61,14 @@ export class CompanyGroupComponent implements OnInit {
 
   addCompanyGroup(): void {
     this.router.navigate(['/company/addCompanyGroup']);
+  }
+
+  goToAdminDashboard(): void {
+    this.router.navigate(['/company/admin-dashboard']);
+  }
+
+  goToUserAccessManagement(): void {
+    this.router.navigate(['/company/user-access-management']);
   }
 
   handleSearch(event: Event): void {

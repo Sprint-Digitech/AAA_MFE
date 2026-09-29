@@ -1,5 +1,7 @@
-import { Routes } from '@angular/router';
+﻿import { Routes } from '@angular/router';
 import { productLoginGuard } from './shared/guards/product-login.guard';
+import { authGuard } from './shared/guards/auth.guard';
+import { environment } from './_helpers/environment';
 
 export const routes: Routes = [
     {
@@ -15,8 +17,8 @@ export const routes: Routes = [
             import('./login/login.component').then((m) => m.LoginComponent),
     },
     {
-        path:'login-inventory',
-        loadComponent: ()=> import('./login-inventory/login-inventory.component').then((m)=>m.LoginInventoryComponent)
+        path: 'login-inventory',
+        loadComponent: () => import('./login-inventory/login-inventory.component').then((m) => m.LoginInventoryComponent)
     },
     {
         path: 'register',
@@ -41,6 +43,7 @@ export const routes: Routes = [
     },
     {
         path: 'initial-setup',
+        canActivate: [authGuard],
         loadComponent: () =>
             import('./registration/initial-setup/initial-setup.component').then(
                 (m) => m.InitialSetupComponent
@@ -63,16 +66,20 @@ export const routes: Routes = [
     {
         path: 'company',
         children: [
-            { path: 'companyGroup', loadComponent: () => import('./registration/company-group/company-group.component').then(m => m.CompanyGroupComponent) },
+            { path: 'companyGroup', loadComponent: () => import('./registration/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
+            { path: 'companyGroup/manage', loadComponent: () => import('./registration/company-group/company-group.component').then(m => m.CompanyGroupComponent) },
             { path: 'updateCompanyGroup/:id', loadComponent: () => import('./registration/company-group-add/company-group-add.component').then(m => m.CompanyGroupAddComponent) },
             { path: 'list', loadComponent: () => import('./registration/companies/companies.component').then(m => m.CompaniesComponent) },
+            { path: 'add', loadComponent: () => import('./registration/add-company/add-company.component').then(m => m.AddCompanyComponent) },
             { path: 'update/:companyId', loadComponent: () => import('./registration/add-company/add-company.component').then(m => m.AddCompanyComponent) },
             { path: 'details/:companyId', loadComponent: () => import('./registration/company-details/company-details.component').then(m => m.CompanyDetailsComponent) },
             { path: 'addBranch/:companyId', loadComponent: () => import('./registration/add-branch/add-branch.component').then(m => m.AddBranchComponent) },
             { path: 'updateBranch/:companyId/:id', loadComponent: () => import('./registration/add-branch/add-branch.component').then(m => m.AddBranchComponent) },
             { path: 'branchDetails/:companyId/:id', loadComponent: () => import('./registration/branch-details/branch-details.component').then(m => m.BranchDetailsComponent) },
             { path: 'workspace', loadComponent: () => import('./registration/workspace/workspace.component').then(m => m.WorkspaceComponent) },
-            { path: 'add-existing-company', loadComponent: () => import('./registration/add-existing-company/add-existing-company.component').then(m => m.AddExistingCompanyComponent) }
+            { path: 'add-existing-company', loadComponent: () => import('./registration/add-existing-company/add-existing-company.component').then(m => m.AddExistingCompanyComponent) },
+            { path: 'user-access-management', loadComponent: () => import('./registration/user-access-management/user-access-management.component').then(m => m.UserAccessManagementComponent) },
+            { path: 'admin-dashboard', loadComponent: () => import('./registration/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) }
         ]
     },
     {
@@ -121,17 +128,17 @@ export const routes: Routes = [
         // Employee MFE payRoll routes (must come before salary matcher)
         path: 'payRoll/salaryreport',
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Employee Basic Details Report' }
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Employee Basic Details Report' }
     },
     {
         path: 'payRoll/extensionReport',
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Extension Report' }
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Extension Report' }
     },
     {
         path: 'payRoll/manpowerReport',
         loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-        data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Manpower Report' }
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Manpower Report' }
     },
     {
         // Salary & Master Data MFE
@@ -167,7 +174,7 @@ export const routes: Routes = [
                 if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
-            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds')) return { consumed: [url[0], url[1]] };
+            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds' || subPath === 'salaryadvance')) return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
             if (path === 'ess') return { consumed: [url[0]] };
@@ -178,9 +185,41 @@ export const routes: Routes = [
             {
                 path: '**',
                 loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-                data: { mfeUrl: 'https://test.fovestta.com/Salary/dist/', title: 'Salary & Master Data' }
+                data: { mfeUrl: environment.salaryMfeUrl, title: 'Salary & Master Data' }
             }
         ]
+    },
+    {
+        // Redirect ESS Dashboard menu to User Access Management
+        path: 'employeeSelfService/EssDashboard',
+        redirectTo: '/company/user-access-management',
+        pathMatch: 'full'
+    },
+    {
+        // Employee MFE employeeSelfService routes (must come before ALMS matcher)
+        path: 'employeeSelfService/directory',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Employee Directory' }
+    },
+    {
+        path: 'employeeSelfService/documents',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Employee Documents' }
+    },
+    {
+        path: 'employeeSelfService/addEmployeeProfileInfo',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Employee Profile Info' }
+    },
+    {
+        path: 'employeeSelfService/help',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Help & Support' }
+    },
+    {
+        path: 'employeeSelfService/supportAdmin',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: environment.employeeMfeUrl, title: 'Support Administration' }
     },
     {
         // ALMS & ESS MFE
@@ -202,7 +241,7 @@ export const routes: Routes = [
             {
                 path: '**',
                 loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-                data: { mfeUrl: 'https://test.fovestta.com/ALMS/dist/', title: 'ALMS & ESS' }
+                data: { mfeUrl: environment.almsMfeUrl, title: 'ALMS & ESS' }
             }
         ]
     },
@@ -213,11 +252,11 @@ export const routes: Routes = [
             {
                 path: '**',
                 loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
-                data: { mfeUrl: 'https://test.fovestta.com/Employee/dist/', title: 'Employee Management' }
+                data: { mfeUrl: environment.employeeMfeUrl, title: 'Employee Management' }
             }
         ]
     },
-  // ✅ INVENTORY — Bas yeh add karo
+    // ✅ INVENTORY — Bas yeh add karo
     {
         matcher: (url) => {
             if (url.length === 0) return null;
@@ -244,7 +283,7 @@ export const routes: Routes = [
                 path: '**',
                 loadComponent: () => import('./mfe-container/mfe-container.component')
                     .then(m => m.MfeContainerComponent),
-                data: { 
+                data: {
                     mfeUrl: 'http://localhost:3000/',  // Local
                     // mfeUrl: 'https://inventory.company.com/', // Production
                     title: 'Inventory',

@@ -1,10 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+﻿import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
 import { AuditLoggingService } from './audit-logging.service';
 import { SecureTokenStorageService } from './secure-token-storage.service';
 import { EnvironmentUrlService } from './environment-url.service';
+import { environment as appEnv } from '../../_helpers/environment';
 
 export interface Login {
   email: string;
@@ -77,8 +78,8 @@ export class AccountService {
 
   environment = {
     production: true,
-    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
-    wmsAuthZUrlAddress: 'https://fovesttastag.in/Wmsauthz/sdapi',
+    urlAddress: appEnv.urlAddress,
+    wmsAuthZUrlAddress: `${appEnv.domain}/Wmsauthz/sdapi`,
   };
 
   public get userValue() {
@@ -97,9 +98,8 @@ export class AccountService {
             loginUser.employee.tenantSchema,
           );
           this.loginSubject$.next(loginUser);
-          return loginUser;
-        } else {
         }
+        return loginUser;
       }),
     );
   }
@@ -185,13 +185,12 @@ export class AccountService {
   };
 
   public update = (route: string, body: any) => {
-    let url = this.createCompleteRoute(route, this.environment.urlAddress);
+    const baseUrl = this.envUrl.getBaseUrl(route);
+    let url = this.createCompleteRoute(route, baseUrl);
     return this.http.put(url, body);
   };
   public post = (route: string, body: any, headers?: HttpHeaders) => {
-    let baseUrl = (route.includes('company-branch/') || route.includes('InitialSetup/') || route.includes('Tenants/'))
-      ? this.envUrl.hrmsAuthZUrlAddress
-      : this.environment.urlAddress;
+    const baseUrl = this.envUrl.getBaseUrl(route);
     let url = this.createCompleteRoute(route, baseUrl);
     return this.http.post(url, body, { headers });
   };
@@ -204,7 +203,8 @@ export class AccountService {
   };
 
   public delete = (route: string) => {
-    let url = this.createCompleteRoute(route, this.environment.urlAddress);
+    const baseUrl = this.envUrl.getBaseUrl(route);
+    let url = this.createCompleteRoute(route, baseUrl);
     return this.http.delete(url);
   };
 
@@ -293,13 +293,14 @@ export class AccountService {
   }
 
   getMenusForUser(email: string, tenantSchema: string): Observable<any[]> {
-    const token = JSON.parse(sessionStorage.getItem('token') || 'null');
+    // Authorization is added automatically by JwtInterceptor for every request -
+    // this used to also build it manually via JSON.parse(sessionStorage.getItem
+    // ('token')), which threw (the token isn't stored JSON-encoded) and made
+    // every call to this method fail before the request was even sent, breaking
+    // sidebar menu loading on every page load.
     const headers: { [key: string]: string } = {
       'x-tenant-schema': tenantSchema,
     };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
     const url = `${this.envUrl.hrmsAuthZUrlAddress}/api/Roles/GetUserMenus?email=${encodeURIComponent(email)}`;
     return this.http.get<any[]>(url, { headers });
   }
@@ -313,13 +314,12 @@ export class AccountService {
   }
 
   getWmsPermissions(email: string, tenantSchema: string): Observable<any> {
-    const token = JSON.parse(sessionStorage.getItem('token') || 'null');
+    // See getMenusForUser above - Authorization is added automatically by
+    // JwtInterceptor, the manual JSON.parse(sessionStorage...) here threw and
+    // broke this call before the request was ever sent.
     const headers: { [key: string]: string } = {
       'x-tenant-schema': tenantSchema,
     };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
     const url = `${this.envUrl.wmsAuthZUrlAddress}/api/Roles/GetPermissions?userEmail=${encodeURIComponent(email)}`;
     return this.http.get<any>(url, { headers }).pipe(
       catchError(() => of(null))
@@ -386,31 +386,36 @@ export class AccountService {
     return this.menuDataSubject.getValue();
   }
 
-  // Reload menu data from API and update observable
-  reloadMenuData(): Observable<any[]> {
-    const user = this.userValue;
-    if (!user) {
-      console.warn('Cannot reload menu data: user not found');
-      return of([]);
-    }
+  // Reload menu data from API and update observable.
+  // email/tenantSchema can be passed explicitly (e.g. by WelcomeComponent,
+  // which just fetched a specific target tenant's user and can't rely on
+  // userValue - that's backed by loginSubject$, which only login()/logout()
+  // update, so it stays stale after setUser() and would still hold whatever
+  // was inherited into the tab at window.open() time). Omit them to keep the
+  // original behavior of deriving both from the current session.
+  reloadMenuData(email?: string, tenantSchema?: string): Observable<any[]> {
+    if (!email) {
+      const user = this.userValue;
+      if (!user) {
+        console.warn('Cannot reload menu data: user not found');
+        return of([]);
+      }
 
-    // Try multiple email fields (same logic as app.component.ts)
-    const email =
-      user.email ||
-      user.employeeEmail ||
-      user.loginEmail ||
-      user.userEmail ||
-      (user.employee && user.employee.email);
+      // Try multiple email fields (same logic as app.component.ts)
+      email =
+        user.email ||
+        user.employeeEmail ||
+        user.loginEmail ||
+        user.userEmail ||
+        (user.employee && user.employee.email);
+    }
 
     if (!email) {
-      console.warn(
-        'Cannot reload menu data: user email not found in user object',
-        user,
-      );
+      console.warn('Cannot reload menu data: user email not found in user object');
       return of([]);
     }
 
-    const tenantSchema = sessionStorage.getItem('tenantSchema') || '';
+    tenantSchema = tenantSchema ?? (sessionStorage.getItem('tenantSchema') || '');
 
     return this.getMenusForUser(email, tenantSchema).pipe(
       map((menus: any[]) => {
@@ -622,6 +627,14 @@ export class AccountService {
 
     // Sort submenus by srNo ascending
     sortedMenus.forEach((menu) => {
+      // FORCE OVERRIDE: Fix Help menu path if it's incorrect (check for 'help' or 'support')
+      const isHelpMenu = (name: string) => name?.toLowerCase().includes('help') || name?.toLowerCase().includes('support');
+
+      if (isHelpMenu(menu.menuName) || isHelpMenu(menu.menuDisplayName)) {
+        console.log('AccountService: Forcing Help menu path to employeeSelfService/help');
+        menu.menuPath = 'employeeSelfService/help';
+      }
+
       if (menu.submenu && menu.submenu.length > 0) {
         const submenusWithSrNo = menu.submenu.filter(
           (s: any) => s.srNo != null && s.srNo !== undefined,
@@ -637,6 +650,14 @@ export class AccountService {
         });
 
         menu.submenu = [...submenusWithSrNo, ...submenusWithoutSrNo];
+
+        // Also check submenus for Help
+        menu.submenu.forEach((sub: any) => {
+          if (isHelpMenu(sub.menuName) || isHelpMenu(sub.menuDisplayName)) {
+            console.log('AccountService: Forcing Help submenu path to employeeSelfService/help');
+            sub.menuPath = 'employeeSelfService/help';
+          }
+        });
       }
     });
 

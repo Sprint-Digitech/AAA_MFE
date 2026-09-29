@@ -1,17 +1,17 @@
-<div class="header-container" style="margin-top:10px">
+﻿<div class="header-container" style="margin-top:10px">
   <!-- <h2 class="custom-header">List of Menu Role </h2>
 </div>
 
 <div class="container">
   <div class="search-container">
-    <lib-nemo-search-option (keyup)="handleSearch($event)"></lib-nemo-search-option>
+    <lib-nemo-search-option></lib-nemo-search-option>
   </div>
   <button class="add-button" (click)="addMenuRoleMapping()">Add Menu Role +</button>
 </div> -->
 
 
 
-  <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Menu Role List'" [showAddButton]="true"
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [searchResultTitle]="'Menu Role List'" [showAddButton]="true"
     [addButtonLabel]="'Add Menu Role'" (onAdd)="addMenuRoleMapping()" [columns]="columns" [dataSource]="dataArray"
     [rowsPerPage]="20" [tableWidth]="'100%'" [showDeleteOption]="onDeleteDepartment" (editAction)="onEditRow($event)"
     (deleteAction)="deleteMenu($event)" [showDeleteOption]="deleteRow" [showDetailsOption]="MenuroleDetails">

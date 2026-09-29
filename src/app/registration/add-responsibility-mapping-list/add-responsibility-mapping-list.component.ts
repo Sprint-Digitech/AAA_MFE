@@ -49,7 +49,7 @@ export class AddResponsibilityMappingListComponent {
   }
   loadAllData() {
     forkJoin({
-      employees: this.service.get('api/Employee/EmployeeBasicDetailList'),
+      employees: this.service.get('api/AttendencesSource/EmployeeBasicDetailList'),
       responsibilityArchMappings:
         this.responsibilityService.getResponsibilityArchMappingList(), // Existing service use kiya
     }).subscribe({

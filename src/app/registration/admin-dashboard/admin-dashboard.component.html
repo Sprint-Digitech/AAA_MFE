@@ -1,0 +1,164 @@
+<div class="dashboard-page">
+
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <div class="dash-header">
+    <div class="dash-header__left">
+      <mat-icon class="dash-icon">dashboard</mat-icon>
+      <div>
+        <h2 class="dash-title">Company Group Admin Dashboard</h2>
+        <p class="dash-sub">Insights across all companies in your group</p>
+      </div>
+    </div>
+    <div class="dash-header__actions">
+      <button class="btn-outline" (click)="goToCompanyList()">
+        <mat-icon>business</mat-icon> Manage Companies
+      </button>
+      <button class="btn-primary" (click)="goToAccessManagement()">
+        <mat-icon>manage_accounts</mat-icon> User Access
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Loading ──────────────────────────────────────────────────────────── -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-icon class="spin">refresh</mat-icon>
+    <p>Loading dashboard…</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ── Summary KPI Cards ─────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card--blue kpi-card--clickable" (click)="goToCompanyList()">
+        <mat-icon>business</mat-icon>
+        <div class="kpi-card__body">
+          <span class="kpi-card__num">{{ totalCompanies }}</span>
+          <span class="kpi-card__label">Total Companies</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--purple kpi-card--clickable" (click)="goToBranchesOverview()">
+        <mat-icon>location_city</mat-icon>
+        <div class="kpi-card__body">
+          <span class="kpi-card__num">{{ totalBranches }}</span>
+          <span class="kpi-card__label">Total Branches</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--green kpi-card--clickable" (click)="goToAccessManagement()">
+        <mat-icon>people</mat-icon>
+        <div class="kpi-card__body">
+          <span class="kpi-card__num">{{ totalUsers }}</span>
+          <span class="kpi-card__label">Assigned Users</span>
+        </div>
+      </div>
+      <div class="kpi-card kpi-card--orange kpi-card--clickable" (click)="goToManageCompanyGroup()">
+        <mat-icon>corporate_fare</mat-icon>
+        <div class="kpi-card__body">
+          <span class="kpi-card__num">{{ groups.length }}</span>
+          <span class="kpi-card__label">Groups</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Per-Group sections ────────────────────────────────────────────── -->
+    <div class="group-section" *ngFor="let g of groups">
+
+      <div class="group-header group-header--clickable" (click)="goToManageCompanyGroup()">
+        <div class="group-header__left">
+          <span class="group-badge">Group</span>
+          <h3 class="group-name">{{ g.groupName }}</h3>
+          <span class="group-schema" *ngIf="g.tenantSchema">{{ g.tenantSchema }}</span>
+          <mat-icon class="group-nav-icon">open_in_new</mat-icon>
+        </div>
+        <div class="group-stats">
+          <div class="group-stat">
+            <span class="group-stat__num">{{ g.totalCompanies }}</span>
+            <span class="group-stat__label">Companies</span>
+          </div>
+          <div class="group-stat">
+            <span class="group-stat__num">{{ g.totalBranches }}</span>
+            <span class="group-stat__label">Branches</span>
+          </div>
+          <div class="group-stat">
+            <span class="group-stat__num">{{ g.totalUsers }}</span>
+            <span class="group-stat__label">Users</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company cards grid -->
+      <div class="company-grid">
+        <div class="company-card" *ngFor="let c of g.companies"
+          [class.company-card--expanded]="expandedCompany === c.companyId"
+          (click)="toggleCompany(c.companyId)">
+
+          <div class="company-card__header">
+            <div class="company-card__icon">
+              <mat-icon>business</mat-icon>
+            </div>
+            <div class="company-card__info">
+              <h4 class="company-card__name">{{ c.companyName }}</h4>
+              <span class="company-card__code" *ngIf="c.companyCode">{{ c.companyCode }}</span>
+            </div>
+            <span [class]="getStatusClass(c.isActive)" class="status-badge">
+              {{ c.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <mat-icon class="expand-icon">
+              {{ expandedCompany === c.companyId ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
+
+          <div class="company-card__stats">
+            <div class="co-stat co-stat--link" (click)="goToCompanyDetails(c.companyId); $event.stopPropagation()">
+              <mat-icon>location_city</mat-icon>
+              <span>{{ c.branchCount }} Branches</span>
+            </div>
+            <div class="co-stat">
+              <mat-icon>people</mat-icon>
+              <span>{{ c.userCount }} Users</span>
+            </div>
+          </div>
+
+          <!-- Branches expandable -->
+          <div class="branch-list" *ngIf="expandedCompany === c.companyId" (click)="$event.stopPropagation()">
+            <div class="branch-row branch-row--clickable" *ngFor="let b of c.branches" (click)="goToCompanyDetails(c.companyId)">
+              <div class="branch-row__left">
+                <mat-icon class="branch-icon">store</mat-icon>
+                <div>
+                  <p class="branch-name">{{ b.branchName }}</p>
+                  <p class="branch-code" *ngIf="b.branchCode">{{ b.branchCode }}</p>
+                </div>
+              </div>
+              <div class="branch-row__right">
+                <span [class]="getStatusClass(b.isActive)" class="status-badge status-badge--sm">
+                  {{ b.isActive ? 'Active' : 'Inactive' }}
+                </span>
+                <span class="branch-users branch-users--link" (click)="goToEmployeeList(c.companyId, b.branchId, b.branchName); $event.stopPropagation()">
+                  <mat-icon>person</mat-icon> {{ b.userCount }}
+                </span>
+              </div>
+            </div>
+            <p class="no-branches" *ngIf="!c.branches.length">No branches configured.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="no-companies" *ngIf="!g.companies.length">
+        No companies in this group yet.
+        <a class="link" (click)="goToCompanyList()">Add one</a>
+      </p>
+
+    </div>
+
+    <div class="empty-state" *ngIf="!groups.length">
+      <mat-icon>business_center</mat-icon>
+      <h3>No groups found</h3>
+      <p>Set up your company group hierarchy to start using multi-company features.</p>
+      <button class="btn-primary" (click)="goToCompanyList()">
+        <mat-icon>add</mat-icon> Add Company
+      </button>
+    </div>
+
+  </ng-container>
+
+</div>

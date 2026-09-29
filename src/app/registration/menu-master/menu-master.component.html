@@ -1,18 +1,18 @@
-<div class="header-container" style="margin-top: 55px;">
+﻿<div class="header-container" style="margin-top: 10px;">
   <!-- <h2 class="custom-header">List of Menu Master</h2>
 </div>
 
 <div class="container">
   <div class="search-container">
-    <lib-nemo-search-option (keyup)="handleSearch($event)"></lib-nemo-search-option>
+    <lib-nemo-search-option></lib-nemo-search-option>
   </div>
   <button class="add-button" (click)="addMenuMaster()">Add Menu Master +</button>
 </div> -->
 
 
 
-  <lib-nemo-reusable-tbl appGlobalTableSearch [searchResultTitle]="'Menu Master List'" [showAddButton]="true"
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [searchResultTitle]="'Menu Master List'" [showAddButton]="true"
     [addButtonLabel]="'Add Menu Master'" (onAdd)="addMenuMaster()" [columns]="columns" [dataSource]="dataArray"
     [rowsPerPage]="20" [tableWidth]="'100%'" (editAction)="onEditRow($event)" (deleteAction)="deleteManu($event)"
-    [showDeleteOption]="deleteMaster" [showDetailsOption]="menuMasterDetails" [showSearch]="true">
+    [showDeleteOption]="deleteMaster" [showDetailsOption]="menuMasterDetails" [showSearch]="false">
   </lib-nemo-reusable-tbl>

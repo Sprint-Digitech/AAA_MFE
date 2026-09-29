@@ -68,6 +68,13 @@
               <h3>LEAVE ENCASHMENT</h3>
             </div>
           </div>
+
+          <!-- Date & Time Settings Card -->
+          <div class="section-card" (click)="loadSection('dateTime')">
+            <div class="section-card-header">
+              <h3>DATE &amp; TIME</h3>
+            </div>
+          </div>
         </div>
 
         <!-- Back Button -->
@@ -84,20 +91,20 @@
             <div class="content-body">
               <div *ngIf="selectedSection === 'contact'">
                 <div *ngIf="contactDataLoaded">
-                  <lib-add-update-form [config]="contactFormConfig"></lib-add-update-form>
+                  <lib-add-update-form [config]="contactFormConfig" (validationError)="onContactValidationError($event)"></lib-add-update-form>
                   <!-- Buttons handled by library -->
                 </div>
               </div>
 
               <!-- Statutory Section -->
               <div *ngIf="selectedSection === 'statutory'">
-                <lib-add-update-form [config]="statutoryFormConfig"></lib-add-update-form>
+                <lib-add-update-form [config]="statutoryFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
                 <!-- Buttons handled by library -->
               </div>
 
               <!-- Tax Deductor Section -->
               <div *ngIf="selectedSection === 'tax'">
-                <lib-add-update-form [config]="taxDeductorFormConfig"></lib-add-update-form>
+                <lib-add-update-form [config]="taxDeductorFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
                 <!-- Buttons handled by library -->
               </div>
 
@@ -106,7 +113,7 @@
                 <div class="address-contact-container">
                   <div class="address-list">
                     <div *ngIf="addressDataLoaded">
-                      <lib-add-update-form [config]="addressFormConfig"></lib-add-update-form>
+                      <lib-add-update-form [config]="addressFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
                       <!-- Buttons handled by library -->
                     </div>
                   </div>
@@ -117,8 +124,17 @@
               <div *ngIf="selectedSection === 'overtime'">
                 <div class="address-contact-container">
                   <div *ngIf="overtimeDataLoaded">
-                    <lib-add-update-form [config]="overtimeFormConfig"></lib-add-update-form>
-                    <!-- Buttons handled by library -->
+                    <lib-add-update-form [config]="overtimeFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
+                    <div style="display:flex; gap:12px; margin-top:16px;">
+                      <button class="btn btn-primary" style="padding:8px 24px; background:#006aff; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;"
+                        (click)="onOvertimeSave()">
+                        Save
+                      </button>
+                      <button class="btn btn-outline" style="padding:8px 24px; background:#303030; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600;"
+                        (click)="getBranchOT()">
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -126,8 +142,27 @@
               <!-- Leave Encashment Section -->
               <div *ngIf="selectedSection === 'leaveEncashment'">
                 <div class="address-contact-container">
-                  <lib-add-update-form [config]="leaveEncashmentFormConfig"></lib-add-update-form>
+                  <lib-add-update-form [config]="leaveEncashmentFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
                   <!-- Buttons handled by library -->
+                </div>
+              </div>
+
+              <!-- Date & Time Settings Section -->
+              <div *ngIf="selectedSection === 'dateTime'">
+                <div class="address-contact-container">
+                  <div *ngIf="dateTimeDataLoaded">
+                    <p style="margin-bottom:12px;">
+                      <span *ngIf="!isTimezoneCustom" style="color:#606060;">
+                        Timezone is auto-detected from this branch's country/state (set on the Address tab).
+                        Saving here will override it for this branch going forward.
+                      </span>
+                      <span *ngIf="isTimezoneCustom" style="color:#606060;">
+                        Timezone has been manually set for this branch and will no longer change automatically.
+                      </span>
+                    </p>
+                    <lib-add-update-form [config]="dateTimeFormConfig" (validationError)="onFormValidationError($event)"></lib-add-update-form>
+                    <!-- Buttons handled by library -->
+                  </div>
                 </div>
               </div>
 

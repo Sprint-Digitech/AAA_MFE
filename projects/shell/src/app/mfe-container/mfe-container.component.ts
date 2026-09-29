@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-mfe-container',
@@ -25,39 +27,47 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
     }
   `]
 })
-export class MfeContainerComponent implements OnInit {
+export class MfeContainerComponent implements OnInit, OnDestroy {
   safeUrl: SafeResourceUrl | null = null;
   mfeUrl: string = '';
 
-  constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
+  private subscription = new Subscription();
+
+  constructor(private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
-    // Subscribe to route data changes (handles MFE switches)
-    this.route.data.subscribe(data => {
-      const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
-      const isExternalApp = data['isExternalApp'] || false;
+    // Handle the initial load of this component.
+    this.handleNavigation();
 
-      // ✅ Inventory (Next.js) — iframe nahi, seedha redirect
-      if (isExternalApp) {
-        this.redirectToExternalApp(mfeBaseUrl);
-        return;
-      }
+    // Angular reuses this component instance across sibling menu clicks that resolve
+    // through the same matcher-based '**' child route (e.g. Salary/ALMS matchers in
+    // app.routes.ts consume every segment, so ActivatedRoute.url/.data stop emitting
+    // after the first activation). Router.events -> NavigationEnd fires on every
+    // completed navigation regardless of route reuse, so use that instead to make sure
+    // the iframe src is recomputed on every menu click.
+    this.subscription.add(
+      this.router.events.pipe(
+        filter(event => event instanceof NavigationEnd)
+      ).subscribe(() => this.handleNavigation())
+    );
+  }
 
-      console.log('[Shell][MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
-      this.updateIframeSrc();
-    });
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
 
-    // Subscribe to URL changes (handles navigation within the same MFE)
-    this.route.url.subscribe(() => {
-      const data = this.route.snapshot.data;
-      const isExternalApp = data['isExternalApp'] || false;
+  private handleNavigation() {
+    const data = this.route.snapshot.data;
+    const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
+    const isExternalApp = data['isExternalApp'] || false;
 
-      // ✅ Inventory ke liye URL change subscribe skip karo
-      if (isExternalApp) return;
+    // ✅ Inventory (Next.js) — iframe nahi, seedha redirect
+    if (isExternalApp) {
+      this.redirectToExternalApp(mfeBaseUrl);
+      return;
+    }
 
-      const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
-      this.updateIframeSrc();
-    });
+    this.updateIframeSrc();
   }
 
   // ✅ Inventory Next.js app ke liye — seedha window redirect
@@ -88,27 +98,6 @@ export class MfeContainerComponent implements OnInit {
     window.location.href = targetUrl;
   }
 
-  // ngOnInit() {
-  //   // Subscribe to route data changes (handles MFE switches)
-  //   this.route.data.subscribe(data => {
-  //     const mfeBaseUrl = data['mfeUrl'] || 'http://localhost:4200';
-  //     console.log('[Shell][MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
-  //     this.updateIframeSrc(mfeBaseUrl);
-  //   });
-
-  //   // Subscribe to URL changes (handles navigation within the same MFE)
-  //   this.route.url.subscribe(() => {
-  //     const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'http://localhost:4200';
-  //     this.updateIframeSrc(mfeBaseUrl);
-  //   });
-  // }
-
-  // private updateIframeSrc(mfeBaseUrl: string) {
-  //   this.route.url.subscribe(() => {
-  //     this.updateIframeSrc();
-  //   });
-  // }
-
   private updateIframeSrc() {
     const isLocal = window.location.hostname === 'localhost';
     const shellBase = '/Gateway/dist';
@@ -116,11 +105,11 @@ export class MfeContainerComponent implements OnInit {
     const currentHash = window.location.hash;
     const currentSearch = window.location.search;
 
-    const authMfeBasePath = isLocal ? 'http://localhost:4204' : 'https://test.fovestta.com/Auth/dist';
-    const salaryMfeBasePath = isLocal ? 'http://localhost:4206' : 'https://test.fovestta.com/Salary/dist';
-    const almsMfeBasePath = isLocal ? 'http://localhost:4205' : 'https://test.fovestta.com/ALMS/dist';
-    const employeeMfeBasePath = isLocal ? 'http://localhost:4207' : 'https://test.fovestta.com/Employee/dist';
-    const notificationMfeBasePath = isLocal ? 'http://localhost:4208' : 'https://test.fovestta.com/Notification/dist';
+    const authMfeBasePath = isLocal ? 'http://localhost:4204' : 'https://attendance.bubnaadvertising.com/Auth/dist';
+    const salaryMfeBasePath = isLocal ? 'http://localhost:4206' : 'https://attendance.bubnaadvertising.com/Salary/dist';
+    const almsMfeBasePath = isLocal ? 'http://localhost:4205' : 'https://attendance.bubnaadvertising.com/ALMS/dist';
+    const employeeMfeBasePath = isLocal ? 'http://localhost:4207' : 'https://attendance.bubnaadvertising.com/Employee/dist';
+    const notificationMfeBasePath = isLocal ? 'http://localhost:4208' : 'https://attendance.bubnaadvertising.com/Notification/dist';
 
     let relativePath = '';
     let hashSearch = '';

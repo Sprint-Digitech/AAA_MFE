@@ -108,7 +108,7 @@ export class LoginInventoryComponent {
                 this.accountService.step('InitialSetup/GetStatus', { companyBranchId: branchId }).subscribe({
                     next: (res: any) => {
                         if (res && res.isSetupComplete === false) {
-                            this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                            this.router.navigate(['/dashboard'], { replaceUrl: true });
                         } else {
                             if (window !== window.parent) {
                                 window.parent.location.href = window.location.origin + '/dashboard';
@@ -184,7 +184,7 @@ export class LoginInventoryComponent {
                                             this.callInitialSetupStatus(branchId).subscribe({
                                                 next: (res: any) => {
                                                     if (res && res.isSetupComplete === false) {
-                                                        this.router.navigate(['/initial-setup'], { replaceUrl: true });
+                                                        this.router.navigate(['/dashboard'], { replaceUrl: true });
                                                     } else {
                                                         if (window !== window.parent) {
                                                             window.parent.location.href = window.location.origin + '/dashboard';
@@ -295,6 +295,9 @@ export class LoginInventoryComponent {
             if (err?.status === 401) {
                 return 'Invalid User ID or Password';
             }
+            if (err?.status === 405) {
+                return 'Login service rejected the request. Please contact support.';
+            }
 
             if (err instanceof HttpErrorResponse) {
                 if (err.status === 0 || !err.status) {
@@ -309,23 +312,34 @@ export class LoginInventoryComponent {
 
             if (err?.error?.errors) {
                 return typeof err.error.errors === 'string'
-                    ? err.error.errors
+                    ? this.toSafeErrorMessage(err.error.errors, fallback)
                     : fallback;
             }
             if (typeof err?.error === 'string') {
-                return err.error;
+                return this.toSafeErrorMessage(err.error, fallback);
             }
             if (err?.error?.Error?.Message) {
-                return err.error.Error.Message;
+                return this.toSafeErrorMessage(err.error.Error.Message, fallback);
             }
             if (err?.error?.message) {
-                return err.error.message;
+                return this.toSafeErrorMessage(err.error.message, fallback);
             }
             if (err?.message) {
-                return err.message;
+                return this.toSafeErrorMessage(err.message, fallback);
             }
         } catch { }
         return fallback;
+    }
+
+    private toSafeErrorMessage(value: string, fallback: string): string {
+        if (!value) {
+            return fallback;
+        }
+        const looksLikeHtml = /<\s*(html|head|body|style|div|h\d|!doctype)\b/i.test(value);
+        if (looksLikeHtml) {
+            return fallback;
+        }
+        return value.length > 300 ? `${value.slice(0, 300)}...` : value;
     }
 
     private callInitialSetupStatus(branchId: string): Observable<any> {

@@ -5,7 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   providedIn: 'root',
 })
 export class NotificationService {
-  private readonly DEFAULT_DURATION = 3000;
+  private readonly DEFAULT_DURATION = 5000;
   private readonly DEFAULT_POSITION: 'top' | 'bottom' = 'bottom';
 
   constructor(private snackBar: MatSnackBar) {}
@@ -48,10 +48,21 @@ export class NotificationService {
     className: string,
     duration: number = this.DEFAULT_DURATION
   ): void {
-    this.snackBar.open(message, action, {
+    this.snackBar.open(this.toSafeMessage(message), action, {
       duration,
       verticalPosition: this.DEFAULT_POSITION,
       panelClass: [className],
     });
+  }
+
+  private toSafeMessage(message: string): string {
+    if (!message) {
+      return 'Something went wrong. Please try again.';
+    }
+    const looksLikeHtml = /<\s*(html|head|body|style|div|h\d|!doctype)\b/i.test(message);
+    if (looksLikeHtml) {
+      return 'Something went wrong. Please try again.';
+    }
+    return message.length > 300 ? `${message.slice(0, 300)}...` : message;
   }
 }

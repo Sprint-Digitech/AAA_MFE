@@ -1,0 +1,431 @@
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+- Generating index html...
+[1m[33m4 rules skipped due to selector errors:
+  .form-floating>~label -> Did not expect successive traversals.
+  .btn-group>+.btn -> Did not expect successive traversals.
+  .btn-group>+.btn -> Did not expect successive traversals.
+  .btn-group-vertical>+.btn -> Did not expect successive traversals.[39m[22m
+✔ Index html generation complete.
+[1m[33m
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 0, column 8 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/bootstrap.scss:0:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+0 | @import "mixins/banner";
+
+
+node_modules\bootstrap\scss\bootstrap.scss 1:9  root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 6, column 8 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/bootstrap.scss:6:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+6 | @import "functions";
+
+
+node_modules\bootstrap\scss\bootstrap.scss 7:9  root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 7, column 8 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/bootstrap.scss:7:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+7 | @import "variables";
+
+
+node_modules\bootstrap\scss\bootstrap.scss 8:9  root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 8, column 8 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/bootstrap.scss:8:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+8 | @import "variables-dark";
+
+
+node_modules\bootstrap\scss\bootstrap.scss 9:9  root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 9, column 8 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/bootstrap.scss:9:8:
+Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+9 | @import "maps";
+
+
+node_modules\bootstrap\scss\bootstrap.scss 10:9  root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 10, column 29 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:10:29:
+Global built-in functions are deprecated and will be removed in Dart Sass 3.0.0.
+Use math.unit instead.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+10 |     @if $prev-num == null or unit($num) == "%" or unit($prev-num) == "%" {
+
+
+node_modules\bootstrap\scss\_functions.scss 11:30  -assert-ascending()
+node_modules\bootstrap\scss\_variables.scss 494:1  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9     root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 10, column 50 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:10:50:
+Global built-in functions are deprecated and will be removed in Dart Sass 3.0.0.
+Use math.unit instead.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+10 |     @if $prev-num == null or unit($num) == "%" or unit($prev-num) == "%" {
+
+
+node_modules\bootstrap\scss\_functions.scss 11:51  -assert-ascending()
+node_modules\bootstrap\scss\_variables.scss 494:1  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9     root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 36, column 10 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:36:10:
+red() is deprecated. Suggestion:
+
+color.channel($color, "red", $space: rgb)
+
+More info: https://sass-lang.com/d/color-functions
+
+36 |   @return red($value), green($value), blue($value);
+
+
+node_modules\bootstrap\scss\_functions.scss 37:11   to-rgb()
+node_modules\bootstrap\scss\_variables.scss 846:31  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 36, column 23 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:36:23:
+green() is deprecated. Suggestion:
+
+color.channel($color, "green", $space: rgb)
+
+More info: https://sass-lang.com/d/color-functions
+
+36 |   @return red($value), green($value), blue($value);
+
+
+node_modules\bootstrap\scss\_functions.scss 37:24   to-rgb()
+node_modules\bootstrap\scss\_variables.scss 846:31  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 184, column 9 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:184:9:
+red() is deprecated. Suggestion:
+
+color.channel($color, "red", $space: rgb)
+
+More info: https://sass-lang.com/d/color-functions
+
+184 |     "r": red($color),
+
+
+node_modules\bootstrap\scss\_functions.scss 185:10  luminance()
+node_modules\bootstrap\scss\_functions.scss 174:8   contrast-ratio()
+node_modules\bootstrap\scss\_functions.scss 159:22  color-contrast()
+node_modules\bootstrap\scss\_variables.scss 846:42  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 185, column 9 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:185:9:
+green() is deprecated. Suggestion:
+
+color.channel($color, "green", $space: rgb)
+
+More info: https://sass-lang.com/d/color-functions
+
+185 |     "g": green($color),
+
+
+node_modules\bootstrap\scss\_functions.scss 186:10  luminance()
+node_modules\bootstrap\scss\_functions.scss 174:8   contrast-ratio()
+node_modules\bootstrap\scss\_functions.scss 159:22  color-contrast()
+node_modules\bootstrap\scss\_variables.scss 846:42  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 186, column 9 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:186:9:
+blue() is deprecated. Suggestion:
+
+color.channel($color, "blue", $space: rgb)
+
+More info: https://sass-lang.com/d/color-functions
+
+186 |     "b": blue($color)
+
+
+node_modules\bootstrap\scss\_functions.scss 187:10  luminance()
+node_modules\bootstrap\scss\_functions.scss 174:8   contrast-ratio()
+node_modules\bootstrap\scss\_functions.scss 159:22  color-contrast()
+node_modules\bootstrap\scss\_variables.scss 846:42  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 206, column 10 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:206:10:
+Global built-in functions are deprecated and will be removed in Dart Sass 3.0.0.
+Use color.mix instead.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+206 |   @return mix(white, $color, $weight);
+
+
+node_modules\bootstrap\scss\_functions.scss 207:11  tint-color()
+node_modules\bootstrap\scss\_variables.scss 79:12   @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 211, column 10 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_functions.scss:211:10:
+Global built-in functions are deprecated and will be removed in Dart Sass 3.0.0.
+Use color.mix instead.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+211 |   @return mix(black, $color, $weight);
+
+
+node_modules\bootstrap\scss\_functions.scss 212:11  shade-color()
+node_modules\bootstrap\scss\_variables.scss 84:12   @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+Deprecation Warning on line 341, column 26 of file:///D:/Office/Sprint-Digitech/AAA_MFE/node_modules/bootstrap/scss/_variables.scss:341:26:
+Global built-in functions are deprecated and will be removed in Dart Sass 3.0.0.
+Use color.mix instead.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+341 | $light-bg-subtle:         mix($gray-100, $white) !default;
+
+
+node_modules\bootstrap\scss\_variables.scss 342:27  @import
+node_modules\bootstrap\scss\bootstrap.scss 8:9      root stylesheet
+
+
+./node_modules/bootstrap/scss/bootstrap.scss - Warning: Module Warning (from ./node_modules/sass-loader/dist/cjs.js):
+232 repetitive deprecation warnings omitted.
+Run in verbose mode to see all warnings.
+
+Warning: [96msrc/app/registration/register-form/register-form.component.ts[0m:[93m101[0m:[93m5[0m - [93mwarning[0m[90m NG8113: [0mFvPhoneFieldComponent is not used within the template of RegisterFormComponent
+
+[7m101[0m     FvPhoneFieldComponent,
+[7m   [0m [93m    ~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Warning: [96msrc/app/registration/register-form/register-form.component.ts[0m:[93m102[0m:[93m5[0m - [93mwarning[0m[90m NG8113: [0mFvPasswordFieldComponent is not used within the template of RegisterFormComponent
+
+[7m102[0m     FvPasswordFieldComponent,
+[7m   [0m [93m    ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Warning: [96msrc/app/registration/register-form/register-form.component.ts[0m:[93m103[0m:[93m5[0m - [93mwarning[0m[90m NG8113: [0mFvDropdownComponent is not used within the template of RegisterFormComponent
+
+[7m103[0m     FvDropdownComponent,
+[7m   [0m [93m    ~~~~~~~~~~~~~~~~~~~[0m
+
+
+Warning: [96msrc/app/registration/reset-password/reset-password.component.ts[0m:[93m29[0m:[93m5[0m - [93mwarning[0m[90m NG8113: [0mFvEntryFieldComponent is not used within the template of ResetPasswordComponent
+
+[7m29[0m     FvEntryFieldComponent,
+[7m  [0m [93m    ~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_helpers/global-error-handler.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_models/approvalRequestEligibilityDto.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_models/approvalResponseEligibilityDto.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_models/eligibilityCriteriaDto.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_models/employeeEligibilityDto.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/_models/reimbursement-limit-dto.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/app.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/loader/loader.interceptor.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/loader/loader.service.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/loader/loader/loader.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/login-inventory/login-inventory.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/mat-confirm-dialog/mat-confirm-dialog.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-branch-probation-settings/add-branch-probation-settings.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-branch-probation-settings/add-branch-probation-settings.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-branch/add-branch.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-company/add-company.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-esi-calculation-month-limit/add-esi-calculation-month-limit.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-existing-company/add-existing-company.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-menu-master/add-menu-master.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-responsibility-arch-mapping-list/add-responsibility-arch-mapping-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-responsibility-list/add-responsibility-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/add-responsibility-mapping-list/add-responsibility-mapping-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/branch-details/branch-details.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/branch-probation-settings-list/branch-probation-settings-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/branch-probation-settings-list/branch-probation-settings-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/company-details/company-details.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/company-group-add/company-group-add.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/company-group/company-group.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/edit-menu-role-mapping/edit-menu-role-mapping.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/esi-calculation-month-list/esi-calculation-month-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/forgot-password/forgot-password.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/initial-setup/initial-setup.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/menu-master/menu-master.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/menu-role-mapping/menu-role-mapping.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/register-form/register-form.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/register-inventory/register-inventory.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/reset-password/reset-password.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/responsibility-arch-mapping-list/responsibility-arch-mapping-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/responsibility-list/responsibility-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/responsibility-mapping-list/responsibility-mapping-list.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/roles-add/roles-add.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/roles/roles.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/welcome/welcome.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/registration/workspace/workspace.component.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/bank-refresh.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/employee-eligibility.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/employeeselfservice.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/entity-refresh.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/filter-persistence.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/financial-year-refresh.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/logger.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/master.service.spec.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/master.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:/Office/Sprint-Digitech/AAA_MFE/src/app/shared/services/reimbursement.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: D:\Office\Sprint-Digitech\AAA_MFE\src\app\registration\register-inventory\register-inventory.component.ts depends on 'crypto-js'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+Warning: D:\Office\Sprint-Digitech\AAA_MFE\src\app\registration\reset-password\reset-password.component.ts depends on '@fovestta2/validation-engine'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+[39m[22m

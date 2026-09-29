@@ -7,11 +7,12 @@ import { AccountService } from '../../shared/services/account.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 @Component({
   standalone: true,
   selector: 'app-menu-master',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './menu-master.component.html',
   styleUrls: ['./menu-master.component.scss'],
 })

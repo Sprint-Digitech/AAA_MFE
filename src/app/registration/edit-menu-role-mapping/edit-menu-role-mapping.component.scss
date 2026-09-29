@@ -183,6 +183,10 @@ h2 {
   display: none;
 }
 
+:host ::ng-deep lib-add-update-form .form-actions {
+  display: none !important;
+}
+
 :host ::ng-deep .menu-item .mat-mdc-checkbox {
   margin: 0 !important;
   padding: 0 !important;

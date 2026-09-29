@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { AccountService } from './account.service';
 import { ErrorLoggingService } from './error-logging.service';
+import { environment as appEnv } from '../../_helpers/environment';
 
 export interface Login {
   email: string;
@@ -34,7 +35,7 @@ export class TokenRefreshService {
    */
   environment = {
     production: false,
-    urlAddress: 'https://test.fovestta.com/Auth/sdapi',
+    urlAddress: appEnv.urlAddress,
   };
   refreshToken(): Observable<string | null> {
     // If refresh is already in progress, return the subject

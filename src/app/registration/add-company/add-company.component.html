@@ -1,39 +1,37 @@
 
+
   <!-- Preview Section -->
-   <div class="main" style="margin-top: 55px;">
-  <lib-add-update-form *ngIf="addCompanyFormLoaded" [config]="companyFormConfig">
-  </lib-add-update-form>
+   <div class="main" style="margin-top: 10px;">
 
-  <div class="settings-section">
-    <div class="section-header">
-      <!-- <i class="preview-icon"></i> -->
-      <h4>Format Preview</h4>
-    </div>
+  <!-- Custom Logo Upload (bypasses broken fv-image-selector in library) -->
+  <div class="logo-upload-section">
+    <label class="form-label">
+      Upload Logo File <span style="color: #dc3545; font-weight: 700;">*</span>
+    </label>
+    <div class="logo-container">
+      <!-- Preview: logo uploaded -->
+      <div class="logo-preview" *ngIf="logoPreview">
+        <img [src]="logoPreview" alt="Company Logo" />
+        <label class="btn btn-sm btn-outline-primary" style="cursor:pointer; margin-left:10px;">
+          Change
+          <input type="file" accept="image/*" (change)="onLogoSelected($event)" style="display:none;" />
+        </label>
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                (click)="removeLogo()">Remove</button>
+      </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <div class="inline-label">
-          <label>Date Format Preview:</label>
-          <div class="preview-text">{{ datePreview }}</div>
-        </div>
-        <small>This is how dates will appear throughout the system</small>
-      </div>
-      <div class="form-group">
-        <div class="inline-label">
-          <label>Time Format Preview:</label>
-          <div class="preview-text">{{ timePreview }}</div>
-        </div>
-        <small>This is how times will appear throughout the system</small>
+      <!-- Upload zone -->
+      <div class="upload-area" *ngIf="!logoPreview" (click)="openLogoPicker()" style="cursor:pointer; width:100%;">
+        <p>Click to upload company logo</p>
+        <p>JPG, PNG, GIF supported</p>
+        <div class="btn btn-outline-primary" style="pointer-events:none;">Browse Files</div>
+        <input #logoFileInput type="file" accept="image/*"
+               (change)="onLogoSelected($event)" style="display:none;" />
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group full-width">
-        <div class="inline-label">
-          <label>Complete Date & Time Preview:</label>
-          <div class="preview-text">{{ dateTimePreview }}</div>
-        </div>
-        <small>This is how complete date and time stamps will appear</small>
-      </div>
-    </div>
+    <span class="text-danger" *ngIf="logoError">Company Logo is required</span>
   </div>
+
+  <lib-add-update-form *ngIf="addCompanyFormLoaded" [config]="companyFormConfig" [formGroup]="companyForm">
+  </lib-add-update-form>
 </div>

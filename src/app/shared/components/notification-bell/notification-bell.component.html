@@ -1,0 +1,65 @@
+<div class="nb-wrapper" *ngIf="show">
+
+  <button type="button" class="nb-trigger" (click)="toggleDropdown($event)">
+    <mat-icon class="nb-icon">notifications</mat-icon>
+    <span class="nb-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+  </button>
+
+  <div class="nb-dropdown" *ngIf="showDropdown" (click)="$event.stopPropagation()">
+    <div class="nb-dropdown__header">
+      <button type="button" class="nb-back" *ngIf="showPreferences" (click)="toggleSettings($event)">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <span>{{ showPreferences ? 'Notification Settings' : 'Notifications' }}</span>
+
+      <button type="button" class="nb-mark-all" *ngIf="!showPreferences && unreadCount > 0" (click)="markAllAsRead($event)">
+        Mark all read
+      </button>
+      <button type="button" class="nb-settings-btn" *ngIf="!showPreferences" (click)="toggleSettings($event)"
+        matTooltip="Notification settings">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </div>
+
+    <!-- Preferences panel -->
+    <div class="nb-prefs" *ngIf="showPreferences">
+      <div class="nb-prefs__loading" *ngIf="preferencesLoading">Loading…</div>
+
+      <div class="nb-prefs__item" *ngFor="let item of preferenceItems">
+        <div class="nb-prefs__text">
+          <span class="nb-prefs__title">{{ item.title }}</span>
+          <span class="nb-prefs__desc">{{ item.description }}</span>
+        </div>
+        <label class="nb-switch" *ngIf="preferences">
+          <input type="checkbox"
+            [checked]="preferences[item.key]"
+            (change)="onPreferenceToggle(item, $any($event.target).checked)" />
+          <span class="nb-switch__track"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Notification list -->
+    <div class="nb-list" *ngIf="!showPreferences">
+      <div class="nb-empty" *ngIf="!loading && notifications.length === 0">
+        <mat-icon>notifications_off</mat-icon>
+        <p>No notifications yet</p>
+      </div>
+
+      <button type="button" class="nb-item" *ngFor="let n of notifications"
+        [class.nb-item--unread]="!n.isRead"
+        (click)="onNotificationClick(n)">
+        <div class="nb-item__icon">
+          <mat-icon>{{ iconFor(n.type) }}</mat-icon>
+        </div>
+        <div class="nb-item__body">
+          <span class="nb-item__title">{{ n.title }}</span>
+          <span class="nb-item__text">{{ n.body }}</span>
+          <span class="nb-item__time">{{ timeAgo(n.createdDate) }}</span>
+        </div>
+        <span class="nb-item__dot" *ngIf="!n.isRead"></span>
+      </button>
+    </div>
+  </div>
+
+</div>

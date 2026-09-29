@@ -48,7 +48,12 @@ export class InitialSetupComponent {
   steps = [
     { label: 'Add Organization Details', path: '', stepId: '' },
     { label: 'Setup Salary Components', path: 'payRoll/payHead', stepId: '' },
-    { label: 'Setup Statuary Components', path: '', stepId: '' },
+    // Optional: doesn't block progress (isSetupComplete only ever depends on
+    // the LAST step, "Process Salary", completing - never on this one) and
+    // isn't counted in the progress bar/total below, since many companies
+    // legitimately never configure PF/ESI/PT statutory details even while
+    // fully live on payroll.
+    { label: 'Setup Statuary Components', path: '', stepId: '', optional: true },
     { label: 'Add Employees', path: 'employee/employeesList', stepId: '' },
     { label: "Add Employee's CTC", path: 'employee/employeeCTC', stepId: '' },
     {
@@ -58,21 +63,33 @@ export class InitialSetupComponent {
     },
     { label: 'Process Salary', path: 'salary/salaryy', stepId: '' },
   ];
-  totalSteps = this.steps.length;
 
   // Tracks actual completion for each step
   stepCompletion: boolean[] = [false, false, false, false, false, false, false];
 
+  // Excludes optional steps so the progress bar reads "6 of 6" (100%) once
+  // everything that actually matters is done, instead of looking perpetually
+  // stuck at less than 100% because of an optional step nobody is required
+  // to complete.
+  get totalSteps(): number {
+    return this.steps.filter((s) => !s.optional).length;
+  }
+
   constructor(private router: Router, private accountService: AccountService) { }
 
   ngOnInit() {
-    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+    const raw = sessionStorage.getItem('user');
+    if (!raw || raw === 'null') {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
+    const user = JSON.parse(raw);
     this.user = user;
     const email = user.email;
     const tenantSchema = sessionStorage.getItem('tenantSchema') || user.tenantSchema || '';
 
     if (!email || !tenantSchema) {
-      this.initializeEmployeeDashboard(user);
+      this.router.navigate(['/login'], { replaceUrl: true });
       return;
     }
 
@@ -113,16 +130,13 @@ export class InitialSetupComponent {
 
           this.getBranchesOfCompany();
         } else {
-          this.initializeEmployeeDashboard({
-            ...user,
-            companyName: user.companyName || authDetail?.companyName || '',
-            branchName: user.branchName || authDetail?.branchName || '',
-          });
+          // Employee (non-Admin/HR) — redirect to ESS dashboard
+          this.router.navigate(['/employeeSelfService/EssDashboard'], { replaceUrl: true });
         }
       },
       error: () => {
-        // Fallback to session data if HRMSAuthZ call fails
-        this.initializeEmployeeDashboard(user);
+        // Fallback: cannot determine role, send to ESS dashboard
+        this.router.navigate(['/employeeSelfService/EssDashboard'], { replaceUrl: true });
       }
     });
   }
@@ -154,30 +168,8 @@ export class InitialSetupComponent {
     this.stepCompletion = [...this.stepCompletion];
   }
 
-  // Helper method to get current month in format "MonthName-YYYY" (e.g., "January-2025")
-  private getCurrentMonthKey(): string {
-    const now = new Date();
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const monthName = monthNames[now.getMonth()];
-    const year = now.getFullYear();
-    return `${monthName}-${year}`;
-  }
   get completedSteps() {
-    // return this.currentStepIndex;
-    return this.stepCompletion.filter((v) => v).length;
+    return this.stepCompletion.filter((v, i) => v && !this.steps[i].optional).length;
   }
 
   get progress() {
@@ -209,32 +201,29 @@ export class InitialSetupComponent {
     const branchId = this.branches[0].id;
     const step = this.steps[stepIndex];
 
-    if (!step.stepId) {
-      console.error('No stepId found for step:', step.label);
-      return;
-    }
+    // Was: bail out entirely if step.stepId isn't known yet - which is always
+    // true the FIRST time a step is ever completed for a tenant, since
+    // stepId only ever comes from a prior GetSteps response. That meant a
+    // step's first completion could never be saved, for any tenant. The
+    // backend now upserts by (companyBranchId, stepName) when setupStepId is
+    // empty, so it's safe to just send whatever we have (undefined is fine).
     const body = {
-      setupStepId: step.stepId,
+      setupStepId: step.stepId || undefined,
       companyBranchId: branchId,
       stepName: step.label,
       isCompleted: isDataSaved,
-      updatedBy: this.employeeId || null,
+      updatedBy: this.employeeId || undefined,
     };
     this.accountService.post('api/InitialSetup/UpdateStep', body).subscribe({
       next: (res) => {
         console.log(`Step "${step.label}" saved successfully`, res);
         this.stepCompletion[stepIndex] = true;
         this.stepCompletion = [...this.stepCompletion];
-        this.loadInitialSteps(branchId); // refresh steps from API
 
         if (isDataSaved && stepIndex === this.steps.length - 1) {
           console.log('Last step completed, updating setup status...');
           this.loadStatus();
           return;
-        }
-        const nextStepIndex = this.getNextIncompleteStep();
-        if (nextStepIndex !== -1) {
-          this.goToStep(nextStepIndex);
         }
         // if (stepIndex === this.steps.length - 1) {
         //   this.loadStatus();
@@ -250,26 +239,27 @@ export class InitialSetupComponent {
     if (!this.branches || this.branches.length === 0) return;
 
     const branchId = this.branches[0].id;
-    if (!this.initialSetupStatusID) {
-      console.error('No initialSetupStatusID found from DB.');
-      return;
-    }
-
+    // Was: bail out if initialSetupStatusID isn't known yet - which is always
+    // true the first time a tenant's status is ever saved (it only ever comes
+    // from a prior GetStatus response, which returns nothing for a company
+    // that's never had a status row). The backend now upserts by
+    // companyBranchId when this is empty, so it's safe to proceed regardless.
     const body = {
-      initialSetupStatusID: this.initialSetupStatusID,
+      initialSetupStatusID: this.initialSetupStatusID || undefined,
       companyBranchId: branchId,
       isSetupComplete: true,
-      updatedBy: this.employeeId,
+      updatedBy: this.employeeId || undefined,
     };
 
     this.accountService.post('api/InitialSetup/UpdateStatus', body).subscribe({
       next: (res) => {
         console.log('Setup status updated successfully:', res);
         alert('Initial setup completed successfully!');
+        const dest = this.isAdminOrHR ? '/salary/salaryDashboard' : '/employeeSelfService/dashboard';
         if (window !== window.parent) {
-          window.parent.location.href = window.location.origin + '/dashboard';
+          window.parent.location.href = window.location.origin + dest;
         } else {
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
+          this.router.navigate([dest], { replaceUrl: true });
         }
       },
       error: (err) => {
@@ -334,6 +324,27 @@ export class InitialSetupComponent {
     this.getEmployeeCtc();
     this.getEmployeeAttendance();
     this.getStatutory();
+    this.checkProcessSalary();
+  }
+
+  // "Process Salary" checked independently of the attendance check - any
+  // branch, any month, has salary EVER been processed for this company at
+  // all. Previously this only ran as a side effect chained inside
+  // getEmployeeAttendance()'s success handler, so a gap/bug in attendance
+  // data (or simply zero attendance records) meant Process Salary could
+  // never be detected even when salary genuinely had been run.
+  checkProcessSalary() {
+    this.accountService.get('api/Salary/HasSalary').subscribe({
+      next: (hasSalary: any) => {
+        if (hasSalary) {
+          this.markStepComplete(6);
+          this.loadStep(6, true);
+        }
+      },
+      error: (err) => {
+        console.error('Error checking salary existence', err);
+      },
+    });
   }
 
   getBranchesOfCompany() {
@@ -355,7 +366,12 @@ export class InitialSetupComponent {
     });
   }
   getEmployees() {
-    this.accountService.get('api/Salary/EmployeeBasicDetailList').subscribe({
+    // Was 'api/Salary/EmployeeBasicDetailList' - that route doesn't exist on
+    // any backend (the real endpoint is EmployeeBasicDetailList under
+    // AttendenceSource on the Employee/ESS service), so this call 404'd
+    // every time and "Add Employees" could never complete regardless of how
+    // many employees the company actually had.
+    this.accountService.get('api/AttendenceSource/EmployeeBasicDetailList').subscribe({
       next: (data: any[]) => {
         this.employees = data;
         console.log('Employees:', data);
@@ -363,10 +379,7 @@ export class InitialSetupComponent {
         // Mark step 3 (Add Employees) as complete if any employee exists
         if (data && data.length > 0) {
           this.markStepComplete(3);
-          // Also save to API if stepId is available
-          if (this.steps[3].stepId) {
-            this.loadStep(3, true);
-          }
+          this.loadStep(3, true);
         }
       },
       error: (err) => {
@@ -376,22 +389,15 @@ export class InitialSetupComponent {
   }
 
   getEmployeeCtc() {
-    this.accountService.get('api/Salary/EmployeeCtcCommanList').subscribe({
-      next: (data: any[]) => {
-        this.employeeCtc = data;
-        console.log('Employee CTC List:', data);
-
-        // Mark step 4 (Add Employee's CTC) as complete if any CTC exists
-        if (data && data.length > 0) {
+    this.accountService.get('api/Salary/HasEmployeeCtc').subscribe({
+      next: (hasCtc: any) => {
+        if (hasCtc) {
           this.markStepComplete(4);
-          // Also save to API if stepId is available
-          if (this.steps[4].stepId) {
-            this.loadStep(4, true);
-          }
+          this.loadStep(4, true);
         }
       },
       error: (err) => {
-        console.error('Error fetching Employee CTC List', err);
+        console.error('Error checking Employee CTC existence', err);
       },
     });
   }
@@ -406,53 +412,25 @@ export class InitialSetupComponent {
           const keys = Object.keys(data);
           console.log('Available months:', keys);
 
-          // Check if attendance exists for the current month
-          const currentMonthKey = this.getCurrentMonthKey();
-          const hasCurrentMonthAttendance =
-            keys.includes(currentMonthKey) &&
-            data[currentMonthKey] &&
-            Array.isArray(data[currentMonthKey]) &&
-            data[currentMonthKey].length > 0;
+          // "Add Employee's Attendance" is a one-time onboarding milestone
+          // ("has attendance ever been set up"), not an ongoing monthly
+          // requirement - checking specifically for the CURRENT calendar
+          // month meant a company that processed attendance every month for
+          // the last year but hasn't yet done THIS month would incorrectly
+          // show this step as incomplete forever between processing runs.
+          const keysWithData = keys.filter(
+            (k) => Array.isArray(data[k]) && data[k].length > 0
+          );
+          const hasAnyAttendance = keysWithData.length > 0;
 
-          if (hasCurrentMonthAttendance) {
-            // Mark step 5 (Add Employee's Attendance) as complete if current month attendance exists
+          if (hasAnyAttendance) {
             this.markStepComplete(5);
-            // Also save to API if stepId is available
-            if (this.steps[5].stepId) {
-              this.loadStep(5, true);
-            }
-
-            // Extract month and year for salary fetch
-            const [monthName, yearValue] = currentMonthKey.split('-');
-            this.month = monthName;
-            this.year = yearValue;
-            console.log(
-              'Current Month Attendance Found:',
-              this.month,
-              'Year:',
-              this.year
-            );
-
-            // Fetch salary for that month-year
-            if (this.branchId) {
-              this.getEmployeesSalary(this.branchId, this.month, this.year);
-            }
+            this.loadStep(5, true);
           } else {
-            // Still try to get first available month for salary fetch if needed
-            if (keys.length > 0) {
-              const firstKey = keys[0]; // e.g. "January-2025"
-              const [monthName, yearValue] = firstKey.split('-');
-              this.month = monthName;
-              this.year = yearValue;
-              console.log('Extracted Month:', this.month, 'Year:', this.year);
-
-              if (this.branchId) {
-                this.getEmployeesSalary(this.branchId, this.month, this.year);
-              }
-            } else {
-              console.warn('No attendance data found.');
-            }
+            console.warn('No attendance data found.');
           }
+          // Note: "Process Salary" (step 6) is checked independently via
+          // checkProcessSalary() - not chained off attendance data anymore.
         },
         error: (err) => {
           console.error('Error fetching attendance', err);
@@ -460,22 +438,6 @@ export class InitialSetupComponent {
       });
   }
 
-  getEmployeesSalary(branchId: string, month: string, year: string) {
-    const apiUrl = `api/Salary/SalaryList?branchId=${branchId}&month=${month}&year=${year}`;
-    this.accountService.get(apiUrl).subscribe({
-      next: (data: any[]) => {
-        this.salaryData = data;
-        console.log('Salary Data:', data);
-
-        if (data && data.length > 0) {
-          this.loadStep(6, true);
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching salary data', err);
-      },
-    });
-  }
   getStatutory() {
     if (!this.branchId) {
       console.warn('BranchId not available for statutory check');
@@ -514,10 +476,7 @@ export class InitialSetupComponent {
             console.log(
               'Marked step 2 (Setup Statuary Components) as complete based on statutory data'
             );
-            // Also save to API if stepId is available
-            if (this.steps[stepIndex]?.stepId) {
-              this.loadStep(stepIndex, true);
-            }
+            this.loadStep(stepIndex, true);
           } else {
             console.log(
               'No statutory data found - array is empty or undefined'

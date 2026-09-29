@@ -7,11 +7,12 @@ import { FormsModule } from '@angular/forms';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { LoaderComponent } from './loader/loader/loader.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AiAgentComponent } from './ai-agent/ai-agent.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule, FormsModule, LoaderComponent, MatTooltipModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, MatIconModule, FormsModule, LoaderComponent, MatTooltipModule, AiAgentComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

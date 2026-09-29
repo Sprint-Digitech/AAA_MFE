@@ -1,8 +1,8 @@
-<div style="margin-top:55px">
-  <lib-nemo-reusable-tbl appGlobalTableSearch [showAddButton]="true"
+﻿<div style="margin-top: 10px;">
+  <lib-nemo-reusable-tbl [showSearch]="false" appAdvancedTableFilter appGlobalTableSearch [showAddButton]="true"
     [addButtonLabel]="'Employee Responsibility Mapping'" (onAdd)="addResponsibility()"
     [searchResultTitle]="'Employee Responsibility Mapping'" [columns]="columns" [dataSource]="dataArray"
-    [rowsPerPage]="10" [tableWidth]="'100%'" [showSearch]="true" [showActions]="true"
+    [rowsPerPage]="10" [tableWidth]="'100%'" [showSearch]="false" [showActions]="true"
     [showDeleteOption]="onDeleteRequest" [showDetailsOption]="onDetail" (editAction)="onEditRow($event)"
     (deleteAction)="deleteList($event)" (searchResult)="onSearch($event)">
   </lib-nemo-reusable-tbl>

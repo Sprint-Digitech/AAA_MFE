@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+﻿import { Routes } from '@angular/router';
 import { LoginContainerComponent } from './login-container/login-container.component';
 import { MfeContainerComponent } from './mfe-container/mfe-container.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -135,6 +135,17 @@ export const routes: Routes = [
                 component: MfeContainerComponent
             }
         ]
+    },
+    {
+        // Employee MFE employeeSelfService routes (must come before ALMS matcher)
+        path: 'employeeSelfService/help',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://attendance.bubnaadvertising.com/Employee/dist/', title: 'Help & Support' }
+    },
+    {
+        path: 'employeeSelfService/supportAdmin',
+        loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+        data: { mfeUrl: 'https://attendance.bubnaadvertising.com/Employee/dist/', title: 'Support Administration' }
     },
     {
         // Notification MFE

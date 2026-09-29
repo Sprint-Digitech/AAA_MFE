@@ -1018,11 +1018,11 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
         ? 'demo'
         : this.generateTenantSchema(this.accountFormGroup.value.companyName);
 
-      // // check if groupTenant exists - check both decryptedData and sessionStorage
-      // // When coming from workspace, groupTenant should be in sessionStorage
-      // const groupTenant =
-      //   this.decryptedData?.groupTenant ||
-      //   sessionStorage.getItem('tenantSchema');
+      // check if groupTenant exists - check both decryptedData and sessionStorage
+      // When coming from workspace, groupTenant should be in sessionStorage
+      const groupTenant =
+        this.decryptedData?.groupTenant ||
+        sessionStorage.getItem('tenantSchema');
 
       // Prepare request body
       const payload: any = {
@@ -1037,10 +1037,11 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // if groupTenant available, add it and call groupTenant API
       let apiUrl = 'api/Account/Register';
-      // if (groupTenant) {
-      //   payload.groupTenant = groupTenant;
-      //   apiUrl = 'api/Account/RegistrationUnderGroupTenant';
-      // }
+      if (groupTenant) {
+        payload.groupTenant = groupTenant;
+        payload.companyName = this.accountFormGroup.value.companyName;
+        apiUrl = 'api/Account/RegistrationUnderGroupTenant';
+      }
 
       // Prevent multiple submissions
       if (this.isSubmitting) {

@@ -3,6 +3,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 import { AccountService } from '../../shared/services/account.service';
 import { UtilityService } from '../../shared/services/utility.service';
 import { Subscription } from 'rxjs';
@@ -12,7 +13,7 @@ import { filter } from 'rxjs/operators';
 @Component({
   standalone: true,
   selector: 'app-branch-probation-settings-list',
-  imports: [NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './branch-probation-settings-list.component.html',
   styleUrl: './branch-probation-settings-list.component.scss'
 })

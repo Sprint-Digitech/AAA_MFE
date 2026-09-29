@@ -1,7 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+﻿import { Component, OnDestroy, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { environment } from '../_helpers/environment';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-mfe-container',
@@ -27,12 +30,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
     }
   `]
 })
-export class MfeContainerComponent implements OnInit {
+export class MfeContainerComponent implements OnInit, OnDestroy {
   @ViewChild('mfeIframe') mfeIframe!: ElementRef<HTMLIFrameElement>;
   safeUrl: SafeResourceUrl | null = null;
   mfeUrl: string = '';
 
-  constructor(private route: ActivatedRoute, private sanitizer: DomSanitizer) { }
+  private subscription = new Subscription();
+
+  constructor(private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
     // Listen for requests from the MFE (e.g., requesting the token)
@@ -43,18 +48,30 @@ export class MfeContainerComponent implements OnInit {
       }
     });
 
-    // Subscribe to route data changes (handles MFE switches)
-    this.route.data.subscribe(data => {
-      const mfeBaseUrl = data['mfeUrl'] || 'https://test.fovestta.com/Auth/dist';
-      console.log('[MfeContainer] Route data changed, Base URL:', mfeBaseUrl);
-      this.updateIframeSrc(mfeBaseUrl);
-    });
+    // Handle the initial load of this component.
+    this.handleNavigation();
 
-    // Subscribe to URL changes (handles navigation within the same MFE)
-    this.route.url.subscribe(() => {
-      const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || 'https://test.fovestta.com/Auth/dist';
-      this.updateIframeSrc(mfeBaseUrl);
-    });
+    // Several matcher-based routes in app.routes.ts (Salary, ALMS, Inventory) consume
+    // every URL segment before reaching their leaf '**' child route, so Angular reuses
+    // this same MfeContainerComponent instance across sibling menu clicks within that
+    // matcher block — ActivatedRoute.url/.data then never emit again (same instance
+    // and identical resolved route config each time), leaving the iframe frozen on
+    // stale content until a manual refresh. Router.events -> NavigationEnd fires on
+    // every completed navigation regardless of route reuse, so drive updates from that.
+    this.subscription.add(
+      this.router.events.pipe(
+        filter(event => event instanceof NavigationEnd)
+      ).subscribe(() => this.handleNavigation())
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  private handleNavigation() {
+    const mfeBaseUrl = this.route.snapshot.data['mfeUrl'] || environment.authMfeUrl;
+    this.updateIframeSrc(mfeBaseUrl);
   }
 
   onIframeLoad() {

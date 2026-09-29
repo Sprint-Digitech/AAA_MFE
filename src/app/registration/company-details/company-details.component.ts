@@ -9,6 +9,7 @@ import { DialogService } from '../../shared/services/dialog.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { NemoReusableTblComponent } from '@fovestta2/nemo-reusable-tbl-fovestta';
 import { GlobalTableSearchDirective } from '../../shared/directives/global-table-search.directive';
+import { AdvancedTableFilterDirective } from '../../shared/directives/advanced-table-filter.directive';
 
 // 2. Add the decorator here
 @Injectable({
@@ -23,7 +24,7 @@ class ExpandedPanelServiceService {
 @Component({
   standalone: true,
   selector: 'app-company-details',
-  imports: [CommonModule, NemoReusableTblComponent, GlobalTableSearchDirective],
+  imports: [CommonModule, NemoReusableTblComponent, GlobalTableSearchDirective, AdvancedTableFilterDirective],
   templateUrl: './company-details.component.html',
   styleUrls: ['./company-details.component.scss'],
 })

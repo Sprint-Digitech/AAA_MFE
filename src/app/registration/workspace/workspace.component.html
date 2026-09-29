@@ -1,4 +1,4 @@
-<div class="header" style="margin-top: 55px;">
+﻿<div class="header" style="margin-top: 10px;">
   <h1>Your Workspace</h1>
   <p>Manage payroll for all your companies in one place </p>
 </div>
@@ -51,7 +51,7 @@
   </div>
   <div class="right-section">
     <!-- <input type="text" placeholder="Filter"> -->
-    <!-- <lib-nemo-search-option (keyup)="handleSearch($event)"></lib-nemo-search-option> -->
+    <!-- <lib-nemo-search-option></lib-nemo-search-option> -->
     <button mat-button style="background: #006AFF; color: #FFFFFF;" (click)="existingCompany()">
       Add Existing Company
     </button>
@@ -64,7 +64,7 @@
       <div class="icon-placeholder">
         <img src="assets/img/building.png" />
       </div>
-      <div>
+      <div class="card-title-wrapper">
         <mat-card-title>{{ emp.companyName || 'N/A' }}</mat-card-title>
         <div class="employee-count">{{ emp.employeeCount || 0 }} employees</div>
         <span class="status-pill" [ngClass]="emp.payStatus">

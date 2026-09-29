@@ -232,6 +232,7 @@ small {
   background-color: #fafafa;
   transition: border-color 0.3s ease, background-color 0.3s ease;
   position: relative;
+  z-index: 1;
   min-height: 120px;
   display: flex;
   flex-direction: column;
@@ -314,10 +315,7 @@ small {
   margin-bottom: 0;
 }
 
-/* File Input */
-.logo-container input[type="file"] {
-  display: none;
-}
+/* File Input — handled inline per element */
 
 /* Upload Button */
 .logo-container .btn {

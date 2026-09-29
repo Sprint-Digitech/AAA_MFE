@@ -22,6 +22,7 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
     private lastDataLength = 0;
     private currentTerm = '';
     private initialized = false;
+    private advancedPredicate: ((row: any) => boolean) | null = null;
 
     constructor(
         private table: NemoReusableTblComponent,
@@ -49,6 +50,15 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
             this.applyFilter(this.currentTerm, false, true);
         }
     }
+    getOriginalData(): any[] {
+        return this.originalData;
+    }
+
+    setAdvancedPredicate(predicate: ((row: any) => boolean) | null): void {
+        this.advancedPredicate = predicate;
+        this.applyFilter(this.currentTerm, false, true);
+    }
+
     private enforceActionButtons(): void {
         const tableRef = this.table as unknown as {
             showDeleteOption?: boolean;
@@ -66,7 +76,7 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
         ) {
             this.lastDataSourceRef = current;
             this.lastDataLength = current.length;
-            if (allowOriginalUpdate && (!this.currentTerm || this._disabled)) {
+            if (allowOriginalUpdate && (!this.currentTerm || this._disabled) && !this.advancedPredicate) {
                 this.originalData = [...current];
             }
             if (!this.table.filteredData || !this.table.filteredData.length) {
@@ -94,8 +104,12 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
         }
 
         if (this._disabled) {
-            this.table.dataSource = [...this.originalData];
-            this.table.filteredData = [...this.originalData];
+            let result = [...this.originalData];
+            if (this.advancedPredicate) {
+                result = result.filter(this.advancedPredicate);
+            }
+            this.table.dataSource = result;
+            this.table.filteredData = result;
             if (!preservePage) {
                 this.table.currentPage = 1;
             }
@@ -104,10 +118,10 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
         }
 
         const normalized = term ? term.toString().toLowerCase().trim() : '';
+        let filtered: any[];
 
         if (!normalized) {
-            this.table.dataSource = [...this.originalData];
-            this.table.filteredData = [...this.originalData];
+            filtered = [...this.originalData];
         } else {
             const keys = this.resolveKeys();
             // Split search term by spaces to handle multi-word searches
@@ -115,7 +129,7 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
             // Remove spaces from search term for space-agnostic matching
             const searchTermNoSpaces = normalized.replace(/\s+/g, '');
 
-            const filtered = this.originalData.filter((row) => {
+            filtered = this.originalData.filter((row) => {
                 // Get all searchable values from the row
                 const searchableText = keys
                     .map((key) => this.valueToString(row?.[key]))
@@ -135,10 +149,14 @@ export class GlobalTableSearchDirective implements OnInit, OnDestroy, DoCheck {
                 // Return true if any condition matches (both require sequential character matching)
                 return multiWordMatch || spaceAgnosticMatch;
             });
-
-            this.table.dataSource = filtered;
-            this.table.filteredData = filtered;
         }
+
+        if (this.advancedPredicate) {
+            filtered = filtered.filter(this.advancedPredicate);
+        }
+
+        this.table.dataSource = filtered;
+        this.table.filteredData = filtered;
 
         if (!preservePage) {
             this.table.currentPage = 1;

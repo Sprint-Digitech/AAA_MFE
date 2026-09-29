@@ -12,6 +12,8 @@ export class EnvironmentUrlService {
   public wmsAuthZUrlAddress: string = (environment as any).wmsAuthZUrlAddress || environment.urlAddress;
   public wmsUrlAddress: string = (environment as any).wmsUrlAddress || environment.urlAddress;
   public wmsAuthUrlAddress: string = (environment as any).wmsAuthUrlAddress || environment.urlAddress;
+  public almsUrlAddress: string = (environment as any).almsUrlAddress || environment.urlAddress;
+  public chatUrlAddress: string = (environment as any).chatUrlAddress || environment.urlAddress;
 
   constructor() { }
 
@@ -20,7 +22,9 @@ export class EnvironmentUrlService {
     const routeLower = route.toLowerCase();
 
     // Priority 0: Employee API routes
-    if (routeLower.includes('api/employee/') || routeLower.includes('employeebasicdetaillist')) {
+    if (routeLower.includes('api/employee/') ||
+      routeLower.includes('employeebasicdetaillist') ||
+      routeLower.includes('employeemaster/')) {
       return this.essUrlAddress;
     }
 
@@ -33,6 +37,11 @@ export class EnvironmentUrlService {
       return this.hrmsAuthZUrlAddress;
     }
 
+    if (routeLower.includes('attendencesource') ||
+      routeLower.includes('alms')) {
+      return this.almsUrlAddress;
+    }
+
     if (routeLower.includes('reference_data') ||
       routeLower.includes('attendance') ||
       routeLower.includes('salary') ||
@@ -43,8 +52,7 @@ export class EnvironmentUrlService {
       routeLower.includes('payhead') ||
       routeLower.includes('gratuity') ||
       routeLower.includes('leave') ||
-      routeLower.includes('holiday') ||
-      routeLower.includes('alms')) {
+      routeLower.includes('holiday')) {
       return this.salaryUrlAddress;
     }
 

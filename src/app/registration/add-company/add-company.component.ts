@@ -1,7 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AddUpdateFormComponent, FormConfig } from '@fovestta2/web-angular';
 import { AccountService } from '../../shared/services/account.service';
 import { NotificationService } from '../../shared/services/notification.service';
@@ -10,28 +13,29 @@ import { UtilityService } from '../../shared/services/utility.service';
 @Component({
   selector: 'app-add-company',
   standalone: true,
-  imports: [AddUpdateFormComponent, CommonModule],
+  imports: [AddUpdateFormComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './add-company.component.html',
   styleUrls: ['./add-company.component.scss'],
 })
 export class AddCompanyComponent implements OnInit {
+  @ViewChild('logoFileInput') logoFileInput?: ElementRef<HTMLInputElement>;
+
+  companyForm = new FormGroup({
+    tCompanyName: new FormControl(''),
+    companyCode: new FormControl(''),
+    companyGroupId: new FormControl(''),
+    tIndustry: new FormControl(''),
+    nStatus: new FormControl('1'),
+  });
+
   companyData: any;
   logoPreview: string | null = null;
+  logoError: boolean = false;
   companyGroups: any[] = [];
   companies: any[] = [];
   companyId: any;
   companyFormConfig!: FormConfig;
   addCompanyFormLoaded: boolean = false;
-
-  // Preview variables
-  selectedDateFormat = 'DD/MM/YYYY';
-  selectedTimeFormat = '12-hour';
-  selectedTimeDateFormat = 'Hours:Minutes:Seconds';
-  selectedTimezone: string = 'IST (Indian Standard Time, UTC+5:30)';
-  seprator: string = '/';
-  datePreview = '';
-  timePreview = '';
-  dateTimePreview = '';
 
   constructor(
     private companiesData: AccountService,
@@ -43,21 +47,24 @@ export class AddCompanyComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // 1. Load dependencies
-    this.getCompanyGroup();
-    this.getCompanies();
-    this.updatePreview();
-
-    // 2. Check route for Edit/Add mode
     this.route.params.subscribe((params) => {
       this.companyId = params['companyId'];
+      this.addCompanyFormLoaded = false;
+      this.loadDependenciesAndInit();
+    });
+  }
+
+  private loadDependenciesAndInit(): void {
+    forkJoin({
+      groups: this.companiesData.get('api/company-branch/GetCompanyGroup').pipe(catchError(() => of([]))),
+      companies: this.companiesData.getCompany('api/company-branch/GetCompany').pipe(catchError(() => of([]))),
+    }).subscribe(({ groups, companies }: any) => {
+      this.companyGroups = (groups as any[]).filter((g: any) => g.status === 1);
+      this.companies = companies as any[];
 
       if (this.companyId) {
-        // Edit Mode: Hide form, fetch data
-        this.addCompanyFormLoaded = false;
         this.getCompanyData();
       } else {
-        // Add Mode: Initialize and show
         this.initializeFormConfig();
         this.addCompanyFormLoaded = true;
       }
@@ -67,51 +74,16 @@ export class AddCompanyComponent implements OnInit {
   initializeFormConfig(initialValues?: any) {
     const isUpdate = !!this.companyId;
 
-    // Set Preview States if data exists
-    if (initialValues) {
-      this.selectedDateFormat = initialValues.dateFormat || 'DD/MM/YYYY';
-      this.seprator = initialValues.dateFieldSeperator || '/';
-      this.selectedTimeFormat = initialValues.timeFormat || '12-hour';
-      this.selectedTimeDateFormat = this.convertDisplayFormatToValue(
-        initialValues.timeDisplayFormat,
-      );
-      this.selectedTimezone =
-        initialValues.timezone || 'IST (Indian Standard Time, UTC+5:30)';
-      this.updatePreview();
-    }
-
-    // Prepare initial value for logo
-    let initialLogo = '';
-    if (initialValues?.companylogo) {
-      initialLogo = this.formatLogoData(initialValues.companylogo) || '';
-    }
+    // Set logoPreview from existing data (used by the custom uploader in template)
+    this.logoPreview = initialValues?.companylogo
+      ? (this.formatLogoData(initialValues.companylogo) || null)
+      : null;
+    this.logoError = false;
 
     this.companyFormConfig = {
       formTitle: isUpdate ? 'Update Company' : 'Add Company',
       maxColsPerRow: 5,
       sections: [
-        {
-          fields: [
-            {
-              name: 'companylogo',
-              label: 'Upload Logo File',
-              type: 'file',
-              accept: 'image/*',
-              colSpan: 5,
-              hint: 'Upload employee photo (JPG, PNG)',
-              // Pass existing logo so form isn't invalid
-              value: initialLogo || '',
-              validations: (!isUpdate && !initialLogo) ? [
-                // Only make it required if we don't already have a logo
-                { type: 'required', message: 'Company Logo is required' },
-              ] : [],
-              onChange: (val: any) => {
-                // We ignore the error as requested, just capturing value if possible
-                console.log('Logo changed:', val);
-              },
-            },
-          ],
-        },
         {
           fields: [
             {
@@ -182,140 +154,6 @@ export class AddCompanyComponent implements OnInit {
                   validator: (val: any) => (val || '').trim().length > 0,
                 },
               ],
-            },
-          ],
-        },
-        {
-          fields: [
-            {
-              name: 'tDateFormat', // API: dateFormat
-              label: 'Date Format',
-              type: 'select',
-              colSpan: 1,
-              options: [
-                { label: 'DD/MM/YYYY', value: 'DD/MM/YYYY' },
-                { label: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
-                { label: 'YYYY/DD/MM', value: 'YYYY/DD/MM' },
-                { label: 'DD.MM.YYYY', value: 'DD.MM.YYYY' },
-                { label: 'DD-MMM-YYYY', value: 'DD-MMM-YYYY' },
-                { label: 'YYYY-DD-MM', value: 'YYYY-DD-MM' },
-                { label: 'YYYY/MM/DD', value: 'YYYY/MM/DD' },
-                { label: 'DD/MM/YY', value: 'DD/MM/YY' },
-              ],
-              value: initialValues?.dateFormat || 'DD/MM/YYYY',
-              validations: [{ type: 'required', message: 'Required' }],
-              onChange: (val: string) => {
-                this.selectedDateFormat = val;
-                this.updatePreview();
-              },
-            },
-            {
-              name: 'tDateFieldSeperator', // API: dateFieldSeperator
-              label: 'Date Field Separator',
-              type: 'select',
-              colSpan: 1,
-              options: [
-                { label: '/', value: '/' },
-                { label: '-', value: '-' },
-                { label: '.', value: '.' },
-              ],
-              value: initialValues?.dateFieldSeperator || '/',
-              validations: [{ type: 'required', message: 'Required' }],
-              onChange: (val: string) => {
-                this.seprator = val;
-                this.updatePreview();
-              },
-            },
-            {
-              name: 'timeformat', // API: timeFormat
-              label: 'Time Format',
-              type: 'select',
-              colSpan: 1,
-              options: [
-                { label: '12-hour', value: '12-hour' },
-                { label: '24-hour', value: '24-hour' },
-              ],
-              value: initialValues?.timeFormat || '12-hour',
-              validations: [{ type: 'required', message: 'Required' }],
-              onChange: (val: string) => {
-                this.selectedTimeFormat = val;
-                this.updatePreview();
-              },
-            },
-            {
-              name: 'displayFormat', // API: timeDisplayFormat
-              label: 'Time Display Format',
-              type: 'select',
-              colSpan: 1,
-              options: [
-                { label: 'Hours:Minutes:Seconds', value: 'HH:mm:ss' },
-                { label: 'Hours:Minutes', value: 'HH:mm' },
-              ],
-              value: this.convertDisplayFormatToValue(
-                initialValues?.timeDisplayFormat || 'Hours:Minutes:Seconds',
-              ),
-              validations: [{ type: 'required', message: 'Required' }],
-              onChange: (val: string) => {
-                this.selectedTimeDateFormat = val;
-                this.updatePreview();
-              },
-            },
-            {
-              name: 'timezone',
-              label: 'Timezone',
-              type: 'select',
-              colSpan: 1,
-              options: [
-                {
-                  label: 'UTC (Coordinated Universal Time)',
-                  value: 'UTC',
-                },
-                {
-                  label: 'GMT (Greenwich Mean Time)',
-                  value: 'GMT',
-                },
-                {
-                  label: 'IST (Indian Standard Time, UTC+5:30)',
-                  value: 'IST',
-                },
-                {
-                  label: 'ICT (Indochina Time, UTC+7:00)',
-                  value: 'ICT',
-                },
-                {
-                  label: 'BST (Bangladesh Standard Time, UTC+6:00)',
-                  value: 'BST',
-                },
-                {
-                  label: 'CST (China Standard Time, UTC+8:00)',
-                  value: 'CST',
-                },
-                {
-                  label: 'SGT (Singapore Time, UTC+8:00)',
-                  value: 'SGT',
-                },
-              ],
-              value:
-                initialValues?.timezone ||
-                'IST',
-              validations: [{ type: 'required', message: 'Required' }],
-              onChange: (val: string) => {
-                this.selectedTimezone = val;
-                this.updatePreview();
-              },
-            },
-            {
-              name: 'adjustForDST',
-              label: 'Adjust DST',
-              type: 'radio',
-              layout: 'horizontal',
-              colSpan: 1,
-              value: initialValues?.adjustForDST ? 'true' : 'false',
-              options: [
-                { label: 'Active', value: 'true' },
-                { label: 'Inactive', value: 'false' },
-              ],
-              validations: [{ type: 'required', message: 'Required' }],
             },
             {
               name: 'nStatus', // API: status
@@ -399,33 +237,25 @@ export class AddCompanyComponent implements OnInit {
   }
 
   sendCompaniesData(formValues: any) {
-    console.log('Submitting Data:', formValues);
-    const rawLogo = formValues.companylogo;
-    const cleanLogo = this.extractLogoString(rawLogo);
-
-    console.log('Submitting Data. Raw Logo:', rawLogo, 'Cleaned:', cleanLogo);
+    // Validate logo for new companies
+    if (!this.companyId && !this.logoPreview) {
+      this.logoError = true;
+      return;
+    }
 
     const company: any = {
       companyId: this.companyId ?? undefined,
       companyName: String(formValues.tCompanyName || '').trim(),
       industry: String(formValues.tIndustry || '').trim(),
-      dateFormat: formValues.tDateFormat,
-      dateFieldSeperator: formValues.tDateFieldSeperator,
       status: Number(formValues.nStatus),
       companyCode: String(formValues.companyCode || '').trim(),
       companyGroupId: formValues.companyGroupId,
-      timeFormat: formValues.timeformat,
-      timezone: formValues.timezone,
-      adjustForDST: formValues.adjustForDST === 'true',
-      timeDisplayFormat: this.convertValueToDisplayFormat(
-        formValues.displayFormat,
-      ),
-      companylogo: cleanLogo || null,
+      companylogo: this.logoPreview || null,
     };
 
     const apiUrl = this.companyId
       ? 'api/company-branch/updateCompany'
-      : 'api/Company/CreateCompany';
+      : 'api/company-branch/CreateCompany';
 
     const apiCall = this.companyId
       ? this.companiesData.update(apiUrl, company)
@@ -451,6 +281,28 @@ export class AddCompanyComponent implements OnInit {
         this.notificationService.showError(errorMessage);
       },
     });
+  }
+
+  // --- Logo Upload Handlers ---
+  onLogoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.logoPreview = reader.result as string;
+        this.logoError = false;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  openLogoPicker(): void {
+    this.logoFileInput?.nativeElement.click();
+  }
+
+  removeLogo() {
+    this.logoPreview = null;
   }
 
   // --- Validators (Fixed to ignore self on update) ---
@@ -503,19 +355,6 @@ export class AddCompanyComponent implements OnInit {
     this.companiesData.get('api/company-branch/GetCompanyGroup').subscribe({
       next: (data: any[]) => {
         this.companyGroups = data.filter((group) => group.status === 1);
-
-        // Update options if form already loaded
-        if (this.companyFormConfig?.sections) {
-          const grpField = this.companyFormConfig.sections[1].fields.find(
-            (f) => f.name === 'companyGroupId',
-          );
-          if (grpField) {
-            grpField.options = this.companyGroups.map((g) => ({
-              label: g.companyGroupName,
-              value: g.id,
-            }));
-          }
-        }
       },
     });
   }
@@ -532,82 +371,9 @@ export class AddCompanyComponent implements OnInit {
     this.location.back();
   }
 
-  // --- Preview Logic ---
-  updatePreview() {
-    const currentDate = new Date();
-    const separator = this.seprator || '/';
-
-    // Date
-    const d = this.pad(currentDate.getDate());
-    const m = this.pad(currentDate.getMonth() + 1);
-    const y = currentDate.getFullYear();
-    const dateFormats: any = {
-      'DD/MM/YYYY': `${d}${separator}${m}${separator}${y}`,
-      'MM/DD/YYYY': `${m}${separator}${d}${separator}${y}`,
-      'YYYY/MM/DD': `${y}${separator}${m}${separator}${d}`,
-      'DD-MMM-YYYY': `${d}-${this.getMonthName(currentDate.getMonth())}-${y}`,
-    };
-    this.datePreview = dateFormats[this.selectedDateFormat] || `${d}/${m}/${y}`;
-
-    // Time
-    let hours = currentDate.getHours();
-    const minutes = currentDate.getMinutes();
-    const seconds = currentDate.getSeconds();
-    let timeStr = '';
-
-    if (this.selectedTimeFormat === '12-hour') {
-      const suffix = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      timeStr =
-        this.selectedTimeDateFormat === 'HH:mm'
-          ? `${this.pad(hours)}:${this.pad(minutes)} ${suffix}`
-          : `${this.pad(hours)}:${this.pad(minutes)}:${this.pad(seconds)} ${suffix}`;
-    } else {
-      timeStr =
-        this.selectedTimeDateFormat === 'HH:mm'
-          ? `${this.pad(hours)}:${this.pad(minutes)}`
-          : `${this.pad(hours)}:${this.pad(minutes)}:${this.pad(seconds)}`;
-    }
-    this.timePreview = timeStr;
-    this.dateTimePreview = `${this.datePreview} ${this.timePreview} ${this.selectedTimezone}`;
-  }
-
-  pad(num: number): string {
-    return num < 10 ? '0' + num : num.toString();
-  }
-  getMonthName(idx: number): string {
-    return [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ][idx];
-  }
-
   private formatLogoData(logo: string | null): string | null {
     if (!logo) return null;
     if (logo.startsWith('data:') || logo.startsWith('http')) return logo;
     return `data:image/png;base64,${logo}`;
-  }
-
-  private convertDisplayFormatToValue(label: string): string {
-    const map: any = {
-      'Hours:Minutes:Seconds': 'HH:mm:ss',
-      'Hours:Minutes:Second': 'HH:mm:ss',
-      'Hours:Minutes': 'HH:mm',
-    };
-    return map[label] || 'HH:mm:ss';
-  }
-
-  private convertValueToDisplayFormat(value: string): string {
-    return value === 'HH:mm' ? 'Hours:Minutes' : 'Hours:Minutes:Second';
   }
 }

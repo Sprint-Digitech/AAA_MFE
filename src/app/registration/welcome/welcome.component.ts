@@ -51,17 +51,23 @@ export class WelcomeComponent implements OnInit, OnDestroy {
           next: (userDetail: any) => {
             this.user = userDetail;
 
-            // Process menus from roles
-            const processedMenus = this.processMenus(
-              userDetail.employeeRoleLoginDtos ?? []
-            );
-            this.menus = processedMenus;
-
-            // Set full user and menus in sessionStorage and observables
+            // Set full user in sessionStorage and observables
             sessionStorage.setItem('user', JSON.stringify(this.user));
-            sessionStorage.setItem('menus', JSON.stringify(this.menus));
             this.accountService.setUser(this.user);
-            this.accountService.setMenuData(this.menus);
+
+            // Fetch the real menu tree from HRMSAuthZ (GetUserMenus) via the
+            // same pipeline the normal password-login flow uses.
+            // userDetail.employeeRoleLoginDtos are bare role assignments
+            // (roleID/roleName/roleDisplayName only, no menuID/menuPath/
+            // children) - running those through processMenus() as if they
+            // were menus produced a single degenerate root entry with no
+            // path and no submenu, so the sidebar rendered nothing.
+            // menuData$ (subscribed below) picks up the result once loaded.
+            // Pass email/tenantSchema explicitly - reloadMenuData()'s default
+            // derivation (userValue) is backed by a session subject that
+            // setUser() above does not update, so it'd still resolve to
+            // whatever was inherited into this tab at window.open() time.
+            this.accountService.reloadMenuData(email, tenantSchema).subscribe();
 
             // Clear localStorage to avoid stale data contamination
             localStorage.clear();
@@ -129,36 +135,5 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     sessionStorage.clear();
     localStorage.clear();
     this.accountService.logout();
-  }
-
-  private processMenus(menuData: any[]): any[] {
-    const menuMap = new Map<string, any>();
-
-    menuData.forEach((menu) => {
-      if (!menu.menuParentId) {
-        menuMap.set(menu.menuID, {
-          ...menu,
-          submenu: [],
-        });
-      }
-    });
-
-    menuData.forEach((menu) => {
-      if (menu.menuParentId) {
-        const parentMenu = menuMap.get(menu.menuParentId);
-        if (parentMenu) {
-          parentMenu.submenu.push(menu);
-        }
-      }
-    });
-
-    const resultMenus = Array.from(menuMap.values());
-    resultMenus.sort((a, b) => (a.srNo ?? 0) - (b.srNo ?? 0));
-    resultMenus.forEach((menu) => {
-      if (menu.submenu && menu.submenu.length > 0) {
-        menu.submenu.sort((a: any, b: any) => (a.srNo ?? 0) - (b.srNo ?? 0));
-      }
-    });
-    return resultMenus;
   }
 }
