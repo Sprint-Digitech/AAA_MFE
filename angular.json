@@ -89,6 +89,34 @@
 									"with": "src/app/_helpers/environment.bubna.ts"
 								}
 							]
+						},
+						"desktop": {
+							"tsConfig": "tsconfig.desktop.json",
+							"optimization": {
+								"scripts": true,
+								"styles": { "minify": true, "inlineCritical": false },
+								"fonts": { "inline": false }
+							},
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2MB",
+									"maximumError": "5MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "100kB",
+									"maximumError": "200kB"
+								}
+							],
+							"outputHashing": "all",
+							"extraWebpackConfig": "webpack.prod.config.js",
+							"fileReplacements": [
+								{
+									"replace": "src/app/_helpers/environment.ts",
+									"with": "src/app/_helpers/environment.desktop.ts"
+								}
+							]
 						}
 					},
 					"defaultConfiguration": "production"

@@ -1,0 +1,15 @@
+/* Fovestta Desktop build only (angular.json -> configurations.desktop.tsConfig).
+   Same as tsconfig.app.json, except that the chat widget, which is not installable from npm,
+   resolves to a no-op stand-in (desktop/chat-widget.stub.ts). */
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "paths": {
+      "@fovestta2/chat-widget-fovestta": ["./desktop/chat-widget.stub.ts"]
+    }
+  },
+  "files": [
+    "src/main.ts",
+    "desktop/chat-widget.stub.ts"
+  ]
+}
