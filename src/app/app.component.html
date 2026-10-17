@@ -1,10 +1,10 @@
 <div class="shell-wrapper" [ngClass]="{'no-shell': isLoginPage, 'sidebar-collapsed': !isExpanded}">
-    <!-- Sidebar (SD Nemo Style) -->
+    <!-- Sidebar: floating glass rail -->
     <aside class="sidebar" [class.expanded]="isExpanded" *ngIf="!isLoginPage">
         <div class="menu-items">
             <div class="menu-header">
                 <ng-container *ngIf="!isExpanded; else expandedHeader">
-                    <button class="logo-toggle" type="button" (click)="toggleSidebar()">
+                    <button class="logo-toggle" type="button" (click)="toggleSidebar()" title="Expand menu">
                         <div class="logo-box">
                             <img src="assets/img/fovesta1.png" alt="Logo" class="logo-img">
                         </div>
@@ -17,27 +17,38 @@
                             <span class="divider-line"></span>
                             <span class="label">HRMS</span>
                         </div>
-                        <span class="hamburger-icon" (click)="toggleSidebar()">
-                            <mat-icon>menu</mat-icon>
-                        </span>
+                        <button type="button" class="hamburger-icon" (click)="toggleSidebar()" title="Collapse menu">
+                            <mat-icon>menu_open</mat-icon>
+                        </button>
                     </div>
                 </ng-template>
             </div>
 
             <nav class="sidebar-nav">
+                <div class="menu-item" *ngIf="canSeeInsights">
+                    <div class="menu-item-content" routerLink="/insights" routerLinkActive="active" (click)="closeSubmenus()"
+                        [matTooltip]="isExpanded ? '' : 'Insights'" matTooltipPosition="right" matTooltipClass="fv-tooltip">
+                        <span class="icon"><mat-icon>insights</mat-icon></span>
+                        <span class="label" *ngIf="isExpanded">Insights</span>
+                    </div>
+                </div>
+
                 <div class="menu-item" *ngFor="let item of menus" [class.active]="isSubmenuOpen(item.menuDisplayName)">
                     <div class="menu-item-content" (click)="onMenuClick($event, item)"
-                        [routerLink]="(!hasSubmenu(item) && item.menuDisplayName !== 'Go to Progress') ? item.menuPath : null" routerLinkActive="active">
+                        [routerLink]="(!hasSubmenu(item) && item.menuDisplayName !== 'Go to Progress') ? item.menuPath : null" routerLinkActive="active"
+                        [matTooltip]="isExpanded || isSubmenuOpen(item.menuDisplayName) ? '' : item.menuDisplayName" matTooltipPosition="right" matTooltipClass="fv-tooltip">
                         <span class="icon">
                             <mat-icon>{{ getIcon(item.menuDisplayName) }}</mat-icon>
                         </span>
                         <span class="label" *ngIf="isExpanded">{{ item.menuDisplayName }}</span>
+                        <mat-icon class="chevron" *ngIf="isExpanded && hasSubmenu(item)">chevron_right</mat-icon>
                     </div>
 
                     <!-- Fixed-position Flyout Submenu -->
-                    <div class="submenu" *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName) && isExpanded"
-                        [style.top.px]="currentSubmenuTop" [style.left.px]="isExpanded ? 180 : 60"
+                    <div class="submenu" *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName)"
+                        [style.top.px]="currentSubmenuTop" [style.left.px]="submenuLeft"
                         (click)="$event.stopPropagation()">
+                        <div class="submenu-title">{{ item.menuDisplayName }}</div>
                         <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
                             routerLinkActive="active-submenu" (click)="closeSubmenus()">
                             {{ sub.menuDisplayName }}
@@ -57,22 +68,49 @@
             </nav>
         </div>
 
-        <!-- Sidebar Footer (SD Nemo Style) -->
         <div class="sidebar-footer">
-            <p>Copyright © 2024 Outsmart Technology</p>
+            <p *ngIf="isExpanded">© 2024 Outsmart Technology</p>
+            <p *ngIf="!isExpanded">©</p>
         </div>
     </aside>
 
     <!-- Main Content Box -->
     <div class="main-container" (click)="onMainContainerClick()">
         <app-loader></app-loader>
-        <!-- Header (SD Nemo Style) -->
+
+        <!-- Header: Apple-style glass navbar -->
         <header class="header" *ngIf="!isLoginPage">
-            <div class="header-left">
-                <div class="search-box">
-                    <mat-icon>search</mat-icon>
-                    <input type="text" placeholder="Search employees..." [(ngModel)]="globalSearchTerm"
-                        (ngModelChange)="onHeaderInput($event)" (focus)="openGlobalSearchResults()" />
+            <div class="tb-left">
+                <div class="header-brand" *ngIf="sidebarLogo">
+                    <img [src]="sidebarLogo" [alt]="sidebarLogoAlt" class="brand-logo" (error)="onImageError($event)">
+                    <span class="brand-name">{{ companyName || user?.companyName || 'Company Name' }}</span>
+                </div>
+            </div>
+
+            <!-- Dashboard links (only the ones this user's menus grant) -->
+            <nav class="tb-nav" *ngIf="navLinks.length">
+                <ng-container *ngFor="let link of navLinks">
+                    <a *ngIf="!link.external" class="tb-link" [routerLink]="link.path" routerLinkActive="active"
+                        [routerLinkActiveOptions]="{ exact: false }" (click)="closeSubmenus()">
+                        {{ link.label }}
+                    </a>
+                    <button *ngIf="link.external" type="button" class="tb-link" (click)="openProgress($event)">
+                        {{ link.label }}
+                        <mat-icon class="tb-ext">north_east</mat-icon>
+                    </button>
+                </ng-container>
+            </nav>
+
+            <div class="header-right">
+                <!-- Expanding search -->
+                <div class="search-box" [class.expanded]="isSearchExpanded || !!globalSearchTerm">
+                    <button type="button" class="search-trigger" (click)="expandSearch($event)" title="Search (Ctrl+K)">
+                        <mat-icon>search</mat-icon>
+                    </button>
+                    <input #globalSearchInput type="text" placeholder="Search employees, records…" [(ngModel)]="globalSearchTerm"
+                        (ngModelChange)="onHeaderInput($event)" (focus)="openGlobalSearchResults()"
+                        (blur)="onSearchBlur()" (keydown.escape)="collapseSearch()" />
+                    <span class="search-kbd" *ngIf="!globalSearchTerm">esc</span>
                     <button type="button" class="clear-search-btn" *ngIf="globalSearchTerm"
                         (click)="clearGlobalSearch()">
                         <mat-icon>close</mat-icon>
@@ -125,14 +163,13 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="header-brand" *ngIf="sidebarLogo">
-                <img [src]="sidebarLogo" [alt]="sidebarLogoAlt" class="brand-logo" (error)="onImageError($event)">
-                <span class="brand-name">{{ companyName || user?.companyName || 'Company Name' }}</span>
-            </div>
+                <button type="button" class="icon-btn theme-toggle" (click)="toggleTheme($event)"
+                    [attr.aria-label]="isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme'"
+                    [title]="isDarkTheme ? 'Light mode' : 'Dark mode'">
+                    <mat-icon>{{ isDarkTheme ? 'light_mode' : 'dark_mode' }}</mat-icon>
+                </button>
 
-            <div class="header-right">
                 <app-company-switcher></app-company-switcher>
 
                 <app-notification-bell></app-notification-bell>

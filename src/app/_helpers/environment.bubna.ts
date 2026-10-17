@@ -19,6 +19,9 @@ export const environment = {
   wmsAuthUrlAddress: 'https://attendance.bubnaadvertising.com/Auth/sdapi',
   almsUrlAddress: 'https://attendance.bubnaadvertising.com/alms/sdapi',
   chatUrlAddress: 'https://attendance.bubnaadvertising.com/chat/sdapi',
+  // Progress Tracker API (no gateway route deployed yet - same hardcoded host the ProgressTracker MFE uses)
+  progressUrlAddress: 'https://attendance.bubnaadvertising.com/Progress/sdapi',
+  progressMfeUrl: 'https://attendance.bubnaadvertising.com/Progress/dist/',
   employeeMfeUrl: 'https://attendance.bubnaadvertising.com/Employee/dist/',
   salaryMfeUrl: 'https://attendance.bubnaadvertising.com/Salary/dist/',
   almsMfeUrl: 'https://attendance.bubnaadvertising.com/ALMS/dist/',

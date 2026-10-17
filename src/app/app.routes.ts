@@ -50,6 +50,15 @@ export const routes: Routes = [
             ),
     },
     {
+        // Combined salary + attendance + Progress Tracker dashboard (shell-native, no iframe)
+        path: 'insights',
+        canActivate: [authGuard],
+        loadComponent: () =>
+            import('./insights/insights-dashboard.component').then(
+                (m) => m.InsightsDashboardComponent
+            ),
+    },
+    {
         path: 'forgot-password',
         loadComponent: () =>
             import('./registration/forgot-password/forgot-password.component').then(
@@ -79,6 +88,7 @@ export const routes: Routes = [
             { path: 'workspace', loadComponent: () => import('./registration/workspace/workspace.component').then(m => m.WorkspaceComponent) },
             { path: 'add-existing-company', loadComponent: () => import('./registration/add-existing-company/add-existing-company.component').then(m => m.AddExistingCompanyComponent) },
             { path: 'user-access-management', loadComponent: () => import('./registration/user-access-management/user-access-management.component').then(m => m.UserAccessManagementComponent) },
+            { path: 'single-sign-on', loadComponent: () => import('./registration/sso-settings/sso-settings.component').then(m => m.SsoSettingsComponent) },
             { path: 'admin-dashboard', loadComponent: () => import('./registration/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) }
         ]
     },
@@ -242,6 +252,18 @@ export const routes: Routes = [
                 path: '**',
                 loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
                 data: { mfeUrl: environment.almsMfeUrl, title: 'ALMS & ESS' }
+            }
+        ]
+    },
+    {
+        // Progress Tracker MFE (tasks, projects, KPIs, goals, reviews) — menu paths /progress/...
+        path: 'progress',
+        canActivate: [authGuard],
+        children: [
+            {
+                path: '**',
+                loadComponent: () => import('./mfe-container/mfe-container.component').then(m => m.MfeContainerComponent),
+                data: { mfeUrl: (environment as any).progressMfeUrl, title: 'Progress Tracker' }
             }
         ]
     },

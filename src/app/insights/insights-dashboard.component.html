@@ -1,0 +1,457 @@
+<div class="ins-page">
+
+  <!-- Hero -->
+  <section class="ins-hero">
+    <div class="hero-text">
+      <span class="hero-eyebrow"><mat-icon>insights</mat-icon> Workforce Insights</span>
+      <h1>{{ greeting }}<ng-container *ngIf="userFirstName">, {{ userFirstName }}</ng-container></h1>
+      <p>Salary, attendance and performance for <b>{{ selectedMonth }} {{ selectedYear }}</b> · {{ selectedBranchName }}</p>
+    </div>
+    <div class="hero-sources">
+      <span class="src-pill" [ngClass]="salaryState" matTooltip="Payroll data from the Salary module">
+        <i></i> Salary
+      </span>
+      <span class="src-pill" [ngClass]="attendanceState" matTooltip="Monthly attendance report from ALMS">
+        <i></i> Attendance
+      </span>
+      <span class="src-pill" [ngClass]="progressState"
+        [matTooltip]="progressState === 'denied' ? 'Progress Tracker data is limited to Admin/HR' : progressState === 'error' ? 'Progress Tracker service is unreachable' : 'Tasks, KPIs and projects from Progress Tracker'">
+        <i></i> Progress
+      </span>
+    </div>
+  </section>
+
+  <!-- Filter bar -->
+  <section class="ins-filters fv-glass">
+    <div class="filter-row">
+      <label class="fld">
+        <span>Month</span>
+        <select [(ngModel)]="selectedMonth" (ngModelChange)="onPeriodChange()">
+          <option *ngFor="let m of months" [value]="m">{{ m }}{{ isProcessedPeriod(m) ? ' •' : '' }}</option>
+        </select>
+      </label>
+      <label class="fld fld--sm">
+        <span>Year</span>
+        <select [(ngModel)]="selectedYear" (ngModelChange)="onPeriodChange()">
+          <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Branch</span>
+        <select [(ngModel)]="selectedBranchId" (ngModelChange)="onBranchChange()">
+          <option value="">All branches</option>
+          <option *ngFor="let b of branches" [value]="b.id">{{ b.companyBranchName }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Department</span>
+        <select [(ngModel)]="f.department" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Designation</span>
+        <select [(ngModel)]="f.designation" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let d of designations" [value]="d">{{ d }}</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="showMoreFilters = !showMoreFilters" [class.on]="showMoreFilters">
+          <mat-icon>tune</mat-icon> {{ showMoreFilters ? 'Fewer' : 'More' }} filters
+        </button>
+        <button type="button" class="btn-icon" (click)="refresh()" [class.spin]="isLoading" title="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row more" *ngIf="showMoreFilters">
+      <label class="fld">
+        <span>Net pay from</span>
+        <input type="number" min="0" placeholder="Min" [(ngModel)]="f.minNet" (ngModelChange)="applyFilters()" />
+      </label>
+      <label class="fld">
+        <span>Net pay below</span>
+        <input type="number" min="0" placeholder="Max" [(ngModel)]="f.maxNet" (ngModelChange)="applyFilters()" />
+      </label>
+      <label class="fld">
+        <span>Attendance</span>
+        <select [(ngModel)]="f.attendance" (ngModelChange)="applyFilters()">
+          <option value="">Any</option>
+          <option value="high">Excellent (≥ 95%)</option>
+          <option value="mid">Average (80–95%)</option>
+          <option value="low">Poor (&lt; 80%)</option>
+          <option value="none">No attendance data</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Performance</span>
+        <select [(ngModel)]="f.band" (ngModelChange)="applyFilters()" [disabled]="!bands.length">
+          <option value="">Any</option>
+          <option *ngFor="let b of bands" [value]="b">{{ b }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Project</span>
+        <select [(ngModel)]="f.project" (ngModelChange)="applyFilters()" [disabled]="!projectNames.length">
+          <option value="">All</option>
+          <option *ngFor="let p of projectNames" [value]="p">{{ p }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Task status</span>
+        <select [(ngModel)]="f.taskStatus" (ngModelChange)="applyFilters()" [disabled]="!taskStatuses.length">
+          <option value="">Any</option>
+          <option *ngFor="let s of taskStatuses" [value]="s">{{ s }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Task priority</span>
+        <select [(ngModel)]="f.priority" (ngModelChange)="applyFilters()" [disabled]="!priorities.length">
+          <option value="">Any</option>
+          <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+        </select>
+      </label>
+      <label class="fld">
+        <span>Data coverage</span>
+        <select [(ngModel)]="f.coverage" (ngModelChange)="applyFilters()">
+          <option value="">Everyone</option>
+          <option value="salary">Has salary</option>
+          <option value="attendance">Has attendance</option>
+          <option value="progress">Has progress</option>
+          <option value="all">In all three</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="chips" *ngIf="chips.length">
+      <button type="button" class="chip" *ngFor="let c of chips; trackBy: trackChip" (click)="c.clear()">
+        {{ c.label }} <mat-icon>close</mat-icon>
+      </button>
+      <button type="button" class="chip chip--reset" (click)="resetFilters()">Clear all</button>
+      <span class="chip-count">{{ filtered.length }} of {{ rows.length }} employees</span>
+    </div>
+  </section>
+
+  <!-- KPI tiles -->
+  <section class="kpis">
+    <div class="kpi kpi--hero kpi--click" (click)="focusTable('net', -1)" tabindex="0" role="button" (keydown.enter)="focusTable('net', -1)">
+      <div class="kpi-top"><span class="kpi-icon"><mat-icon>payments</mat-icon></span>Net payroll</div>
+      <div class="kpi-value">{{ money(summary.net) }}</div>
+      <div class="kpi-sub">Gross {{ money(summary.gross) }} · Deductions {{ money(summary.deductions) }}</div>
+    </div>
+    <div class="kpi kpi--click" (click)="resetFilters(); jump('ins-employees')" tabindex="0" role="button" (keydown.enter)="resetFilters(); jump('ins-employees')">
+      <div class="kpi-top"><span class="kpi-icon i-info"><mat-icon>groups</mat-icon></span>Employees</div>
+      <div class="kpi-value">{{ summary.headcount }}</div>
+      <div class="kpi-sub">{{ summary.paidCount }} paid this month</div>
+    </div>
+    <div class="kpi kpi--click" (click)="setGroupBy('department'); jump('ins-breakdown')" tabindex="0" role="button" (keydown.enter)="setGroupBy('department'); jump('ins-breakdown')">
+      <div class="kpi-top"><span class="kpi-icon i-accent"><mat-icon>account_balance_wallet</mat-icon></span>Avg net pay</div>
+      <div class="kpi-value">{{ money(summary.avgNet) }}</div>
+      <div class="kpi-sub">Monthly CTC {{ money(summary.ctc) }}</div>
+    </div>
+    <div class="kpi kpi--click" (click)="focusTable('attendancePct', 1)" tabindex="0" role="button" (keydown.enter)="focusTable('attendancePct', 1)">
+      <div class="kpi-top"><span class="kpi-icon i-success"><mat-icon>event_available</mat-icon></span>Attendance</div>
+      <div class="kpi-value" [ngClass]="pctClass(summary.avgAttendance)">
+        {{ summary.avgAttendance != null ? summary.avgAttendance + '%' : '—' }}
+      </div>
+      <div class="kpi-sub">{{ summary.absentDays }} absent · {{ summary.leaveDays }} leave days</div>
+    </div>
+    <div class="kpi kpi--click" (click)="focusTable('lateIns', -1)" tabindex="0" role="button" (keydown.enter)="focusTable('lateIns', -1)">
+      <div class="kpi-top"><span class="kpi-icon i-warning"><mat-icon>schedule</mat-icon></span>Late check-ins</div>
+      <div class="kpi-value">{{ summary.lateIns }}</div>
+      <div class="kpi-sub">{{ summary.overtime | number:'1.0-1' }} h overtime</div>
+    </div>
+    <div class="kpi kpi--click" (click)="focusTable('taskCompletionRate', -1)" tabindex="0" role="button" (keydown.enter)="focusTable('taskCompletionRate', -1)">
+      <div class="kpi-top"><span class="kpi-icon i-accent2"><mat-icon>task_alt</mat-icon></span>Tasks done</div>
+      <div class="kpi-value">{{ summary.completed }}<small>/{{ summary.tasks }}</small></div>
+      <div class="kpi-bar"><span [style.width.%]="summary.completionRate || 0"></span></div>
+      <div class="kpi-sub">{{ summary.completionRate != null ? summary.completionRate + '% complete' : 'No task data' }}</div>
+    </div>
+    <div class="kpi kpi--click" (click)="focusTable('overdueTasks', -1)" tabindex="0" role="button" (keydown.enter)="focusTable('overdueTasks', -1)">
+      <div class="kpi-top"><span class="kpi-icon i-danger"><mat-icon>assignment_late</mat-icon></span>Overdue tasks</div>
+      <div class="kpi-value" [class.bad]="summary.overdue > 0">{{ summary.overdue }}</div>
+      <div class="kpi-sub">{{ summary.activeProjects }} active projects</div>
+    </div>
+    <div class="kpi kpi--click" (click)="setGroupBy('band'); jump('ins-breakdown')" tabindex="0" role="button" (keydown.enter)="setGroupBy('band'); jump('ins-breakdown')">
+      <div class="kpi-top"><span class="kpi-icon i-highlight"><mat-icon>military_tech</mat-icon></span>Avg performance</div>
+      <div class="kpi-value" [ngClass]="pctClass(summary.avgScore, 80, 60)">{{ summary.avgScore ?? '—' }}</div>
+      <div class="kpi-sub">Overall score out of 100</div>
+    </div>
+  </section>
+
+  <!-- Charts -->
+  <section class="grid grid--2-1">
+    <div class="card">
+      <div class="card-head">
+        <h3>Payroll trend</h3>
+        <span class="hint">Last 12 processed months</span>
+      </div>
+      <div class="chart-box">
+        <canvas #trendChart></canvas>
+        <div class="chart-empty" *ngIf="salaryState !== 'loading' && !(salary?.monthlyTrend?.length)">No payroll history</div>
+        <div class="chart-empty" *ngIf="salaryState === 'loading'"><span class="loader"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Net pay distribution</h3>
+        <span class="hint">Click a bar to filter</span>
+      </div>
+      <div class="chart-box">
+        <canvas #payChart></canvas>
+        <div class="chart-empty" *ngIf="salaryState !== 'loading' && !summary.paidCount">No salary for this selection</div>
+        <div class="chart-empty" *ngIf="salaryState === 'loading'"><span class="loader"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid grid--2-1">
+    <div class="card">
+      <div class="card-head">
+        <h3>Department payroll &amp; attendance</h3>
+        <span class="hint">Click a department to filter</span>
+      </div>
+      <div class="chart-box">
+        <canvas #deptChart></canvas>
+        <div class="chart-empty" *ngIf="!isLoading && !filtered.length">No employees match the filters</div>
+        <div class="chart-empty" *ngIf="isLoading && !rows.length"><span class="loader"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Daily attendance</h3>
+        <span class="hint">{{ selectedMonth }}</span>
+      </div>
+      <div class="chart-box">
+        <canvas #attTrendChart></canvas>
+        <div class="chart-empty" *ngIf="attendanceState !== 'loading' && !(teamInsights?.trend?.length)">No daily attendance trend</div>
+        <div class="chart-empty" *ngIf="attendanceState === 'loading'"><span class="loader"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid grid--3">
+    <div class="card">
+      <div class="card-head">
+        <h3>Performance bands</h3>
+        <span class="hint">Click to filter</span>
+      </div>
+      <div class="chart-box chart-box--sm">
+        <canvas #bandChart></canvas>
+        <div class="chart-empty" *ngIf="progressState !== 'loading' && !bands.length">
+          {{ progressState === 'denied' ? 'Admin/HR only' : progressState === 'error' ? 'Progress Tracker unreachable' : 'No performance data' }}
+        </div>
+        <div class="chart-empty" *ngIf="progressState === 'loading'"><span class="loader"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Task status</h3>
+        <span class="hint">{{ filteredTasks.length }} tasks</span>
+      </div>
+      <div class="chart-box chart-box--sm">
+        <canvas #taskChart></canvas>
+        <div class="chart-empty" *ngIf="progressState !== 'loading' && !filteredTasks.length">
+          {{ progressState === 'denied' ? 'Admin/HR only' : progressState === 'error' ? 'Progress Tracker unreachable' : 'No tasks in this period' }}
+        </div>
+        <div class="chart-empty" *ngIf="progressState === 'loading'"><span class="loader"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Top performers</h3>
+        <span class="hint">By overall score</span>
+      </div>
+      <ul class="people" *ngIf="topPerformers.length; else noPerformers">
+        <li *ngFor="let r of topPerformers; let i = index" (click)="openEmployee(r)">
+          <span class="rank">{{ i + 1 }}</span>
+          <span class="avatar">{{ initials(r.employeeName) }}</span>
+          <span class="who">
+            <b>{{ r.employeeName }}</b>
+            <small>{{ r.departmentName || r.designationName || '—' }}</small>
+          </span>
+          <span class="score" [ngClass]="pctClass(r.score, 80, 60)">{{ r.score }}</span>
+        </li>
+      </ul>
+      <ng-template #noPerformers>
+        <div class="empty-block">No scored employees yet</div>
+      </ng-template>
+    </div>
+  </section>
+
+  <section class="grid grid--2">
+    <div class="card">
+      <div class="card-head">
+        <h3><mat-icon class="h-icon warn">priority_high</mat-icon> Needs attention</h3>
+        <span class="hint">Low attendance, absences, overdue work or low score</span>
+      </div>
+      <ul class="people" *ngIf="needsAttention.length; else allGood">
+        <li *ngFor="let n of needsAttention" (click)="openEmployee(n.row)">
+          <span class="avatar avatar--warn">{{ initials(n.row.employeeName) }}</span>
+          <span class="who">
+            <b>{{ n.row.employeeName }}</b>
+            <small>{{ n.row.departmentName || '—' }}</small>
+          </span>
+          <span class="tags">
+            <span class="tag" *ngFor="let reason of n.reasons">{{ reason }}</span>
+          </span>
+        </li>
+      </ul>
+      <ng-template #allGood>
+        <div class="empty-block"><mat-icon>verified</mat-icon> Everyone in this view is on track</div>
+      </ng-template>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Projects</h3>
+        <span class="hint">{{ filteredProjects.length }} in scope · overdue first</span>
+      </div>
+      <ul class="projects" *ngIf="filteredProjects.length; else noProjects">
+        <li *ngFor="let p of filteredProjects | slice:0:7" (click)="f.project = f.project === p.name ? '' : p.name; applyFilters()"
+          [class.on]="f.project === p.name">
+          <div class="proj-top">
+            <b>{{ p.name }}</b>
+            <span class="status" [class.overdue]="p.isOverdue">{{ p.isOverdue ? 'Overdue' : p.statusName }}</span>
+          </div>
+          <div class="proj-bar"><span [style.width.%]="p.completionPercentage" [class.overdue]="p.isOverdue"></span></div>
+          <div class="proj-meta">
+            <span>{{ p.projectManagerName || '—' }}</span>
+            <span>{{ p.completedTasks }}/{{ p.totalTasks }} tasks · {{ p.completionPercentage | number:'1.0-0' }}%</span>
+          </div>
+        </li>
+      </ul>
+      <ng-template #noProjects>
+        <div class="empty-block">
+          {{ progressState === 'denied' ? 'Project data is limited to Admin/HR' : progressState === 'error' ? 'Progress Tracker is unreachable' : 'No projects in scope' }}
+        </div>
+      </ng-template>
+    </div>
+  </section>
+
+  <!-- Group-wise breakdown -->
+  <section class="card" id="ins-breakdown">
+    <div class="card-head">
+      <h3>Breakdown</h3>
+      <div class="seg">
+        <button type="button" [class.on]="groupBy === 'department'" (click)="setGroupBy('department')">Department</button>
+        <button type="button" [class.on]="groupBy === 'designation'" (click)="setGroupBy('designation')">Designation</button>
+        <button type="button" [class.on]="groupBy === 'project'" (click)="setGroupBy('project')">Project</button>
+        <button type="button" [class.on]="groupBy === 'band'" (click)="setGroupBy('band')">Performance</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>{{ groupBy === 'band' ? 'Performance band' : (groupBy | titlecase) }}</th>
+            <th class="num">Employees</th>
+            <th class="num">Net payroll</th>
+            <th class="num">Avg net</th>
+            <th class="num">Attendance</th>
+            <th class="num">Absent days</th>
+            <th class="num">Tasks done</th>
+            <th class="num">Overdue</th>
+            <th class="num">Avg score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of breakdown" class="clickable" [class.on]="isDrilled(b)" (click)="drillInto(b)">
+            <td><b>{{ b.name }}</b></td>
+            <td class="num">{{ b.headcount }}</td>
+            <td class="num">{{ money(b.net) }}</td>
+            <td class="num">{{ money(b.avgNet) }}</td>
+            <td class="num"><span class="pill" [ngClass]="pctClass(b.avgAttendance)">{{ b.avgAttendance != null ? b.avgAttendance + '%' : '—' }}</span></td>
+            <td class="num">{{ b.absentDays }}</td>
+            <td class="num">{{ b.completed }}/{{ b.tasks }}</td>
+            <td class="num" [class.bad]="b.overdue > 0">{{ b.overdue }}</td>
+            <td class="num"><span class="pill" [ngClass]="pctClass(b.avgScore, 80, 60)">{{ b.avgScore ?? '—' }}</span></td>
+          </tr>
+          <tr *ngIf="!breakdown.length">
+            <td colspan="9" class="empty-cell">No data for this selection</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Employee-wise table -->
+  <section class="card" id="ins-employees">
+    <div class="card-head">
+      <h3>Employees <span class="count">{{ filtered.length }}</span></h3>
+      <button type="button" class="btn-ghost" (click)="exportCsv()" [disabled]="!filtered.length">
+        <mat-icon>download</mat-icon> Export CSV
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="tbl tbl--emp">
+        <thead>
+          <tr>
+            <th (click)="sortBy('employeeName')" [class.sorted]="sortKey === 'employeeName'">Employee <mat-icon class="sort">{{ sortKey === 'employeeName' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th (click)="sortBy('departmentName')" [class.sorted]="sortKey === 'departmentName'">Department <mat-icon class="sort">{{ sortKey === 'departmentName' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('monthlyCtc')" [class.sorted]="sortKey === 'monthlyCtc'">CTC <mat-icon class="sort">{{ sortKey === 'monthlyCtc' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('net')" [class.sorted]="sortKey === 'net'">Net paid <mat-icon class="sort">{{ sortKey === 'net' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('paidDays')" [class.sorted]="sortKey === 'paidDays'">Paid days <mat-icon class="sort">{{ sortKey === 'paidDays' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('attendancePct')" [class.sorted]="sortKey === 'attendancePct'">Attendance <mat-icon class="sort">{{ sortKey === 'attendancePct' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('absentDays')" [class.sorted]="sortKey === 'absentDays'">Absent <mat-icon class="sort">{{ sortKey === 'absentDays' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('lateIns')" [class.sorted]="sortKey === 'lateIns'">Late <mat-icon class="sort">{{ sortKey === 'lateIns' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('taskCompletionRate')" [class.sorted]="sortKey === 'taskCompletionRate'">Tasks <mat-icon class="sort">{{ sortKey === 'taskCompletionRate' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('overdueTasks')" [class.sorted]="sortKey === 'overdueTasks'">Overdue <mat-icon class="sort">{{ sortKey === 'overdueTasks' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th class="num" (click)="sortBy('score')" [class.sorted]="sortKey === 'score'">Score <mat-icon class="sort">{{ sortKey === 'score' && sortDir === 1 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon></th>
+            <th>Projects</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of pageRows; trackBy: trackRow" class="clickable" (click)="openEmployee(r)">
+            <td>
+              <div class="emp">
+                <span class="avatar">{{ initials(r.employeeName) }}</span>
+                <span class="who">
+                  <b>{{ r.employeeName }}</b>
+                  <small>{{ r.employeeCode || '—' }} · {{ r.designationName || '—' }}</small>
+                </span>
+              </div>
+            </td>
+            <td>{{ r.departmentName || '—' }}</td>
+            <td class="num">{{ r.hasSalary ? money(r.monthlyCtc) : '—' }}</td>
+            <td class="num"><b>{{ r.hasSalary ? money(r.net) : '—' }}</b></td>
+            <td class="num">{{ r.paidDays ?? '—' }}</td>
+            <td class="num"><span class="pill" [ngClass]="pctClass(r.attendancePct)">{{ r.attendancePct != null ? r.attendancePct + '%' : '—' }}</span></td>
+            <td class="num">{{ r.hasAttendance ? r.absentDays : '—' }}</td>
+            <td class="num">{{ r.hasAttendance ? r.lateIns : '—' }}</td>
+            <td class="num">
+              <ng-container *ngIf="r.hasProgress; else dash">
+                {{ r.completedTasks }}/{{ r.totalTasks }}
+                <div class="mini-bar"><span [style.width.%]="r.taskCompletionRate || 0"></span></div>
+              </ng-container>
+            </td>
+            <td class="num" [class.bad]="r.overdueTasks > 0">{{ r.hasProgress ? r.overdueTasks : '—' }}</td>
+            <td class="num">
+              <span class="pill" [ngClass]="pctClass(r.score, 80, 60)" [matTooltip]="r.band">{{ r.score ?? '—' }}</span>
+            </td>
+            <td class="projects-cell">
+              <span class="tag" *ngFor="let p of r.projects | slice:0:2">{{ p }}</span>
+              <span class="tag tag--more" *ngIf="r.projects.length > 2">+{{ r.projects.length - 2 }}</span>
+              <span *ngIf="!r.projects.length" class="muted">—</span>
+            </td>
+          </tr>
+          <tr *ngIf="!pageRows.length">
+            <td colspan="12" class="empty-cell">
+              {{ isLoading ? 'Loading…' : 'No employees match the selected filters' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #dash>—</ng-template>
+    </div>
+    <div class="pager" *ngIf="pageCount > 1">
+      <button type="button" class="btn-icon" (click)="goToPage(page - 1)" [disabled]="page === 0"><mat-icon>chevron_left</mat-icon></button>
+      <span>Page {{ page + 1 }} of {{ pageCount }}</span>
+      <button type="button" class="btn-icon" (click)="goToPage(page + 1)" [disabled]="page >= pageCount - 1"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+  </section>
+
+  <p class="foot" *ngIf="lastUpdated">Updated {{ lastUpdated | date:'h:mm a' }} · Salary figures are for processed payroll only; attendance % = days present ÷ (present + absent + half-marked days).</p>
+</div>

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { startWith, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -53,6 +54,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   constructor(
     private notificationSvc: NotificationBellService,
     private cdr: ChangeDetectorRef,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -74,10 +76,53 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.cdr.markForCheck();
       });
+
+    // Progress Tracker approvals waiting on this user (live count, not tied to notification rows).
+    this.approvalSub = interval(POLL_INTERVAL_MS)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.notificationSvc.getPendingApprovalCount().pipe(catchError(() => of({ total: 0 })))),
+      )
+      .subscribe((r) => {
+        this.pendingApprovals = r?.total ?? 0;
+        this.cdr.markForCheck();
+      });
+  }
+
+  pendingApprovals = 0;
+  private approvalSub?: Subscription;
+
+  /** Progress Tracker items are mirrored into ALMS with a 'Progress' type prefix. */
+  isProgress(n: NotificationItem): boolean {
+    return n.type?.startsWith('Progress') ?? false;
+  }
+
+  /** Approval requests are represented by the live pending count, so they don't double-count in the badge. */
+  private isApprovalRequest(n: NotificationItem): boolean {
+    return this.isProgress(n) && n.type.endsWith('ApprovalRequested');
+  }
+
+  /** Where a Progress Tracker notification should take you (ids are encoded in the Guid's last block). */
+  private progressLink(n: NotificationItem): any[] | null {
+    const kind = n.type.substring('Progress'.length);
+    const last = (n.relatedEntityId || '').split('-').pop() || '';
+    const id = /^\d{12}$/.test(last) && last !== '999999999999' ? String(Number(last)) : null;
+    if (kind.endsWith('ApprovalRequested')) return ['/progress/approvals'];
+    if (/^Task/.test(kind) && id) return ['/progress/tasks', id];
+    if (/^Goal/.test(kind) && id) return ['/progress/goals', id];
+    if (/^Kpi/.test(kind)) return ['/progress/kpi'];
+    return ['/progress/dashboard/employee'];
+  }
+
+  openApprovals(event: Event): void {
+    event.stopPropagation();
+    this.showDropdown = false;
+    this.router.navigate(['/progress/approvals']);
   }
 
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
+    this.approvalSub?.unsubscribe();
   }
 
   private resolveEmployeeId(): string | null {
@@ -93,6 +138,11 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 
   get unreadCount(): number {
     return this.notifications.filter((n) => !n.isRead).length;
+  }
+
+  /** Badge: unread notifications + live pending approvals (approval-request rows not counted twice). */
+  get badgeCount(): number {
+    return this.notifications.filter((n) => !n.isRead && !this.isApprovalRequest(n)).length + this.pendingApprovals;
   }
 
   get show(): boolean {
@@ -114,6 +164,13 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   }
 
   onNotificationClick(n: NotificationItem): void {
+    if (this.isProgress(n)) {
+      const link = this.progressLink(n);
+      if (link) {
+        this.showDropdown = false;
+        this.router.navigate(link);
+      }
+    }
     if (n.isRead) return;
     n.isRead = true; // optimistic - avoids waiting on the round trip to update the badge
     this.notificationSvc.markNotificationRead(n.notificationId).subscribe({
@@ -164,7 +221,18 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       case 'RegularizationRequest': return 'edit_calendar';
       case 'CheckInOut': return 'fingerprint';
       case 'BulkEmployeeRegistration': return 'group_add';
-      default: return 'notifications';
+      case 'ProgressTaskAssigned': return 'assignment_ind';
+      case 'ProgressTaskApprovalRequested':
+      case 'ProgressKpiApprovalRequested':
+      case 'ProgressGoalApprovalRequested': return 'fact_check';
+      case 'ProgressTaskApproved':
+      case 'ProgressKpiApproved':
+      case 'ProgressGoalApproved': return 'check_circle';
+      case 'ProgressTaskReturned':
+      case 'ProgressKpiRejected':
+      case 'ProgressGoalRejected': return 'undo';
+      case 'ProgressGoalAssigned': return 'emoji_events';
+      default: return type?.startsWith('Progress') ? 'insights' : 'notifications';
     }
   }
 

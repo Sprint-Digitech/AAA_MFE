@@ -1,5 +1,5 @@
 import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withHashLocation } from '@angular/router';
+import { provideRouter, withNavigationErrorHandler, withHashLocation } from '@angular/router';
 import {
   HTTP_INTERCEPTORS,
   provideHttpClient,
@@ -23,10 +23,23 @@ import {
 
 import { routes } from './app.routes';
 
+// After a deploy, a tab still running the old main.js asks for lazy chunks that no longer exist and the
+// route renders nothing. Reload once to pick up the new build (the flag stops a reload loop).
+function reloadOnStaleChunk(err: { error: any }): void {
+  const msg = String(err?.error?.message || err?.error || '');
+  if (!/Loading chunk|ChunkLoadError|dynamically imported module|Importing a module script failed/i.test(msg)) return;
+  try {
+    if (sessionStorage.getItem('fv-chunk-reload')) return;
+    sessionStorage.setItem('fv-chunk-reload', '1');
+    setTimeout(() => sessionStorage.removeItem('fv-chunk-reload'), 30000);
+  } catch { /* storage blocked - still try once */ }
+  location.reload();
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withHashLocation()),
+    provideRouter(routes, withHashLocation(), withNavigationErrorHandler(reloadOnStaleChunk)),
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     importProvidersFrom(MatSnackBarModule, MatDialogModule),

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnDestroy } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { AccountService } from '../../shared/services/account.service';
+import { ThemeService } from '../../shared/services/theme.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -9,11 +10,11 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-initial-setup',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatProgressBarModule, MatIconModule],
+  imports: [CommonModule, MatCardModule, MatProgressBarModule, MatIconModule, RouterLink],
   templateUrl: './initial-setup.component.html',
   styleUrl: './initial-setup.component.scss',
 })
-export class InitialSetupComponent {
+export class InitialSetupComponent implements OnDestroy {
   username = '';
   companyId: any;
   branches: any;
@@ -75,9 +76,12 @@ export class InitialSetupComponent {
     return this.steps.filter((s) => !s.optional).length;
   }
 
-  constructor(private router: Router, private accountService: AccountService) { }
+  private releaseNative?: () => void;
+
+  constructor(private router: Router, private accountService: AccountService, private themeService: ThemeService) { }
 
   ngOnInit() {
+    this.releaseNative = this.themeService.claimNative();
     const raw = sessionStorage.getItem('user');
     if (!raw || raw === 'null') {
       this.router.navigate(['/login'], { replaceUrl: true });
@@ -488,5 +492,9 @@ export class InitialSetupComponent {
           console.error('BranchId used:', this.branchId);
         },
       });
+  }
+
+  ngOnDestroy(): void {
+    this.releaseNative?.();
   }
 }

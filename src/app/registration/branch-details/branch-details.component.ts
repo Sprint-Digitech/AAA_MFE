@@ -148,6 +148,8 @@ export class BranchDetailsComponent implements OnInit {
   // OT-hours bank is an ALMS-only table (no HRMSAuthZ/CAB copies to fan out to),
   // so it gets its own id tracking separate from overtimeId/almsOvertimeId/cabOvertimeId above.
   overtimeBankSettingId: string | null = null;
+  // Comp-Off is also an ALMS-only table, same reasoning as OT Bank above.
+  compOffSettingId: string | null = null;
   leaveTypeOptions: { label: string; value: string }[] = [];
   leaveId: string | undefined;
   dateTimeSettingsId: string | undefined;
@@ -1370,8 +1372,8 @@ export class BranchDetailsComponent implements OnInit {
     });
   }
 
-  initializeOvertimeConfig(initialValues?: any, otBankValues?: any) {
-    console.log('[BRANCH_DETAILS] initializeOvertimeConfig - Raw Data:', initialValues, otBankValues);
+  initializeOvertimeConfig(initialValues?: any, otBankValues?: any, compOffValues?: any) {
+    console.log('[BRANCH_DETAILS] initializeOvertimeConfig - Raw Data:', initialValues, otBankValues, compOffValues);
     const otId = initialValues?.branchOvertimeSettingID || initialValues?.BranchOvertimeSettingID || initialValues?.id || initialValues?.Id;
     this.overtimeId = otId || null;
     // Seed manualOvertimeData with API values; onChange handlers keep it in sync
@@ -1393,10 +1395,18 @@ export class BranchDetailsComponent implements OnInit {
       // branch's settings doesn't accidentally turn its OT off.
       isOvertimeAllowed: initialValues?.isOvertimeAllowed ?? true,
       isFixedOTAllowed: initialValues?.isFixedOTAllowed ?? false,
+      isFixedOTMultipleMode: initialValues?.isFixedOTMultipleMode ?? false,
       fixedOTDailyHours: initialValues?.fixedOTDailyHours ?? '',
       fixedOTRate: initialValues?.fixedOTRate ?? '',
       fixedOTRateBasis: initialValues?.fixedOTRateMultiplierBase === 'Gross' ? 'Gross' : 'BasicDA',
       isDynamicOTAllowed: initialValues?.isDynamicOTAllowed ?? true,
+      // Late-arrival adjustment. Defaults true (today's behavior: a late
+      // check-in offsets extra time worked) so a first-time save of an
+      // existing branch's settings doesn't silently switch its OT math to
+      // checkout-vs-scheduled-end. The minimum-OT-to-qualify gate is the
+      // existing overtimeConfiguration/BranchOTHoursRule field below (UI: "OT
+      // Eligibility (minutes)") - no separate field needed.
+      allowLateArrivalAdjustment: initialValues?.allowLateArrivalAdjustment ?? true,
       // OT-hours bank (Feature 1) - a separate ALMS-only setting, seeded from its
       // own fetch (otBankValues) rather than initialValues (BranchOvertimeSetting).
       isOvertimeBankEnabled: otBankValues?.isEnabled ?? false,
@@ -1407,6 +1417,17 @@ export class BranchDetailsComponent implements OnInit {
       dispositionMode: otBankValues?.dispositionMode || 'CarryForwardMonth',
       carryForwardMaxHours: otBankValues?.carryForwardMaxHours ?? '',
       otRedemptionLeaveTypeMasterId: otBankValues?.otRedemptionLeaveTypeMasterId || otBankValues?.OtRedemptionLeaveTypeMasterId || '',
+      // Comp-Off (Case 3) - Fixed OT banked as time off instead of paid in cash.
+      // A separate ALMS-only table, same reasoning as OT Bank above.
+      triggerMinutes: compOffValues?.triggerMinutes ?? 90,
+      quarterValueDays: compOffValues?.quarterValueDays ?? 0.25,
+      includeWeeklyOffHolidayWork: compOffValues?.includeWeeklyOffHolidayWork ?? false,
+      includeFixedOT: compOffValues?.includeFixedOT ?? false,
+      compOffMaxBalanceDays: compOffValues?.maxBalanceDays ?? '',
+      compOffRedemptionRequiresApproval: compOffValues?.redemptionRequiresApproval ?? true,
+      compOffCarryForwardMode: compOffValues?.carryForwardMode || 'NextMonth',
+      compOffCarryForwardMaxDays: compOffValues?.carryForwardMaxDays ?? '',
+      compOffLapseAction: compOffValues?.lapseAction || 'Forfeit',
     };
     const isUpdate = !!otId;
 
@@ -1537,7 +1558,9 @@ export class BranchDetailsComponent implements OnInit {
               label: 'OT Eligibility (minutes)',
               type: 'number',
               colSpan: 1,
+              placeholder: 'e.g. 15 - use 0 for no minimum',
               value: initialValues?.branchOTHoursRule ?? '',
+              hint: 'Minimum OT needed to qualify for the day. Below this, OT is 0. At or above it, the full computed OT counts (not reduced by this amount). Use 0 for no minimum.',
               validations: [{ type: 'required', message: 'Required' }],
               onChange: (val: any) => { this.manualOvertimeData.overtimeConfiguration = val; },
             },
@@ -1586,11 +1609,20 @@ export class BranchDetailsComponent implements OnInit {
               onChange: (val: any) => { this.manualOvertimeData.isFixedOTAllowed = val; },
             },
             {
+              name: 'isFixedOTMultipleMode',
+              label: 'Fixed OT in Multiples',
+              type: 'toggle',
+              colSpan: 1,
+              value: initialValues?.isFixedOTMultipleMode ?? false,
+              hint: 'Only takes effect when Fixed OT Allowed is on. Off (default): Fixed OT Daily Hours below is a flat cap - e.g. 1.5h cap means 2h of OT gives 1.5h Fixed. On: that same field becomes a rounding unit instead - e.g. unit 1.5h means 2h of OT rounds DOWN to 1.5h Fixed, 3.5h rounds down to 3h, 4.5h gives the full 4.5h. No partial credit for an incomplete multiple either way, the leftover goes to Dynamic.',
+              onChange: (val: any) => { this.manualOvertimeData.isFixedOTMultipleMode = val; },
+            },
+            {
               name: 'fixedOTDailyHours',
               label: 'Fixed OT Daily Hours',
               type: 'number',
               colSpan: 1,
-              placeholder: 'e.g. 3 (hours)',
+              placeholder: 'e.g. 3 (hours), or 1.5 as a multiple unit',
               value: initialValues?.fixedOTDailyHours ?? '',
               disabled: (group: any) => !group.get('isFixedOTAllowed')?.value,
               required: (group: any) => !!group.get('isFixedOTAllowed')?.value,
@@ -1630,6 +1662,110 @@ export class BranchDetailsComponent implements OnInit {
               value: initialValues?.isDynamicOTAllowed ?? true,
               hint: 'OT worked beyond the fixed daily hours goes to the normal approval queue at the Normal/Holiday rates above.',
               onChange: (val: any) => { this.manualOvertimeData.isDynamicOTAllowed = val; },
+            },
+            {
+              name: 'allowLateArrivalAdjustment',
+              label: 'Adjust OT for Late Arrival',
+              type: 'toggle',
+              colSpan: 1,
+              value: initialValues?.allowLateArrivalAdjustment ?? true,
+              hint: 'On: OT = time worked minus shift duration (a late check-in eats into OT). Off: OT = actual checkout minus the shift\'s scheduled end time only, ignoring how late the employee arrived. The minimum-OT-to-qualify gate is "OT Eligibility (minutes)" above.',
+              onChange: (val: any) => { this.manualOvertimeData.allowLateArrivalAdjustment = val; },
+            },
+          ],
+        },
+        {
+          title: 'Comp-Off (Time Off in Lieu of OT)',
+          fields: [
+            {
+              name: 'triggerMinutes',
+              label: 'Minutes per Comp-Off Unit',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g. 90 (1:30 hr)',
+              value: compOffValues?.triggerMinutes ?? 90,
+              hint: 'Every this many minutes of eligible OT banks one unit below - no partial credit until a full multiple is reached.',
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.triggerMinutes = val; },
+            },
+            {
+              name: 'quarterValueDays',
+              label: 'Days Credited per Unit',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'e.g. 0.5 (half day)',
+              value: compOffValues?.quarterValueDays ?? 0.25,
+              validations: [{ type: 'required', message: 'Required' }],
+              onChange: (val: any) => { this.manualOvertimeData.quarterValueDays = val; },
+            },
+            {
+              name: 'includeWeeklyOffHolidayWork',
+              label: 'Include Weekend/Holiday OT',
+              type: 'toggle',
+              colSpan: 1,
+              value: compOffValues?.includeWeeklyOffHolidayWork ?? false,
+              hint: 'OT worked on a weekly-off or holiday banks as comp-off instead of (or in addition to) cash.',
+              onChange: (val: any) => { this.manualOvertimeData.includeWeeklyOffHolidayWork = val; },
+            },
+            {
+              name: 'includeFixedOT',
+              label: 'Include Fixed OT',
+              type: 'toggle',
+              colSpan: 1,
+              value: compOffValues?.includeFixedOT ?? false,
+              hint: 'Fixed OT (auto-approved, no daily approval) banks entirely as comp-off instead of being paid in cash. Turns off Fixed OT\'s cash payout at salary time for this branch.',
+              onChange: (val: any) => { this.manualOvertimeData.includeFixedOT = val; },
+            },
+            {
+              name: 'compOffMaxBalanceDays',
+              label: 'Max Balance (Days)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'Optional - leave blank for no cap',
+              value: compOffValues?.maxBalanceDays ?? '',
+              onChange: (val: any) => { this.manualOvertimeData.compOffMaxBalanceDays = val; },
+            },
+            {
+              name: 'compOffRedemptionRequiresApproval',
+              label: 'Redemption Requires Approval',
+              type: 'toggle',
+              colSpan: 1,
+              value: compOffValues?.redemptionRequiresApproval ?? true,
+              onChange: (val: any) => { this.manualOvertimeData.compOffRedemptionRequiresApproval = val; },
+            },
+            {
+              name: 'compOffCarryForwardMode',
+              label: 'Carry Forward',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Next Month', value: 'NextMonth' },
+                { label: 'Next Leave Year', value: 'NextLeaveYear' },
+              ],
+              value: compOffValues?.carryForwardMode || 'NextMonth',
+              onChange: (val: any) => { this.manualOvertimeData.compOffCarryForwardMode = val; },
+            },
+            {
+              name: 'compOffCarryForwardMaxDays',
+              label: 'Carry-Forward Cap (Days)',
+              type: 'number',
+              colSpan: 1,
+              placeholder: 'Optional - leave blank for no cap',
+              value: compOffValues?.carryForwardMaxDays ?? '',
+              onChange: (val: any) => { this.manualOvertimeData.compOffCarryForwardMaxDays = val; },
+            },
+            {
+              name: 'compOffLapseAction',
+              label: 'On Lapse',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Forfeit', value: 'Forfeit' },
+                { label: 'Encash', value: 'Encash' },
+                { label: 'Convert to Leave', value: 'ConvertToLeave' },
+              ],
+              value: compOffValues?.lapseAction || 'Forfeit',
+              onChange: (val: any) => { this.manualOvertimeData.compOffLapseAction = val; },
             },
           ],
         },
@@ -1752,9 +1888,10 @@ export class BranchDetailsComponent implements OnInit {
     forkJoin({
       main: this.reposotory.get(`api/company-branch/GetBranchOvertimeSetting?branchId=${this.companyBranchId}`).pipe(catchError(() => of(null))),
       otBank: this.reposotory.get(`api/AttendenceSource/GetOvertimeBankSettings?branchID=${this.companyBranchId}`).pipe(catchError(() => of(null))),
+      compOff: this.reposotory.get(`api/AttendenceSource/GetCompOffSettings?branchID=${this.companyBranchId}`).pipe(catchError(() => of(null))),
       leaveTypes: this.reposotory.get('api/AttendenceSource/GetLeaveMasters').pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ main, otBank, leaveTypes }: any) => {
+      next: ({ main, otBank, compOff, leaveTypes }: any) => {
         const emptyGuid = '00000000-0000-0000-0000-000000000000';
         this.leaveTypeOptions = (leaveTypes || [])
           .filter((lt: any) => !lt.branchId || lt.branchId === emptyGuid || lt.branchId === this.companyBranchId)
@@ -1763,8 +1900,11 @@ export class BranchDetailsComponent implements OnInit {
         const otBankSetting = otBank && otBank.length > 0 ? otBank[0] : null;
         this.overtimeBankSettingId = otBankSetting?.overtimeBankSettingID || otBankSetting?.OvertimeBankSettingID || null;
 
+        const compOffSetting = compOff && compOff.length > 0 ? compOff[0] : null;
+        this.compOffSettingId = compOffSetting?.compOffSettingID || compOffSetting?.CompOffSettingID || null;
+
         const overtimeData = main && main.length > 0 ? main[0] : null;
-        this.initializeOvertimeConfig(overtimeData, otBankSetting);
+        this.initializeOvertimeConfig(overtimeData, otBankSetting, compOffSetting);
         this.overtimeDataLoaded = true;
 
         // Fetch ALMS OT ID for sync
@@ -1835,6 +1975,8 @@ export class BranchDetailsComponent implements OnInit {
       FixedOTRateMultiplierBase: data.isFixedOTAllowed ? (data.fixedOTRateBasis === 'Gross' ? 'Gross' : 'BasicDA') : null,
       FixedOTRate: data.isFixedOTAllowed ? (parseFloat(String(data.fixedOTRate)) || null) : null,
       IsDynamicOTAllowed: !!data.isDynamicOTAllowed,
+      IsFixedOTMultipleMode: !!data.isFixedOTMultipleMode,
+      AllowLateArrivalAdjustment: !!data.allowLateArrivalAdjustment,
     };
 
     const isUpdate = !!this.overtimeId;
@@ -1959,6 +2101,9 @@ export class BranchDetailsComponent implements OnInit {
         check('Fixed OT Daily Hours', expected.FixedOTDailyHours, saved.fixedOTDailyHours);
         check('Fixed OT Rate', expected.FixedOTRate, saved.fixedOTRate);
         check('Dynamic OT Allowed', expected.IsDynamicOTAllowed, saved.isDynamicOTAllowed);
+        check('Fixed OT in Multiples', expected.IsFixedOTMultipleMode, saved.isFixedOTMultipleMode);
+        check('Adjust OT for Late Arrival', expected.AllowLateArrivalAdjustment, saved.allowLateArrivalAdjustment);
+        check('OT Eligibility (minutes)', expected.BranchOTHoursRule, saved.branchOTHoursRule);
 
         if (mismatches.length > 0) {
           this.notificationService.showError(
@@ -2729,6 +2874,10 @@ export class BranchDetailsComponent implements OnInit {
     ];
     const missing = requiredFields.find(f => {
       const num = parseFloat(String(d[f.key]));
+      // OT Eligibility (minutes) is the minimum-OT-to-qualify gate - 0 is a
+      // valid, meaningful value here ("no minimum"), unlike the other fields
+      // in this list where 0 would be nonsensical.
+      if (f.key === 'overtimeConfiguration') return isNaN(num) || num < 0;
       return isNaN(num) || num <= 0;
     });
     if (missing) {
@@ -2772,8 +2921,25 @@ export class BranchDetailsComponent implements OnInit {
       }
     }
 
+    // Comp-off's trigger/unit fields are always required - they have defaults
+    // (90 min / 0.25 day) even when both Include toggles are off, since the
+    // setting row can still be created ahead of a branch opting in later.
+    const compOffFields: { key: string; label: string }[] = [
+      { key: 'triggerMinutes', label: 'Minutes per Comp-Off Unit' },
+      { key: 'quarterValueDays', label: 'Days Credited per Unit' },
+    ];
+    const missingCompOff = compOffFields.find(f => {
+      const num = parseFloat(String(d[f.key]));
+      return isNaN(num) || num <= 0;
+    });
+    if (missingCompOff) {
+      this.notificationService.showError(`${missingCompOff.label} is required.`);
+      return;
+    }
+
     this.onOvertimeFormSubmit(d, this.overtimeId);
     this.saveOvertimeBankSetting(d);
+    this.saveCompOffSetting(d);
   }
 
   // OT Bank is a separate, ALMS-only table (no HRMSAuthZ/CAB fan-out needed) -
@@ -2811,6 +2977,45 @@ export class BranchDetailsComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.notificationService.showError(
           err.error?.message || err.error?.Message || 'Error saving OT Bank setting'
+        );
+      },
+    });
+  }
+
+  // Comp-Off is also a separate, ALMS-only table (no HRMSAuthZ/CAB fan-out
+  // needed) - saved independently of onOvertimeFormSubmit()'s fan-out, same
+  // pattern as saveOvertimeBankSetting above.
+  saveCompOffSetting(d: any): void {
+    const payload: any = {
+      CompanyBranchId: this.companyBranchId,
+      CompOffSettingID: this.compOffSettingId || undefined,
+      TriggerMinutes: parseInt(String(d.triggerMinutes), 10) || 90,
+      QuarterValueDays: parseFloat(String(d.quarterValueDays)) || 0.25,
+      QuartersForHalfDay: 2,
+      QuartersForFullDay: 4,
+      IncludeWeeklyOffHolidayWork: !!d.includeWeeklyOffHolidayWork,
+      IncludeFixedOT: !!d.includeFixedOT,
+      MaxBalanceDays: d.compOffMaxBalanceDays ? (parseFloat(String(d.compOffMaxBalanceDays)) || null) : null,
+      RedemptionRequiresApproval: d.compOffRedemptionRequiresApproval !== false,
+      CarryForwardMode: d.compOffCarryForwardMode || 'NextMonth',
+      CarryForwardMaxDays: d.compOffCarryForwardMaxDays ? (parseFloat(String(d.compOffCarryForwardMaxDays)) || null) : null,
+      LapseAction: d.compOffLapseAction || 'Forfeit',
+      Status: 1,
+    };
+
+    const isUpdate = !!this.compOffSettingId;
+    const apiCall = isUpdate
+      ? this.reposotory.update('api/AttendenceSource/UpdateCompOffSetting', payload)
+      : this.reposotory.post('api/AttendenceSource/CreateCompOffSetting', payload);
+
+    apiCall.subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`Comp-Off setting ${isUpdate ? 'updated' : 'saved'} successfully`);
+        this.getBranchOT();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.notificationService.showError(
+          err.error?.message || err.error?.Message || 'Error saving Comp-Off setting'
         );
       },
     });

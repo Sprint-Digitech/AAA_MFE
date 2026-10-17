@@ -1,8 +1,17 @@
 <!-- Admin/HR Setup View -->
 <ng-container *ngIf="isAdminOrHR">
 <div class="welcome-container">
-  <h1>Welcome to Fovestta Payroll</h1>
-  <p><b>Set up your organisation before you run your first payroll.</b></p>
+  <div class="welcome-text">
+    <span class="eyebrow"><mat-icon>rocket_launch</mat-icon> Getting started</span>
+    <h1>Welcome to Fovestta Payroll</h1>
+    <p>Set up your organisation before you run your first payroll.</p>
+  </div>
+  <div class="welcome-ring" [style.--p]="progress">
+    <div class="ring-inner">
+      <b>{{ completedSteps }}/{{ totalSteps }}</b>
+      <small>steps done</small>
+    </div>
+  </div>
 </div>
 
 <div class="content-wrapper">
@@ -144,6 +153,11 @@
 <!-- Employee/Manager Dashboard View -->
 <ng-container *ngIf="!isAdminOrHR">
 <div class="employee-dashboard-container">
+  <div class="employee-hero">
+    <span class="eyebrow"><mat-icon>waving_hand</mat-icon> Welcome back</span>
+    <h1>{{ userName }}</h1>
+    <p>{{ designation }}<ng-container *ngIf="department"> · {{ department }}</ng-container></p>
+  </div>
   <div class="dashboard-content">
     <!-- Profile Card -->
     <mat-card class="profile-card">

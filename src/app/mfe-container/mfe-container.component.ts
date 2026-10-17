@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../_helpers/environment';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { ThemeService } from '../shared/services/theme.service';
 
 @Component({
   selector: 'app-mfe-container',
@@ -36,10 +37,13 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
   mfeUrl: string = '';
 
   private subscription = new Subscription();
+  // The iframe content themes itself, so the shell must not invert this area.
+  private releaseNative?: () => void;
 
-  constructor(private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer) { }
+  constructor(private route: ActivatedRoute, private router: Router, private sanitizer: DomSanitizer, private themeService: ThemeService) { }
 
   ngOnInit() {
+    this.releaseNative = this.themeService.claimNative();
     // Listen for requests from the MFE (e.g., requesting the token)
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'REQUEST_TOKEN') {
@@ -66,6 +70,7 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.releaseNative?.();
     this.subscription.unsubscribe();
   }
 
@@ -77,7 +82,10 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
   onIframeLoad() {
     console.log('[MfeContainer] Iframe loaded, sending token...');
     // Small delay to ensure the MFE has initialized its message listener
-    setTimeout(() => this.sendTokenToMfe(), 500);
+    setTimeout(() => {
+      this.sendTokenToMfe();
+      this.themeService.broadcast();
+    }, 500);
   }
 
   private sendTokenToMfe() {
@@ -117,7 +125,10 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
     const isLocal = window.location.hostname === 'localhost';
     const currentPath = window.location.pathname;
     const currentHash = window.location.hash;
-    const currentSearch = window.location.search;
+    // In hash routing the query lives inside the hash (#/path?x=1), not in location.search;
+    // keep it so MFE screens opened with parameters (e.g. the CTC screen in offer mode) receive them.
+    const hashQueryAt = currentHash.indexOf('?');
+    const currentSearch = window.location.search || (hashQueryAt >= 0 ? currentHash.substring(hashQueryAt) : '');
     let targetUrl = mfeBaseUrl;
 
     // Define potential shell bases to strip

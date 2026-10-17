@@ -1,3 +1,5 @@
+import { DestroyRef as FvDestroyRef, inject as fvInject } from '@angular/core';
+import { ThemeService } from '../../shared/services/theme.service';
 import { Component } from '@angular/core';
 import {
   FormBuilder,
@@ -44,6 +46,13 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./forgot-password.component.scss'],
 })
 export class ForgotPasswordComponent {
+  // Designed dark-glass page: keep the runtime dark-mode engine off it.
+  private readonly releaseNative = (() => {
+    const release = fvInject(ThemeService).claimNative();
+    fvInject(FvDestroyRef).onDestroy(release);
+    return release;
+  })();
+
   backgroundImage =
     'linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url(assets/img/teamless.jpg)';
   forgotPasswordForm: FormGroup;

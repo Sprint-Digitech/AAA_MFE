@@ -2,7 +2,7 @@
 
   <button type="button" class="nb-trigger" (click)="toggleDropdown($event)">
     <mat-icon class="nb-icon">notifications</mat-icon>
-    <span class="nb-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+    <span class="nb-badge" *ngIf="badgeCount > 0">{{ badgeCount > 9 ? '9+' : badgeCount }}</span>
   </button>
 
   <div class="nb-dropdown" *ngIf="showDropdown" (click)="$event.stopPropagation()">
@@ -41,7 +41,17 @@
 
     <!-- Notification list -->
     <div class="nb-list" *ngIf="!showPreferences">
-      <div class="nb-empty" *ngIf="!loading && notifications.length === 0">
+      <!-- Live: Progress Tracker items waiting on this user's sign-off -->
+      <button type="button" class="nb-item nb-item--pinned" *ngIf="pendingApprovals > 0" (click)="openApprovals($event)">
+        <div class="nb-item__icon"><mat-icon>fact_check</mat-icon></div>
+        <div class="nb-item__body">
+          <span class="nb-item__title">{{ pendingApprovals }} approval{{ pendingApprovals === 1 ? '' : 's' }} waiting for you</span>
+          <span class="nb-item__text">KPI updates, goal progress and tasks marked done in Progress Tracker</span>
+          <span class="nb-item__time">Open approvals →</span>
+        </div>
+      </button>
+
+      <div class="nb-empty" *ngIf="!loading && notifications.length === 0 && pendingApprovals === 0">
         <mat-icon>notifications_off</mat-icon>
         <p>No notifications yet</p>
       </div>

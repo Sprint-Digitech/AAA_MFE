@@ -1,3 +1,5 @@
+import { DestroyRef as FvDestroyRef, inject as fvInject } from '@angular/core';
+import { ThemeService } from '../../shared/services/theme.service';
 import {
   HttpErrorResponse,
   HttpClient,
@@ -107,6 +109,13 @@ import { ValidationSchema } from '@fovestta2/validation-engine';
   styleUrl: './register-form.component.scss',
 })
 export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
+  // Designed dark-glass page: keep the runtime dark-mode engine off it.
+  private readonly releaseNative = (() => {
+    const release = fvInject(ThemeService).claimNative();
+    fvInject(FvDestroyRef).onDestroy(release);
+    return release;
+  })();
+
   accountFormGroup!: FormGroup;
   companyFormGroup!: FormGroup;
   packageFormGroup!: FormGroup;

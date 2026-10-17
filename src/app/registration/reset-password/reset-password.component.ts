@@ -1,3 +1,5 @@
+import { DestroyRef as FvDestroyRef, inject as fvInject } from '@angular/core';
+import { ThemeService } from '../../shared/services/theme.service';
 import { Component } from '@angular/core';
 import {
   FormGroup,
@@ -34,6 +36,13 @@ import { FvEntryFieldComponent, FvEmailFieldComponent, FvPasswordFieldComponent 
   styleUrls: ['./reset-password.component.scss'],
 })
 export class ResetPasswordComponent {
+  // Designed dark-glass page: keep the runtime dark-mode engine off it.
+  private readonly releaseNative = (() => {
+    const release = fvInject(ThemeService).claimNative();
+    fvInject(FvDestroyRef).onDestroy(release);
+    return release;
+  })();
+
   emailSchema: ValidationSchema = {
     controlType: 'EntryField',
     errorPriority: ['required', 'regex'],
@@ -155,7 +164,7 @@ export class ResetPasswordComponent {
 
     const storedGoogleUser = localStorage.getItem('token');
     if (storedGoogleUser) {
-      this.googleuser = JSON.parse(storedGoogleUser);
+      try { this.googleuser = JSON.parse(storedGoogleUser); } catch { this.googleuser = storedGoogleUser; }
       this.googlelogin = this.googleuser;
     } else {
       this.googlelogin = null;

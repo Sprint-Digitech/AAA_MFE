@@ -84,7 +84,12 @@ export class ErrorInterceptor implements HttpInterceptor {
           'ShiftManagment',
           'AttendenceSource',
           'AttendanceSource',
-          'EmployeeBasicDetail'
+          'EmployeeBasicDetail',
+          // Insights dashboard: Progress Tracker endpoints are admin/HR-only and may be offline;
+          // the dashboard shows its own unavailable state instead of a toast.
+          '/api/Dashboard/',
+          '/api/Task',
+          '/api/Project'
         ];
 
         // Skip error notifications for image assets (404s on images are common and not critical)

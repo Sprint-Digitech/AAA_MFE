@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { RouterOutlet, RouterLink, Router, NavigationEnd, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +22,25 @@ import { NotificationBellComponent } from './shared/components/notification-bell
 import { ChatIconComponent, ChatWidgetConfig, EmployeeContact } from '@fovestta2/chat-widget-fovestta';
 import { EnvironmentUrlService } from './shared/services/environment-url.service';
 import { SecureTokenStorageService } from './shared/services/secure-token-storage.service';
+import { ThemeService } from './shared/services/theme.service';
+import { UploadFxService } from './shared/services/upload-fx.service';
+import { TableFilterService } from './shared/services/table-filter.service';
+
+interface NavLink {
+  label: string;
+  path: string;
+  external?: boolean;
+  /** Menu path the user must already be granted (defaults to path). */
+  requires?: string;
+}
+
+// Dashboards surfaced in the top navbar - each only shows when the user's role menus
+// already grant that path, so the navbar never exposes a screen the sidebar wouldn't.
+const NAV_DASHBOARDS: NavLink[] = [
+  { label: 'Salary', path: '/salary/salaryDashboard' },
+  { label: 'Attendance', path: '/attendance/team-dashboard' },
+  { label: 'TDS', path: '/TDS/insights', requires: '/TDS/dashboard' },
+];
 
 
 @Component({
@@ -94,6 +113,15 @@ export class AppComponent implements OnInit, OnDestroy {
   chatContacts: EmployeeContact[] = [];
 
 
+  // Top navbar
+  @ViewChild('globalSearchInput') globalSearchInput?: ElementRef<HTMLInputElement>;
+  isSearchExpanded = false;
+  navLinks: NavLink[] = [];
+  // The Insights dashboard shows company-wide salary data; the SalaryDashboard API itself
+  // only checks for a logged-in user, so gate it on the same menu grant as the Salary
+  // Dashboard screen.
+  canSeeInsights = false;
+
   menuIcons: { [key: string]: string } = {
     Employee: 'badge',
     Reports: 'add_chart',
@@ -109,10 +137,14 @@ export class AppComponent implements OnInit, OnDestroy {
     Gratuity: 'work_history',
     Arrear: 'history',
     Dashboard: 'dashboard',
-    'Go to Progress': 'speed'
+    'Go to Progress': 'speed',
+    'Progress Tracker': 'insights'
   };
 
   constructor(private router: Router,
+    private themeService: ThemeService,
+    private uploadFx: UploadFxService,
+    private tableFilter: TableFilterService,
     private cdr: ChangeDetectorRef,
     private globalSearchService: GlobalSearchService,
     private employeeService: EmployeeService,
@@ -160,6 +192,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Animated file pill / Uploading… / Completed states on every upload screen.
+    this.uploadFx.start();
+    this.tableFilter.start();
     // Listen for messages from parent shell (sync token/user)
     window.addEventListener('message', (event) => {
       if (!event.data) return;
@@ -213,6 +248,14 @@ export class AppComponent implements OnInit, OnDestroy {
       // matter how far the user navigated inside the iframe. Each MFE already posts
       // ROUTER_NAVIGATED on its own route changes (see Employee_MFE's app.component.ts) — piggyback
       // on that to clear the search here too, same as the shell's own NavigationEnd handler does.
+      // Lets one embedded MFE open a screen that lives in another MFE (e.g. Employee_MFE's offer
+      // page opening Salary_MFE's CTC screen). Same-origin frames only, and only app-relative paths.
+      if (event.data.type === 'SHELL_NAVIGATE' && event.origin === window.location.origin
+          && typeof event.data.url === 'string' && event.data.url.startsWith('/') && !event.data.url.startsWith('//')) {
+        this.router.navigateByUrl(event.data.url);
+        return;
+      }
+
       if (event.data.type === 'ROUTER_NAVIGATED') {
         this.globalSearchTerm = '';
         this.isGlobalSearchOpen = false;
@@ -238,6 +281,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Subscribe to menu data so sidebar updates whenever menus change
     this.menuSub = this.accountService.menuData$.subscribe((menus) => {
       this.menus = menus || [];
+      this.refreshNavLinks();
       this.cdr.markForCheck();
     });
 
@@ -267,19 +311,75 @@ export class AppComponent implements OnInit, OnDestroy {
       this.menus = JSON.parse(storedMenus);
     }
 
-    if (this.menus && !this.menus.find(m => m.menuDisplayName === 'Go to Progress')) {
-      this.menus.splice(1, 0, {
-        menuDisplayName: 'Go to Progress',
-        menuPath: '', // Empty path as it opens externally
-        submenu: null
-      });
-    }
-
     if (storedUser) {
       this.user = JSON.parse(storedUser);
       this.setUserDetails(this.user);
       this.syncCompanyBrandingFromUser(this.user);
     }
+    this.refreshNavLinks();
+  }
+
+  private refreshNavLinks(): void {
+    const granted = new Set<string>();
+    const collect = (items: any[] | null | undefined) => {
+      (items || []).forEach((m: any) => {
+        if (typeof m?.menuPath === 'string' && m.menuPath) granted.add(m.menuPath.toLowerCase());
+        collect(m?.submenu);
+      });
+    };
+    collect(this.menus);
+
+    this.canSeeInsights = granted.has('/salary/salarydashboard');
+    const links: NavLink[] = [{ label: 'Overview', path: '/initial-setup' }];
+    if (this.canSeeInsights) links.push({ label: 'Insights', path: '/insights' });
+    NAV_DASHBOARDS.forEach((l) => {
+      if (granted.has((l.requires || l.path).toLowerCase())) links.push(l);
+    });
+    // Progress Tracker now comes from the user's HRMSAuthZ menus (/progress/...) and opens inside the shell.
+    if ([...granted].some((p) => p.startsWith('/progress'))) {
+      links.push({ label: 'Progress', path: '/progress/dashboard/employee' });
+    }
+    this.navLinks = links;
+  }
+
+  // Theme
+  get isDarkTheme(): boolean {
+    return this.themeService.isDark;
+  }
+
+  toggleTheme(event: Event): void {
+    event.stopPropagation();
+    this.themeService.toggle();
+  }
+
+  // Expanding navbar search
+  expandSearch(event: Event): void {
+    event.stopPropagation();
+    this.isSearchExpanded = true;
+    setTimeout(() => this.globalSearchInput?.nativeElement.focus(), 0);
+  }
+
+  collapseSearch(): void {
+    this.isSearchExpanded = false;
+    this.globalSearchInput?.nativeElement.blur();
+  }
+
+  onSearchBlur(): void {
+    if (!this.globalSearchTerm) this.isSearchExpanded = false;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key?.toLowerCase() === 'k' && !this.isLoginPage) {
+      event.preventDefault();
+      this.isSearchExpanded = true;
+      setTimeout(() => this.globalSearchInput?.nativeElement.focus(), 0);
+    }
+  }
+
+  // Flyout sits just right of the edge-docked rail (rail width + 8px gap).
+  get submenuLeft(): number {
+    return this.isExpanded ? 204 : 72;
   }
   get userInitials(): string {
     const source = (this.userDetails.name || '').trim();
@@ -518,6 +618,8 @@ export class AppComponent implements OnInit, OnDestroy {
     // Clear ALL storage
     sessionStorage.clear();
     localStorage.clear();
+    // Theme is a device preference, not session data - keep it across logout.
+    this.themeService.persist();
 
     // Reset all state
     this.setUserDetails(null);
@@ -640,36 +742,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onMenuClick(event: Event, menu: any) {
     event.stopPropagation();
-    if (!this.isExpanded) {
-      this.isExpanded = true;
-      this.isSidebarCollapsed = false;
-    }
+    // A collapsed rail stays collapsed - menus with children open their flyout beside it.
 
     if (menu.menuDisplayName === 'Go to Progress') {
-      event.preventDefault();
-      const isLocal = window.location.hostname === 'localhost';
-      // const progressMfe = isLocal ? 'http://localhost:4205' : 'https://test.fovestta.com/ProgressTracker/dist';
-      const progressMfe = isLocal ? 'http://localhost:4205' : 'https://localhost:7274/auth/sdapi/api/Account/Login';
-      let url = `${progressMfe}/#/dashboard/employee`;
-      const token = sessionStorage.getItem('token');
-      if (token) {
-        let parsedToken = token;
-        if (token.startsWith('{')) {
-          parsedToken = JSON.parse(token);
-        } else if (token.startsWith('"') && token.endsWith('"')) {
-          parsedToken = token.substring(1, token.length - 1);
-        }
-        url += `?token=${parsedToken}`;
-      }
-      url += `&userName=${encodeURIComponent(this.userDetails.name || '')}`;
-      url += `&userRole=${encodeURIComponent(this.userDetails.role || '')}`;
-      url += `&userEmail=${encodeURIComponent(this.userDetails.email || '')}`;
-
-      const normalizedUser = this.normalizeEmployee(this.user);
-      const employeeId = normalizedUser.employeeId || this.user?.userId || '';
-      url += `&employeeId=${encodeURIComponent(employeeId)}`;
-
-      window.open(url, '_blank');
+      this.openProgress(event);
       return;
     }
 
@@ -685,17 +761,37 @@ export class AppComponent implements OnInit, OnDestroy {
         const target = event.currentTarget as HTMLElement;
         const rect = target.getBoundingClientRect();
 
-        // Use direct property binding (subtracting 12px for internal padding alignment)
+        // Align with the clicked item, then keep the whole flyout inside the window:
+        // long menus (e.g. Reports) opened near the bottom used to run off-screen.
         this.currentSubmenuTop = rect.top - 12;
+        setTimeout(() => this.fitSubmenu(), 0);
       }
     } else {
       this.openSubmenus.clear();
     }
   }
 
+  /** Legacy entry point: Progress Tracker is embedded in the shell (route /progress/...), never opened in a new tab with the token in the URL. */
+  openProgress(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeSubmenus();
+    this.router.navigate(['/progress/dashboard/employee']);
+  }
+
   onMainContainerClick(): void {
     this.closeSubmenus();
     this.showUserDropdown = false;
+  }
+
+  private fitSubmenu(): void {
+    const panel = document.querySelector('.sidebar .submenu') as HTMLElement | null;
+    if (!panel) return;
+    const margin = 12;
+    const height = Math.min(panel.scrollHeight, window.innerHeight - margin * 2);
+    const maxTop = window.innerHeight - height - margin;
+    this.currentSubmenuTop = Math.max(margin, Math.min(this.currentSubmenuTop, maxTop));
+    this.cdr.detectChanges();
   }
 
   closeSubmenus() {

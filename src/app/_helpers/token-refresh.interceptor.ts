@@ -10,6 +10,7 @@ import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { TokenRefreshService } from '../shared/services/token-refresh.service';
 import { AccountService } from '../shared/services/account.service';
+import { SecureTokenStorageService } from '../shared/services/secure-token-storage.service';
 
 @Injectable()
 export class TokenRefreshInterceptor implements HttpInterceptor {
@@ -18,12 +19,20 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
 
   constructor(
     private tokenRefreshService: TokenRefreshService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private secureTokenStorage: SecureTokenStorageService
   ) { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Skip token refresh for authentication endpoints
     if (this.isAuthEndpoint(request.url)) {
+      return next.handle(request);
+    }
+
+    // No session at all (public pages like #/reset and #/forgot-password): the app shell still
+    // fires GetCompany on startup, and its 401 just means "not signed in". There's nothing to
+    // refresh, and logout() would navigate to /login - kicking the user off the reset link.
+    if (!this.hasSession()) {
       return next.handle(request);
     }
 
@@ -40,6 +49,10 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
     );
   }
 
+  private hasSession(): boolean {
+    return !!(this.secureTokenStorage.getToken() || sessionStorage.getItem('token'));
+  }
+
   /**
    * Check if request is to an authentication endpoint
    */
@@ -48,7 +61,9 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
     return normalizedUrl.includes('/api/account/login') ||
       normalizedUrl.includes('/api/account/refreshtoken') ||
       normalizedUrl.includes('/api/account/google-login') ||
-      normalizedUrl.includes('/api/account/register');
+      normalizedUrl.includes('/api/account/register') ||
+      // SSO sign-in: a 401 means a bad/expired one-time code, not an expired session.
+      normalizedUrl.includes('/api/sso/');
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {

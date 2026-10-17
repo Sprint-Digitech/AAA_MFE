@@ -497,7 +497,11 @@ export class UserAccessManagementComponent implements OnInit, OnDestroy {
         this.closeRoleEditor();
         this.cdr.detectChanges();
       },
-      error: () => { this.notif.showError('Failed to update roles.'); this.isSavingRoles = false; }
+      error: (err) => {
+        const msg = typeof err?.error === 'string' ? err.error : err?.error?.message;
+        this.notif.showError(msg || 'Failed to update roles.');
+        this.isSavingRoles = false;
+      }
     });
   }
 

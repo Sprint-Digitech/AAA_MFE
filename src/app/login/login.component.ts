@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import {
     FormBuilder,
     FormGroup,
@@ -39,6 +39,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { CommonModule } from '@angular/common';
 import { RequiredNemoComponent } from 'required-nemo-fovestta';
 import { PasswordNemoComponent } from 'password-nemo';
+import { ThemeService } from '../shared/services/theme.service';
+import { OrbitCodeComponent, OrbitCodeState } from '../shared/components/orbit-code/orbit-code.component';
 
 @Component({
     selector: 'app-login',
@@ -55,6 +57,7 @@ import { PasswordNemoComponent } from 'password-nemo';
         MatDatepickerModule,
         MatNativeDateModule,
         MatButtonModule,
+        OrbitCodeComponent,
         MatRadioModule,
         MatIconModule,
         MatSlideToggleModule,
@@ -75,7 +78,25 @@ export class LoginComponent implements OnInit {
     loginForm: FormGroup;
     user: SocialUser | null = null;
     hidePassword = true;
-    loading = false;
+    /** Visual sign-in progress: 1 = security check, 2 = authenticating, 3 = signed in. */
+    authStage = 0;
+    private authStartedAt = 0;
+    private authSucceeded = false;
+    private _loading = false;
+    get loading(): boolean {
+        return this._loading;
+    }
+    // Any path that stops loading without a successful sign-in resets the steps.
+    set loading(value: boolean) {
+        this._loading = value;
+        if (!value && !this.authSucceeded) this.authStage = 0;
+    }
+    // Designed dark-glass page: keep the runtime dark-mode engine off it.
+    private readonly releaseNative = (() => {
+        const release = inject(ThemeService).claimNative();
+        inject(DestroyRef).onDestroy(release);
+        return release;
+    })();
     backgroundImage: string =
         "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('assets/img/teamless.jpg')";
     submitted = false;
@@ -88,6 +109,12 @@ export class LoginComponent implements OnInit {
     twoFactorEmail = '';
     otpCode = '';
     verifyingOtp = false;
+    /** Drives the orbit code animation (success comes from authStage === 3). */
+    otpVisualState: OrbitCodeState = 'idle';
+
+    // Single sign-on: offered once the typed email belongs to a company that set it up.
+    sso: { available: boolean; required: boolean; displayName?: string } | null = null;
+    private ssoCheckedFor = '';
 
     constructor(
         private formBuilder: FormBuilder,
@@ -134,8 +161,70 @@ export class LoginComponent implements OnInit {
         return this.loginForm.controls;
     }
 
+    /** Called when the email field loses focus: asks whether this person's company uses SSO. */
+    checkSso(): void {
+        const email = (this.loginForm.value.email || '').trim().toLowerCase();
+        if (!email || this.loginForm.get('email')?.invalid || email === this.ssoCheckedFor) return;
+        this.ssoCheckedFor = email;
+        this.accountService.ssoDiscover(email).pipe(first()).subscribe({
+            next: (r) => (this.sso = r?.available ? r : null),
+            error: () => (this.sso = null),
+        });
+    }
+
+    signInWithSso(): void {
+        const email = (this.loginForm.value.email || '').trim();
+        if (!email) return;
+        this.loading = true;
+        // Identity providers refuse to load inside frames, so leave any shell iframe.
+        const target = window.top && window.top !== window ? window.top : window;
+        try {
+            target.location.href = this.accountService.ssoStartUrl(email);
+        } catch {
+            window.location.href = this.accountService.ssoStartUrl(email);
+        }
+    }
+
+    /** Back from the identity provider: #/login?sso_code=… or #/login?sso_error=… */
+    private handleSsoReturn(): boolean {
+        // main.ts stashes the SSO result before Angular starts (the query string can be lost to an early
+        // redirect); the query params are the fallback.
+        const stashed: { code?: string | null; error?: string | null } = (window as any).__fvSsoReturn || {};
+        (window as any).__fvSsoReturn = undefined;
+        const params = this.route.snapshot.queryParamMap;
+        const code = stashed.code || params.get('sso_code');
+        const ssoError = stashed.error || params.get('sso_error');
+        if (!code && !ssoError) return false;
+        // Drop the code from the address bar straight away. history.replaceState, not router.navigate: a router
+        // navigation started here (inside the first navigation) recreated this component on prod, losing the error.
+        try {
+            window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search + '#/login');
+        } catch { /* cosmetic only */ }
+        if (ssoError) {
+            this.error = ssoError;
+            this.notificationService.showError(ssoError);
+            return true;
+        }
+        this.loading = true;
+        this.startAuthStages();
+        this.accountService.ssoExchange(code!).pipe(first()).subscribe({
+            next: (loginResponse) => this.completeLogin(loginResponse),
+            error: (err) => {
+                // Not handleError: it turns every 401 into "Invalid User ID or Password", which is wrong after SSO.
+                const serverMsg = typeof err?.error?.errors === 'string' ? err.error.errors : '';
+                const msg = serverMsg ? this.toSafeErrorMessage(serverMsg, 'Single sign-on failed. Please try again.')
+                    : this.handleError(err, 'Single sign-on failed. Please try again.');
+                this.error = msg;
+                this.notificationService.showError(msg);
+                this.loading = false;
+            },
+        });
+        return true;
+    }
+
     ngOnInit(): void {
         this.loaderService.forceHide(); // Ensure no blocking overlay
+        this.handleSsoReturn();
         this.authService.authState.subscribe((user) => {
             if (user && user.idToken) {
                 this.accountService.GoogleLogin(user.idToken).subscribe(
@@ -260,176 +349,13 @@ export class LoginComponent implements OnInit {
             rememberMe: this.loginForm.value.rememberMe,
         };
         this.loading = true;
+        this.startAuthStages();
 
         this.accountService
             .login('api/Account/Login', user)
             .pipe(first())
             .subscribe({
-                next: (loginResponse) => {
-                    // Handle 2FA — show OTP entry form
-                    if (loginResponse?.requiresTwoFactor) {
-                        this.loading = false;
-                        this.requiresTwoFactor = true;
-                        this.twoFactorEmail = this.loginForm.value.email;
-                        this.notificationService.showSuccess('A verification code has been sent to your email.');
-                        return;
-                    }
-
-                    const email = loginResponse?.employee?.email;
-                    const tenantSchema = loginResponse?.employee?.tenantSchema;
-
-                    const svcType = (loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
-                    forkJoin({
-                        employeeLoginDetail: tenantSchema
-                            ? this.accountService.getEmployeeLoginDetail(email, tenantSchema).pipe(first())
-                            : this.accountService.logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`).pipe(first()),
-                        menus: (svcType !== 'WMS_USER' && tenantSchema)
-                            ? this.accountService.getMenusForUser(email, tenantSchema).pipe(first())
-                            : of([]),
-                        wmsPermissions: (svcType === 'WMS_USER' || svcType === 'BOTH') && tenantSchema
-                            ? this.accountService.getWmsPermissions(email, tenantSchema).pipe(first())
-                            : of(null),
-                        companyInfo: tenantSchema
-                            ? this.accountService.getCompanyInfoForTenant(tenantSchema).pipe(first(), catchError(() => of(null)))
-                            : of(null),
-                        branchInfo: tenantSchema
-                            ? this.accountService.getBranchesForTenant(tenantSchema).pipe(first(), catchError(() => of([])))
-                            : of([]),
-                    }).subscribe({
-                        next: (results) => {
-                            const userDetail = results.employeeLoginDetail;
-                            if (userDetail !== undefined) {
-                                console.log('--- USER DETAIL RECEIVED FROM SERVER:', userDetail);
-
-                                // GetCompany returns array of CompanyResponseFiledDto: { companyId, companyName, ... }
-                                const companyList: any[] = Array.isArray(results.companyInfo) ? results.companyInfo : (results.companyInfo ? [results.companyInfo] : []);
-                                // GetCompanyBranch returns array of CompanyBrachFildResponseDto: { id, companyBranchName, companyId, ... }
-                                const branches: any[] = results.branchInfo || [];
-
-                                // Extract branchId — fall back to company-branch API (field: id) if null/empty
-                                let branchId =
-                                    userDetail.companyBranchId ||
-                                    userDetail.branchID ||
-                                    userDetail.branchId ||
-                                    userDetail.BranchId ||
-                                    '';
-                                if (!branchId && branches.length === 1) {
-                                    branchId = branches[0].id || '';
-                                }
-
-                                // Extract companyId — branch DTO also has companyId as reliable fallback
-                                const companyId =
-                                    userDetail.companyId ||
-                                    userDetail.CompanyId ||
-                                    companyList[0]?.companyId ||
-                                    branches[0]?.companyId ||
-                                    '';
-
-                                // Resolve company and branch names
-                                const companyName =
-                                    userDetail.companyName ||
-                                    companyList[0]?.companyName ||
-                                    null;
-
-                                // Branch name field in DTO is: companyBranchName
-                                const matchedBranch = branchId ? branches.find((b: any) => b.id === branchId) : null;
-                                const branchName =
-                                    userDetail.branchName ||
-                                    matchedBranch?.companyBranchName ||
-                                    (branches.length === 1 ? branches[0].companyBranchName || null : null) ||
-                                    null;
-
-                                const employeeId = userDetail.employeId ?? userDetail.employeeId ?? userDetail.EmployeeId ?? null;
-                                const serviceType = (userDetail.serviceType || loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
-                                const isWmsOnly = serviceType === 'WMS_USER';
-                                const processedMenus = isWmsOnly ? [] : this.processMenus(results.menus ?? []);
-
-                                const finalUser = {
-                                    ...userDetail,
-                                    companyId: companyId,
-                                    companyName: companyName,
-                                    branchId: branchId,
-                                    branchID: branchId,
-                                    companyBranchId: branchId,
-                                    branchName: branchName,
-                                    employeId: employeeId,
-                                };
-
-                                console.log('--- FINAL PROCESSED USER:', finalUser);
-
-                                sessionStorage.setItem('menus', JSON.stringify(processedMenus));
-                                sessionStorage.setItem('user', JSON.stringify(finalUser));
-                                if (loginResponse?.employee?.tenantSchema) {
-                                    sessionStorage.setItem('tenantSchema', loginResponse.employee.tenantSchema);
-                                }
-                                this.accountService.setUser(finalUser);
-                                this.accountService.setMenuData(processedMenus);
-
-                                // WMS-only users: store WMS permissions and navigate to WMS app
-                                if (isWmsOnly) {
-                                    if (results.wmsPermissions) {
-                                        sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
-                                    }
-                                    if (window !== window.parent) {
-                                        window.parent.location.href = window.parent.location.origin + '/Gateway/dist/wms';
-                                    } else {
-                                        this.router.navigate(['/wms-dashboard'], { replaceUrl: true });
-                                    }
-                                    this.loading = false;
-                                    return;
-                                }
-
-                                // HRMS (or BOTH): store WMS permissions if present, then run initial-setup check
-                                if (results.wmsPermissions) {
-                                    sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
-                                }
-
-                                this.callInitialSetupStatus(branchId).subscribe({
-                                    next: (res: any) => {
-                                        if (Array.isArray(res)) {
-                                            // Admin user — no specific branch, GetStatus returned all statuses
-                                            this.router.navigate(['/company/admin-dashboard'], {
-                                                replaceUrl: true,
-                                            });
-                                            this.loading = false;
-                                        } else {
-                                            this.resolvePostLoginDestination(finalUser, res).subscribe((dest) => {
-                                                this.router.navigate([dest], { replaceUrl: true });
-                                                this.loading = false;
-                                            });
-                                        }
-                                    },
-                                    error: () => {
-                                        console.error('Error fetching setup status - defaulting to dashboard');
-                                        if (window !== window.parent) {
-                                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/dashboard';
-                                            this.loading = false;
-                                        } else {
-                                            this.resolvePostLoginDestination(finalUser, null).subscribe((dest) => {
-                                                this.router.navigate([dest], { replaceUrl: true });
-                                                this.loading = false;
-                                            });
-                                        }
-                                    },
-                                });
-                            } else {
-                                const msg = 'Invalid credentials!';
-                                this.error = msg;
-                                this.notificationService.showError(msg);
-                                this.loading = false;
-                            }
-                        },
-                        error: (detailError) => {
-                            const msg = this.handleError(
-                                detailError,
-                                'Failed to load user details.'
-                            );
-                            this.error = msg;
-                            this.notificationService.showError(msg);
-                            this.loading = false;
-                        },
-                    });
-                },
+                next: (loginResponse) => this.completeLogin(loginResponse),
                 error: (loginError) => {
                     const msg = this.handleError(
                         loginError,
@@ -442,12 +368,184 @@ export class LoginComponent implements OnInit {
             });
     }
 
+    /** Everything after the server accepted the sign-in (password or SSO): 2FA prompt, user details, menus, routing. */
+    private completeLogin(loginResponse: any): void {
+        // Handle 2FA — show OTP entry form
+        if (loginResponse?.requiresTwoFactor) {
+            this.loading = false;
+            this.requiresTwoFactor = true;
+            this.twoFactorEmail = this.loginForm.value.email;
+            this.notificationService.showSuccess('A verification code has been sent to your email.');
+            return;
+        }
+
+        const email = loginResponse?.employee?.email;
+        const tenantSchema = loginResponse?.employee?.tenantSchema;
+
+        const svcType = (loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
+        forkJoin({
+            employeeLoginDetail: tenantSchema
+                ? this.accountService.getEmployeeLoginDetail(email, tenantSchema).pipe(first())
+                : this.accountService.logindetail(`api/Account/GetEmployeeRoleDetail?email=${email}`).pipe(first()),
+            menus: (svcType !== 'WMS_USER' && tenantSchema)
+                ? this.accountService.getMenusForUser(email, tenantSchema).pipe(first())
+                : of([]),
+            wmsPermissions: (svcType === 'WMS_USER' || svcType === 'BOTH') && tenantSchema
+                ? this.accountService.getWmsPermissions(email, tenantSchema).pipe(first())
+                : of(null),
+            companyInfo: tenantSchema
+                ? this.accountService.getCompanyInfoForTenant(tenantSchema).pipe(first(), catchError(() => of(null)))
+                : of(null),
+            branchInfo: tenantSchema
+                ? this.accountService.getBranchesForTenant(tenantSchema).pipe(first(), catchError(() => of([])))
+                : of([]),
+        }).subscribe({
+            next: (results) => {
+                const userDetail = results.employeeLoginDetail;
+                if (userDetail !== undefined) {
+                    console.log('--- USER DETAIL RECEIVED FROM SERVER:', userDetail);
+
+                    // GetCompany returns array of CompanyResponseFiledDto: { companyId, companyName, ... }
+                    const companyList: any[] = Array.isArray(results.companyInfo) ? results.companyInfo : (results.companyInfo ? [results.companyInfo] : []);
+                    // GetCompanyBranch returns array of CompanyBrachFildResponseDto: { id, companyBranchName, companyId, ... }
+                    const branches: any[] = results.branchInfo || [];
+
+                    // Extract branchId — fall back to company-branch API (field: id) if null/empty
+                    let branchId =
+                        userDetail.companyBranchId ||
+                        userDetail.branchID ||
+                        userDetail.branchId ||
+                        userDetail.BranchId ||
+                        '';
+                    if (!branchId && branches.length === 1) {
+                        branchId = branches[0].id || '';
+                    }
+
+                    // Extract companyId — branch DTO also has companyId as reliable fallback
+                    const companyId =
+                        userDetail.companyId ||
+                        userDetail.CompanyId ||
+                        companyList[0]?.companyId ||
+                        branches[0]?.companyId ||
+                        '';
+
+                    // Resolve company and branch names
+                    const companyName =
+                        userDetail.companyName ||
+                        companyList[0]?.companyName ||
+                        null;
+
+                    // Branch name field in DTO is: companyBranchName
+                    const matchedBranch = branchId ? branches.find((b: any) => b.id === branchId) : null;
+                    const branchName =
+                        userDetail.branchName ||
+                        matchedBranch?.companyBranchName ||
+                        (branches.length === 1 ? branches[0].companyBranchName || null : null) ||
+                        null;
+
+                    const employeeId = userDetail.employeId ?? userDetail.employeeId ?? userDetail.EmployeeId ?? null;
+                    const serviceType = (userDetail.serviceType || loginResponse?.employee?.serviceType || 'HRMS_USER').toUpperCase();
+                    const isWmsOnly = serviceType === 'WMS_USER';
+                    const processedMenus = isWmsOnly ? [] : this.processMenus(results.menus ?? []);
+
+                    const finalUser = {
+                        ...userDetail,
+                        companyId: companyId,
+                        companyName: companyName,
+                        branchId: branchId,
+                        branchID: branchId,
+                        companyBranchId: branchId,
+                        branchName: branchName,
+                        employeId: employeeId,
+                    };
+
+                    console.log('--- FINAL PROCESSED USER:', finalUser);
+
+                    sessionStorage.setItem('menus', JSON.stringify(processedMenus));
+                    sessionStorage.setItem('user', JSON.stringify(finalUser));
+                    if (loginResponse?.employee?.tenantSchema) {
+                        sessionStorage.setItem('tenantSchema', loginResponse.employee.tenantSchema);
+                    }
+                    this.accountService.setUser(finalUser);
+                    this.accountService.setMenuData(processedMenus);
+
+                    // WMS-only users: store WMS permissions and navigate to WMS app
+                    if (isWmsOnly) {
+                        if (results.wmsPermissions) {
+                            sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
+                        }
+                        if (window !== window.parent) {
+                            window.parent.location.href = window.parent.location.origin + '/Gateway/dist/wms';
+                        } else {
+                            this.navigateAfterAuth(['/wms-dashboard'], { replaceUrl: true });
+                        }
+                        this.loading = false;
+                        return;
+                    }
+
+                    // HRMS (or BOTH): store WMS permissions if present, then run initial-setup check
+                    if (results.wmsPermissions) {
+                        sessionStorage.setItem('wmsPermissions', JSON.stringify(results.wmsPermissions));
+                    }
+
+                    this.callInitialSetupStatus(branchId).subscribe({
+                        next: (res: any) => {
+                            if (Array.isArray(res)) {
+                                // Admin user — no specific branch, GetStatus returned all statuses
+                                this.navigateAfterAuth(['/company/admin-dashboard'], {
+                                    replaceUrl: true,
+                                });
+                                this.loading = false;
+                            } else {
+                                this.resolvePostLoginDestination(finalUser, res).subscribe((dest) => {
+                                    this.navigateAfterAuth([dest], { replaceUrl: true });
+                                    this.loading = false;
+                                });
+                            }
+                        },
+                        error: () => {
+                            console.error('Error fetching setup status - defaulting to dashboard');
+                            if (window !== window.parent) {
+                                window.parent.location.href = window.parent.location.origin + '/Gateway/dist/dashboard';
+                                this.loading = false;
+                            } else {
+                                this.resolvePostLoginDestination(finalUser, null).subscribe((dest) => {
+                                    this.navigateAfterAuth([dest], { replaceUrl: true });
+                                    this.loading = false;
+                                });
+                            }
+                        },
+                    });
+                } else {
+                    const msg = 'Invalid credentials!';
+                    this.error = msg;
+                    this.notificationService.showError(msg);
+                    this.loading = false;
+                }
+            },
+            error: (detailError) => {
+                const msg = this.handleError(
+                    detailError,
+                    'Failed to load user details.'
+                );
+                this.error = msg;
+                this.notificationService.showError(msg);
+                this.loading = false;
+            },
+        });
+    }
+
     verifyOtp(): void {
+        if (this.verifyingOtp) return;
         if (!this.otpCode || this.otpCode.trim().length === 0) {
             this.notificationService.showError('Please enter the verification code.');
             return;
         }
         this.verifyingOtp = true;
+        this.otpVisualState = 'verifying';
+        this.authSucceeded = false;
+        this.authStartedAt = Date.now();
+        this.authStage = 2;
         this.error = '';
 
         this.http.post<any>(
@@ -500,29 +598,31 @@ export class LoginComponent implements OnInit {
                                 this.callInitialSetupStatus(branchId).subscribe({
                                     next: (res: any) => {
                                         this.resolvePostLoginDestination(userDetail, res).subscribe((dest) => {
-                                            this.router.navigate([dest], { replaceUrl: true });
+                                            this.navigateAfterAuth([dest], { replaceUrl: true });
                                         });
                                     },
                                     error: () => {
                                         this.resolvePostLoginDestination(userDetail, null).subscribe((dest) => {
-                                            this.router.navigate([dest], { replaceUrl: true });
+                                            this.navigateAfterAuth([dest], { replaceUrl: true });
                                         });
                                     }
                                 });
                             } else {
                                 this.resolvePostLoginDestination(userDetail, null).subscribe((dest) => {
-                                    this.router.navigate([dest], { replaceUrl: true });
+                                    this.navigateAfterAuth([dest], { replaceUrl: true });
                                 });
                             }
                         } else {
                             this.error = 'Failed to load user details.';
                             this.verifyingOtp = false;
+                            this.otpFailed();
                         }
                     },
                     error: (err) => {
                         console.error('verifyOtp forkJoin error:', err);
                         this.error = 'Failed to load user details after verification.';
                         this.verifyingOtp = false;
+                        this.otpFailed();
                     }
                 });
             },
@@ -531,8 +631,18 @@ export class LoginComponent implements OnInit {
                 this.error = typeof msg === 'string' ? msg : JSON.stringify(msg);
                 this.notificationService.showError(this.error);
                 this.verifyingOtp = false;
+                this.otpFailed();
             }
         });
+    }
+
+    /** Wrong/expired code: red shake, then clear the boxes for a retry. */
+    private otpFailed(): void {
+        this.otpVisualState = 'error';
+        setTimeout(() => {
+            this.otpCode = '';
+            this.otpVisualState = 'idle';
+        }, 900);
     }
 
     private handleError(
@@ -686,5 +796,32 @@ export class LoginComponent implements OnInit {
             }
         });
         return resultMenus;
+    }
+
+    private startAuthStages(): void {
+        this.authSucceeded = false;
+        this.authStartedAt = Date.now();
+        this.authStage = 1;
+        setTimeout(() => {
+            if (this.loading && this.authStage === 1) this.authStage = 2;
+        }, 800);
+    }
+
+    /**
+     * Successful sign-in: let the security steps finish (Security check ✓, Authentication ✓,
+     * lock → green check) before leaving the page, however fast the server answered.
+     */
+    private navigateAfterAuth(commands: any[], extras?: any): Promise<boolean> {
+        this.authSucceeded = true;
+        const wait = Math.max(0, 800 - (Date.now() - this.authStartedAt));
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                this.authStage = Math.max(this.authStage, 2);
+                setTimeout(() => {
+                    this.authStage = 3;
+                    setTimeout(() => this.router.navigate(commands, extras).then(resolve), 700);
+                }, 500);
+            }, wait);
+        });
     }
 }

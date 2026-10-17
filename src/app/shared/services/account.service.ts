@@ -248,6 +248,31 @@ export class AccountService {
     });
   };
 
+  // ─── Single sign-on (company OIDC provider) ───
+  ssoDiscover(email: string) {
+    return this.http.post<{ available: boolean; required: boolean; displayName?: string }>(
+      `${this.environment.urlAddress}/api/Sso/discover`, { email });
+  }
+
+  /** Full-page navigation target: the login service redirects on to the company's identity provider. */
+  ssoStartUrl(email: string) {
+    return `${this.environment.urlAddress}/api/Sso/start?client=web&email=${encodeURIComponent(email)}`;
+  }
+
+  /** Swaps the one-time code from the SSO redirect for the same response a password login returns. */
+  ssoExchange(code: string) {
+    return this.http.post<LoginResponse>(`${this.environment.urlAddress}/api/Sso/exchange`, { code }).pipe(
+      map((loginUser: any) => {
+        if (loginUser != null && loginUser.employee != null) {
+          sessionStorage.setItem('token', JSON.stringify(loginUser.token));
+          sessionStorage.setItem('tenantSchema', loginUser.employee.tenantSchema);
+          this.loginSubject$.next(loginUser);
+        }
+        return loginUser;
+      }),
+    );
+  }
+
   GoogleLogin(idToken: string) {
     const url = this.environment.urlAddress;
     return this.http.post(`${url}/api/Account/google-login`, { idToken });

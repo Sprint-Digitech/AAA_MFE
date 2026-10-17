@@ -20,6 +20,9 @@ export const environment = {
   wmsAuthUrlAddress: 'https://app.fovestta.com/Auth/sdapi',
   almsUrlAddress: 'https://app.fovestta.com/alms/sdapi',
   chatUrlAddress: 'https://app.fovestta.com/chat/sdapi',
+  // Progress Tracker API (no gateway route deployed yet - same hardcoded host the ProgressTracker MFE uses)
+  progressUrlAddress: 'https://app.fovestta.com/Progress/sdapi',
+  progressMfeUrl: 'https://app.fovestta.com/Progress/dist/',
   employeeMfeUrl: 'https://app.fovestta.com/Employee/dist/',
   salaryMfeUrl: 'https://app.fovestta.com/Salary/dist/',
   almsMfeUrl: 'https://app.fovestta.com/ALMS/dist/',

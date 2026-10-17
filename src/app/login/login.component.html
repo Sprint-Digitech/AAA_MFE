@@ -1,4 +1,4 @@
-<div class="main" [style.background-image]="backgroundImage" [style.background-repeat]="'repeat'"
+<div class="main fv-auth-page" [style.background-image]="backgroundImage" [style.background-repeat]="'repeat'"
   [style.background-size]="'auto'">
   <div class="login-wrapper">
     <div class="left-section">
@@ -14,7 +14,6 @@
           Streamline your workforce management with our comprehensive <br>
           payroll and HR solutions. Simplify employee management , <br>
          automate payroll processing, and enhance productivity. <br>
-          
         </p>
         <div class="image-wrapper">
           <img src="assets/img/login.png" alt="login illustration" class="illustration-img">
@@ -29,31 +28,42 @@
     </div>
 
     <div class="right-section">
-      <mat-card class="login-card">
+      <!-- soft moving light behind the glass card -->
+      <span class="glow g1"></span>
+      <span class="glow g2"></span>
+      <span class="glow g3"></span>
+
+      <mat-card class="login-card glass" [class.busy]="loading || verifyingOtp">
+        <span class="corner tl"></span>
+        <span class="corner br"></span>
         <mat-card-content>
 
           <!-- 2FA OTP Verification -->
           <ng-container *ngIf="requiresTwoFactor; else normalLogin">
             <div class="login-header">
               <h1>Verify Identity</h1>
+              <span class="lock-orb" [class.working]="verifyingOtp && authStage < 3" [class.done]="authStage === 3"><mat-icon>{{ authStage === 3 ? 'check' : verifyingOtp ? 'lock' : 'verified_user' }}</mat-icon></span>
             </div>
-            <p style="color:#555; font-size:14px; margin-bottom:20px;">
-              A 6-digit verification code has been sent to <strong>{{ twoFactorEmail }}</strong>.
+            <p class="otp-note">
+              Enter the 6-digit security code sent to <strong>{{ twoFactorEmail }}</strong>.
             </p>
-            <div class="form-group">
-              <label>Verification Code</label>
-              <mat-form-field class="user-id-field" appearance="outline">
-                <input matInput [(ngModel)]="otpCode" placeholder="Enter 6-digit code" maxlength="6" type="text" />
-              </mat-form-field>
-            </div>
-            <button mat-raised-button class="login-button" type="button"
-              [disabled]="verifyingOtp" (click)="verifyOtp()"
-              style="background-color:#006AFF; color:#FFFFFF; font-family:Poppins;">
-              {{ verifyingOtp ? 'Verifying...' : 'Verify Code' }}
+            <app-orbit-code
+              [length]="6"
+              [(value)]="otpCode"
+              [state]="authStage === 3 ? 'success' : otpVisualState"
+              (completed)="verifyOtp()"
+              ariaLabel="6-digit verification code">
+            </app-orbit-code>
+            <p class="otp-status" [attr.data-state]="authStage === 3 ? 'success' : otpVisualState">
+              {{ authStage === 3 ? 'Verified — signing you in…' : otpVisualState === 'verifying' ? 'Verifying code…' : otpVisualState === 'error' ? 'That code didn\'t work — try again' : 'Type or paste the code' }}
+            </p>
+            <button mat-raised-button class="login-button" type="button" [disabled]="verifyingOtp || otpCode.length < 6" (click)="verifyOtp()">
+              <ng-container *ngIf="!verifyingOtp">Verify Code</ng-container>
+              <ng-container *ngIf="verifyingOtp"><mat-icon class="btn-lock">lock</mat-icon> Verifying…</ng-container>
             </button>
-            <p style="margin-top:12px; font-size:13px; color:#666;">
+            <p class="otp-back">
               Didn't receive the code?
-              <a href="#" (click)="requiresTwoFactor=false; $event.preventDefault()" style="color:#006AFF;">Go back</a>
+              <a href="#" (click)="requiresTwoFactor=false; authStage = 0; otpCode = ''; otpVisualState = 'idle'; $event.preventDefault()">Go back</a>
             </p>
             <div *ngIf="error" class="alert alert-danger mt-3 mb-0">{{ error }}</div>
           </ng-container>
@@ -62,20 +72,32 @@
           <ng-template #normalLogin>
           <div class="login-header">
             <h1>Login</h1>
+            <span class="lock-orb" [class.working]="authStage === 1 || authStage === 2" [class.done]="authStage === 3" [title]="authStage ? 'Authenticating' : 'Secure sign-in'">
+              <mat-icon>{{ authStage === 3 ? 'check' : authStage ? 'lock' : 'lock_open' }}</mat-icon>
+            </span>
           </div>
 
           <form [formGroup]="loginForm" (ngSubmit)="submit()">
             <div class="form-group">
               <label for="email">User ID</label>
               <mat-form-field class="user-id-field" appearance="outline">
-                <input matInput formControlName="email" type="email" placeholder="Username / Email" required />
+                <input matInput formControlName="email" type="email" placeholder="Username / Email" required (blur)="checkSso()" />
+                <mat-icon matSuffix class="ok-mark" *ngIf="loginForm.get('email')?.valid">check_circle</mat-icon>
               </mat-form-field>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('email') && 
-                   loginForm.get('email')?.touched && 
+              <mat-error *ngIf="loginForm.get('email')?.hasError('email') &&
+                   loginForm.get('email')?.touched &&
                    !loginForm.get('email')?.hasError('required')">
                 Email must be a valid email
               </mat-error>
               <lib-required-nemo [control]="loginForm.get('email')" label="Email"></lib-required-nemo>
+            </div>
+
+            <div class="sso-offer" *ngIf="sso?.available">
+              <button mat-stroked-button type="button" class="sso-button" (click)="signInWithSso()" [disabled]="loading">
+                <mat-icon>key</mat-icon> Continue with {{ sso?.displayName || 'SSO' }}
+              </button>
+              <small *ngIf="sso?.required">Your company signs in with single sign-on.</small>
+              <small *ngIf="!sso?.required">or enter your password below</small>
             </div>
 
             <div class="form-group">
@@ -98,11 +120,18 @@
               <a routerLink="/forgot-password">Forgot Password?</a>
             </div>
 
-            <button mat-raised-button class="login-button" type="submit" [disabled]="loading"
-              (click)="submit()"
-              style="background-color: #006AFF; color:#FFFFFF; font-family: Poppins;">
-              {{ loading ? 'Logging in...' : 'Login' }}
+            <button mat-raised-button class="login-button" type="submit" [disabled]="loading || authStage > 0" [class.signed-in]="authStage === 3">
+              <ng-container *ngIf="authStage === 0">Login</ng-container>
+              <ng-container *ngIf="authStage === 1 || authStage === 2"><mat-icon class="btn-lock">lock</mat-icon> Authenticating…</ng-container>
+              <ng-container *ngIf="authStage === 3"><mat-icon>verified_user</mat-icon> Signed in</ng-container>
             </button>
+
+            <!-- secure sign-in progress -->
+            <ul class="secure-steps">
+              <li [class.done]="loginForm.valid"><span class="dot"><mat-icon>check</mat-icon></span>Credentials</li>
+              <li [class.active]="authStage === 1" [class.done]="authStage >= 2"><span class="dot"><mat-icon>check</mat-icon></span>Security check</li>
+              <li [class.active]="authStage === 2" [class.done]="authStage >= 3"><span class="dot"><mat-icon>check</mat-icon></span>Authentication</li>
+            </ul>
 
             <p class="create-account">
               <span class="or-text">or </span>
