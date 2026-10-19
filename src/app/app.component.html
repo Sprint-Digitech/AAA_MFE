@@ -45,14 +45,36 @@
                     </div>
 
                     <!-- Fixed-position Flyout Submenu -->
-                    <div class="submenu" *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName)"
+                    <div class="submenu" [class.submenu-wide]="isReportsMenu(item)"
+                        *ngIf="hasSubmenu(item) && isSubmenuOpen(item.menuDisplayName)"
                         [style.top.px]="currentSubmenuTop" [style.left.px]="submenuLeft"
                         (click)="$event.stopPropagation()">
-                        <div class="submenu-title">{{ item.menuDisplayName }}</div>
-                        <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
-                            routerLinkActive="active-submenu" (click)="closeSubmenus()">
-                            {{ sub.menuDisplayName }}
-                        </a>
+                        <ng-container *ngIf="isReportsMenu(item); else plainSubmenu">
+                            <div class="submenu-title submenu-title-row">
+                                <span>{{ item.menuDisplayName }}</span>
+                                <a class="submenu-hub-link" routerLink="/report-hub" (click)="closeSubmenus()">
+                                    All reports <mat-icon>arrow_forward</mat-icon>
+                                </a>
+                            </div>
+                            <div class="report-groups">
+                                <div class="report-group" *ngFor="let group of reportGroups">
+                                    <div class="report-group-title">
+                                        <mat-icon>{{ group.icon }}</mat-icon>{{ group.category }}
+                                    </div>
+                                    <a class="submenu-item" *ngFor="let r of group.reports" [routerLink]="r.path"
+                                        routerLinkActive="active-submenu" (click)="closeSubmenus()">
+                                        {{ r.name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </ng-container>
+                        <ng-template #plainSubmenu>
+                            <div class="submenu-title">{{ item.menuDisplayName }}</div>
+                            <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
+                                routerLinkActive="active-submenu" (click)="closeSubmenus()">
+                                {{ sub.menuDisplayName }}
+                            </a>
+                        </ng-template>
                     </div>
                 </div>
 

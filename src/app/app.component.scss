@@ -313,6 +313,70 @@
   }
 }
 
+/* Reports flyout: grouped sections laid out in columns so ~30 reports fit without scrolling */
+.submenu.submenu-wide {
+  max-width: min(760px, calc(100vw - 240px));
+  width: min(760px, calc(100vw - 240px));
+}
+
+.submenu-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.submenu-hub-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fv-accent-text);
+  text-decoration: none;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.report-groups {
+  columns: 3 200px;
+  column-gap: 8px;
+}
+
+.report-group {
+  break-inside: avoid;
+  margin-bottom: 8px;
+}
+
+.report-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fv-text-2);
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: var(--fv-accent-text);
+  }
+}
+
 .submenu-title {
   padding: 6px 12px 8px;
   font-size: 11px;

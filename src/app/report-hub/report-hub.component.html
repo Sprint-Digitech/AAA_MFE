@@ -1,0 +1,70 @@
+<div class="rh-page">
+  <header class="rh-hero">
+    <div>
+      <h1>Reports</h1>
+      <p class="muted">Every report you have access to, grouped by module.</p>
+    </div>
+    <label class="rh-search">
+      <mat-icon>search</mat-icon>
+      <input type="text" [(ngModel)]="search" (ngModelChange)="refresh()" placeholder="Search reports - e.g. PF, leave, late" autocomplete="off" />
+      <button *ngIf="search" type="button" class="rh-clear" (click)="clearSearch()" aria-label="Clear search">
+        <mat-icon>close</mat-icon>
+      </button>
+    </label>
+  </header>
+
+  <nav class="rh-chips" aria-label="Report categories">
+    <button type="button" class="rh-chip" *ngFor="let c of categories" [class.active]="activeCategory === c.key"
+      (click)="selectCategory(c.key)">
+      <mat-icon>{{ c.icon }}</mat-icon>{{ c.key }}<span class="rh-count">{{ c.count }}</span>
+    </button>
+  </nav>
+
+  <ng-container *ngIf="!search && activeCategory === 'All'">
+    <section class="rh-section" *ngIf="favourites.length">
+      <h2><mat-icon>star</mat-icon>Favourites</h2>
+      <div class="rh-grid">
+        <ng-container *ngFor="let r of favourites; trackBy: trackByPath">
+          <ng-container *ngTemplateOutlet="card; context: { $implicit: r }"></ng-container>
+        </ng-container>
+      </div>
+    </section>
+
+    <section class="rh-section" *ngIf="recent.length">
+      <h2><mat-icon>history</mat-icon>Recently opened</h2>
+      <div class="rh-recent">
+        <a *ngFor="let r of recent; trackBy: trackByPath" role="link" tabindex="0" (click)="open(r)" (keydown.enter)="open(r)" class="rh-recent-item">
+          <span>{{ r.name }}</span><small>{{ r.category }}</small>
+        </a>
+      </div>
+    </section>
+  </ng-container>
+
+  <section class="rh-section" *ngFor="let g of groups">
+    <h2><mat-icon>{{ g.icon }}</mat-icon>{{ g.category }}</h2>
+    <div class="rh-grid">
+      <ng-container *ngFor="let r of g.reports; trackBy: trackByPath">
+        <ng-container *ngTemplateOutlet="card; context: { $implicit: r }"></ng-container>
+      </ng-container>
+    </div>
+  </section>
+
+  <div class="rh-empty" *ngIf="totalShown === 0">
+    <mat-icon>search_off</mat-icon>
+    <p *ngIf="search">No reports match "{{ search }}".</p>
+    <p *ngIf="!search">No reports are assigned to your role yet. Ask your administrator to grant report menus.</p>
+  </div>
+</div>
+
+<ng-template #card let-r>
+  <a class="rh-card" role="link" (click)="open(r)" tabindex="0" (keydown.enter)="open(r)">
+    <div class="rh-card-head">
+      <span class="rh-card-name">{{ r.name }}</span>
+      <button type="button" class="rh-star" [class.on]="isFavourite(r)" (click)="toggleFavourite(r, $event)"
+        [matTooltip]="isFavourite(r) ? 'Remove from favourites' : 'Add to favourites'" matTooltipClass="fv-tooltip">
+        <mat-icon>{{ isFavourite(r) ? 'star' : 'star_border' }}</mat-icon>
+      </button>
+    </div>
+    <p class="rh-card-desc" *ngIf="r.description">{{ r.description }}</p>
+  </a>
+</ng-template>

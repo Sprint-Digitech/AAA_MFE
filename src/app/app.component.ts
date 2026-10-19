@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { EmployeeService } from './shared/services/employee.service';
 import { AccountService } from './shared/services/account.service';
+import { collectReportLinks, groupReportLinks, isReportsMenu, ReportGroup } from './shared/report-catalog';
 import { LoaderComponent } from './loader/loader/loader.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
@@ -75,6 +76,8 @@ export class AppComponent implements OnInit, OnDestroy {
   isSidebarCollapsed = false; // Add compatibility for my existing toggle if needed
   openSubmenus: Set<string> = new Set();
   menus: any[] = [];
+  // Reports flyout sections - cached here (not a getter) so change detection never sees fresh arrays.
+  reportGroups: ReportGroup[] = [];
   user: any = null;
   currentSubmenuTop = 0;
   companies: string = '';
@@ -328,6 +331,7 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     };
     collect(this.menus);
+    this.reportGroups = groupReportLinks(collectReportLinks((this.menus || []).filter(isReportsMenu)));
 
     this.canSeeInsights = granted.has('/salary/salarydashboard');
     const links: NavLink[] = [{ label: 'Overview', path: '/initial-setup' }];
@@ -818,6 +822,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isSubmenuOpen(menuId: string): boolean {
     return this.openSubmenus.has(menuId);
+  }
+
+  isReportsMenu(menu: any): boolean {
+    return isReportsMenu(menu);
   }
 
   hasSubmenu(menu: any): boolean {

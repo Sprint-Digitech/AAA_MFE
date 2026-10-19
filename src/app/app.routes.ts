@@ -50,6 +50,15 @@ export const routes: Routes = [
             ),
     },
     {
+        // All granted reports grouped by module (shell-native). Not 'reports' - the Salary MFE matcher owns that prefix.
+        path: 'report-hub',
+        canActivate: [authGuard],
+        loadComponent: () =>
+            import('./report-hub/report-hub.component').then(
+                (m) => m.ReportHubComponent
+            ),
+    },
+    {
         // Combined salary + attendance + Progress Tracker dashboard (shell-native, no iframe)
         path: 'insights',
         canActivate: [authGuard],
