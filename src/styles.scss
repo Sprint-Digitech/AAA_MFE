@@ -722,6 +722,11 @@ lib-query-form {
     border-color: var(--fv-danger) !important;
 }
 
+// fv-number-field flags invalid on load (no touched check) — keep normal border until touched/submitted
+fv-number-field .fv-input.fv-input-error.ng-untouched:not(:focus) {
+    border-color: var(--fv-border-strong) !important;
+}
+
 .fv-input-disabled,
 .fv-input:disabled,
 .fv-dropdown-disabled,
