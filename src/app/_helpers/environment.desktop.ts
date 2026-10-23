@@ -22,6 +22,8 @@ export const environment = {
   wmsAuthUrlAddress: 'app://fovestta/Auth/sdapi',
   almsUrlAddress: 'app://fovestta/alms/sdapi',
   chatUrlAddress: 'app://fovestta/chat/sdapi',
+  progressUrlAddress: 'app://fovestta/Progress/sdapi',
+  progressMfeUrl: 'app://fovestta/Progress/dist/',
   employeeMfeUrl: 'app://fovestta/Employee/dist/',
   salaryMfeUrl: 'app://fovestta/Salary/dist/',
   almsMfeUrl: 'app://fovestta/ALMS/dist/',

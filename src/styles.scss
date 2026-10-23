@@ -548,6 +548,32 @@ html body lib-nemo-reusable-tbl {
         box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25);
     }
 
+    /* Header controls (Filters + Add button): same height, radius and vertical alignment */
+    .header-right {
+        align-items: center !important;
+    }
+
+    .header-right .add-button-container,
+    .header-right .add-menu-container {
+        display: flex;
+        align-items: center;
+        margin: 0 !important;
+    }
+
+    .header-right .add-btn,
+    .header-right .adv-filter-toggle {
+        display: inline-flex !important;
+        align-items: center;
+        box-sizing: border-box;
+        height: 38px !important;
+        margin: 0 !important;
+        padding: 0 16px !important;
+        border-radius: 10px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+    }
+
     .page-btn,
     .nav-btn {
         background-color: var(--fv-surface-solid) !important;
@@ -962,7 +988,8 @@ input:checked + .fv-toggle-slider {
 }
 
 /* Library file box already prints the name - keep the bubble off it */
-.fv-file-selector-box.fv-file-chosen::after {
+.fv-file-selector-box.fv-file-chosen::after,
+.fv-file-chosen:has(.fv-file-selector-box)::after {
     display: none;
 }
 
