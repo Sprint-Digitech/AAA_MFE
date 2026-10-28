@@ -160,6 +160,12 @@ export const routes: Routes = [
         data: { mfeUrl: environment.employeeMfeUrl, title: 'Manpower Report' }
     },
     {
+        // Salary and Advance Disbursement Report was exposed in ESS (every employee's salary); removed
+        path: 'employeeSelfService/salaryAdvance',
+        redirectTo: '/employeeSelfService/dashboard',
+        pathMatch: 'full'
+    },
+    {
         // Salary & Master Data MFE
         matcher: (url) => {
             if (url.length === 0) return null;
@@ -193,7 +199,7 @@ export const routes: Routes = [
                 if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
-            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds' || subPath === 'salaryadvance')) return { consumed: [url[0], url[1]] };
+            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds')) return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
             if (path === 'ess') return { consumed: [url[0]] };
