@@ -116,7 +116,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
   }
 
   private fetchEsiCalculationMonthLimitList(): void {
-    this.service.get('api/Currency/GetESICalculationMonthLimit').subscribe({
+    this.service.get('api/esi-calculation-month-limit/GetESICalculationMonthLimit').subscribe({
       next: (data: any[]) => {
         this.esiCalculationMonthLimitList = data ?? [];
       },
@@ -131,7 +131,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
     }
     this.service
       .get(
-        `api/Currency/GetESICalculationMonthLimit?eSICalculationMonthLimitId=${this.esiCalculationMonthLimitId}`
+        `api/esi-calculation-month-limit/GetESICalculationMonthLimit?id=${this.esiCalculationMonthLimitId}`
       )
       .subscribe({
         next: (response: any) => {
@@ -351,7 +351,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
         status: 0, // Inactive
       };
       return firstValueFrom(
-        this.service.update('api/Currency/UpdateESICalculationMonthLimit', updatePayload)
+        this.service.update('api/esi-calculation-month-limit/UpdateESICalculationMonthLimit', updatePayload)
       );
     });
 
@@ -377,7 +377,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
         status: 0, // Inactive
       };
       return firstValueFrom(
-        this.service.update('api/Currency/UpdateESICalculationMonthLimit', updatePayload)
+        this.service.update('api/esi-calculation-month-limit/UpdateESICalculationMonthLimit', updatePayload)
       );
     });
 
@@ -388,7 +388,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
    * Updates an existing ESI Calculation Month Limit record
    */
   private updateRecord(payload: esiCalculationMonthLimitDto): void {
-    this.service.update('api/Currency/UpdateESICalculationMonthLimit', payload).subscribe({
+    this.service.update('api/esi-calculation-month-limit/UpdateESICalculationMonthLimit', payload).subscribe({
       next: () => {
         this.notificationService.showSuccess('Updated Successfully');
         this.navigateToList();
@@ -405,7 +405,7 @@ esiCalculationMonthLimitFormConfig?: FormConfig;
    * Creates a new ESI Calculation Month Limit record
    */
   private createNewRecord(payload: esiCalculationMonthLimitDto): void {
-    this.service.post('api/Currency/CreateESICalculationMonthLimit', payload).subscribe({
+    this.service.post('api/esi-calculation-month-limit/CreateESICalculationMonthLimit', payload).subscribe({
       next: () => {
         this.notificationService.showSuccess('Saved Successfully');
         this.navigateToList();

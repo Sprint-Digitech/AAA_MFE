@@ -340,7 +340,14 @@ export class LoginComponent implements OnInit {
         this.error = '';
         if (this.loginForm.invalid) {
             console.warn('--- Login Form is INVALID ---');
-            this.notificationService.showError('Please fill all required fields.');
+            const emailValue = (this.loginForm.get('email')?.value || '').toString().trim();
+            const passwordValue = (this.loginForm.get('password')?.value || '').toString();
+            // A filled-in but malformed User ID is a wrong ID, not a missing field.
+            this.notificationService.showError(
+                !emailValue || !passwordValue
+                    ? 'Please enter your User ID and Password.'
+                    : 'Invalid User ID or Password.'
+            );
             return;
         }
         const user: Login = {

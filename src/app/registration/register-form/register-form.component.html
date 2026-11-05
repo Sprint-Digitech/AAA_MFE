@@ -143,7 +143,7 @@
                 <select [formControl]="employeesControl" class="native-select"
                   [class.select-error]="employeesControl.invalid && employeesControl.touched">
                   <option value="" disabled selected>Select employee count</option>
-                  <option *ngFor="let opt of employeeCountOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                  <option *ngFor="let opt of employeeCountOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                 </select>
                 <span class="field-error-msg" *ngIf="employeesControl.invalid && employeesControl.touched">This field is
                   required</span>
@@ -226,7 +226,7 @@
                   <select [formControl]="industryControl" class="native-select"
                     [class.select-error]="industryControl.invalid && industryControl.touched">
                     <option value="" disabled selected>Select industry</option>
-                    <option *ngFor="let opt of industryOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                    <option *ngFor="let opt of industryOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                   </select>
                   <span class="field-error-msg" *ngIf="industryControl.invalid && industryControl.touched">This field is
                     required</span>
@@ -255,7 +255,7 @@
                   <label class="field-label">Date Format</label>
                   <select [formControl]="dateFormatControl" class="native-select">
                     <option value="" disabled>Select date format</option>
-                    <option *ngFor="let opt of dateFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                    <option *ngFor="let opt of dateFormatOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                   </select>
                 </div>
 
@@ -264,7 +264,7 @@
                   <label class="field-label">Date Field Separator</label>
                   <select [formControl]="dateSeparatorControl" class="native-select">
                     <option value="" disabled>Select separator</option>
-                    <option *ngFor="let opt of dateSeparatorOptionsForDropdown" [value]="opt.value">{{opt.label}}
+                    <option *ngFor="let opt of dateSeparatorOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}
                     </option>
                   </select>
                 </div>
@@ -274,7 +274,7 @@
                   <label class="field-label">Time Format</label>
                   <select [formControl]="timeFormatControl" class="native-select">
                     <option value="" disabled>Select time format</option>
-                    <option *ngFor="let opt of timeFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                    <option *ngFor="let opt of timeFormatOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                   </select>
                 </div>
 
@@ -283,7 +283,7 @@
                   <label class="field-label">Timezone</label>
                   <select [formControl]="timezoneControl" class="native-select">
                     <option value="" disabled>Select timezone</option>
-                    <option *ngFor="let opt of timezoneOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                    <option *ngFor="let opt of timezoneOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                   </select>
                 </div>
 
@@ -292,7 +292,7 @@
                   <label class="field-label">Display Format</label>
                   <select [formControl]="displayFormatControl" class="native-select">
                     <option value="" disabled>Select display format</option>
-                    <option *ngFor="let opt of displayFormatOptionsForDropdown" [value]="opt.value">{{opt.label}}
+                    <option *ngFor="let opt of displayFormatOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}
                     </option>
                   </select>
                 </div>
@@ -303,7 +303,7 @@
                   <select [formControl]="serviceControl" class="native-select"
                     [class.select-error]="serviceControl.invalid && serviceControl.touched">
                     <option value="" disabled>Select service</option>
-                    <option *ngFor="let opt of serviceOptionsForDropdown" [value]="opt.value">{{opt.label}}</option>
+                    <option *ngFor="let opt of serviceOptionsForDropdown; trackBy: trackOption" [value]="opt.value">{{opt.label}}</option>
                   </select>
                   <span class="field-error-msg" *ngIf="serviceControl.invalid && serviceControl.touched">This field is
                     required</span>

@@ -98,7 +98,9 @@ export const routes: Routes = [
             { path: 'add-existing-company', loadComponent: () => import('./registration/add-existing-company/add-existing-company.component').then(m => m.AddExistingCompanyComponent) },
             { path: 'user-access-management', loadComponent: () => import('./registration/user-access-management/user-access-management.component').then(m => m.UserAccessManagementComponent) },
             { path: 'single-sign-on', loadComponent: () => import('./registration/sso-settings/sso-settings.component').then(m => m.SsoSettingsComponent) },
-            { path: 'admin-dashboard', loadComponent: () => import('./registration/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) }
+            { path: 'admin-dashboard', loadComponent: () => import('./registration/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
+            // "Start Tracing" menu (Settings) points here; the screen is ALMS's live field-employee tracking.
+            { path: 'tracing-view', redirectTo: '/attendance/field-tracking', pathMatch: 'full' }
         ]
     },
     {
@@ -199,7 +201,7 @@ export const routes: Routes = [
                 if (salaryAttendanceSubPaths.includes(subPath)) return { consumed: [url[0], url[1]] };
             }
 
-            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds')) return { consumed: [url[0], url[1]] };
+            if (path === 'employeeselfservice' && (subPath === 'salary&tax' || subPath === 'tds' || subPath === 'loanapply')) return { consumed: [url[0], url[1]] };
 
             // Handle legacy 'ess' link if it maps to Salary
             if (path === 'ess') return { consumed: [url[0]] };

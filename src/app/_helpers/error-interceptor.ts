@@ -15,6 +15,20 @@ import { ErrorLoggingService } from '../shared/services/error-logging.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
+  // The stored token is a JSON-encoded JWT string; expired = past its exp claim.
+  private isTokenExpired(stored: string): boolean {
+    let token: any = stored;
+    try { token = JSON.parse(stored); } catch { /* bare JWT */ }
+    const payload = typeof token === 'string' ? token.split('.')[1] : '';
+    if (!payload) return true;
+    try {
+      const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return !json?.exp || json.exp * 1000 <= Date.now();
+    } catch {
+      return true;
+    }
+  }
+
   constructor(
     private injector: Injector,
     private errorLogger: ErrorLoggingService
@@ -49,13 +63,17 @@ export class ErrorInterceptor implements HttpInterceptor {
         if (error.status === 401) {
           // Only logout if user is still logged in (token refresh might have already logged out)
           const token = sessionStorage.getItem('token');
-          if (token) {
+          if (token && this.isTokenExpired(token)) {
             const errorMessage =
               error?.error?.Error?.Message ||
               'Session expired. Please login again.';
             // Auto-logout on token expiration (if refresh failed)
             this.accountService.logout();
             this.notificationService.showError(errorMessage);
+          } else if (token) {
+            // Session still valid: one endpoint refused this call - don't end the session.
+            this.notificationService.showError(
+              error?.error?.message || 'You are not authorized to perform this action.');
           }
           return throwError(() => error);
         }

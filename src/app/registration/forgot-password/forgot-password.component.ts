@@ -86,6 +86,9 @@ export class ForgotPasswordComponent {
       event.stopPropagation();
     }
 
+    // ngSubmit and a second click/Enter used to queue two reset emails per request
+    if (this.isLoading) return;
+
     console.log('--- FORGOT PASSWORD SUBMIT CALLED ---');
     console.log('Form State Valid:', this.forgotPasswordForm.valid);
     console.log('Form Values:', this.forgotPasswordForm.value);

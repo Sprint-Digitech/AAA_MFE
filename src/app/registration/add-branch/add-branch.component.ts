@@ -113,8 +113,9 @@ export class AddBranchComponent implements OnInit {
           { type: 'maxLength', value: 50, message: 'Max 50 characters' },
           {
             type: 'pattern',
-            value: '^[a-zA-Z\\s]*$',
-            message: 'Branch Name should contain alphabets only',
+            // Branch names like "Wellwisher 2.0" or "Branch 2" are valid.
+            value: "^[a-zA-Z0-9][a-zA-Z0-9\\s.&()'/-]*$",
+            message: 'Branch Name can contain letters, numbers, spaces and . & ( ) \' / -',
           },
         ],
       },

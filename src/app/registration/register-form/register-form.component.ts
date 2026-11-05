@@ -180,6 +180,11 @@ export class RegisterFormComponent implements OnInit, AfterViewInit, OnDestroy {
 
   employeeCountOptions: string[] = ['1-10', '11-50', '51-200', '200+'];
 
+  // The *OptionsForDropdown getters return new arrays on every change detection; without
+  // trackBy the <option>s are recreated each pass and the browser snaps the select back to
+  // the first option (TC-003: only "1-10" could be chosen).
+  trackOption = (_: number, opt: { value: string }) => opt.value;
+
   // Convert to dropdown options format
   get employeeCountOptionsForDropdown() {
     return this.employeeCountOptions.map((count) => ({

@@ -240,7 +240,7 @@
 
                             <div class="user-menu__cp-form" *ngIf="showChangePassword" (click)="$event.stopPropagation()">
                                 <input type="password" class="cp-input" placeholder="Current Password"
-                                    [(ngModel)]="cpForm.currentPassword" autocomplete="current-password" />
+                                    [(ngModel)]="cpForm.currentPassword" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" />
                                 <input type="password" class="cp-input" placeholder="New Password"
                                     [(ngModel)]="cpForm.newPassword" autocomplete="new-password" />
                                 <input type="password" class="cp-input" placeholder="Confirm New Password"

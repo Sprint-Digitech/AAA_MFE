@@ -78,7 +78,7 @@ export class EsiCalculationMonthListComponent {
     });
   }
   getEsiCalculationMonthLimit(): void {
-    this.service.get('api/Currency/GetESICalculationMonthLimit').subscribe({
+    this.service.get('api/esi-calculation-month-limit/GetESICalculationMonthLimit').subscribe({
       next: (data: any[]) => {
         this.originalData = data
           .map((item, index) => ({

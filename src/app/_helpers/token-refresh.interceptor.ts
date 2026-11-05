@@ -38,6 +38,14 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
+        // A 401 while the session token is still within its lifetime means that one
+        // service/endpoint rejected the call (e.g. Branch View/Update), not that the
+        // session ended. There is no refresh endpoint, so "refreshing" here always
+        // failed and logged the user out mid-task - surface the error instead.
+        if (error.status === 401 && !this.isSessionExpired()) {
+          return throwError(() => error);
+        }
+
         // Only handle 401 errors and if we're not already refreshing
         if (error.status === 401 && !this.isRefreshing) {
           return this.handle401Error(request, next);
@@ -47,6 +55,22 @@ export class TokenRefreshInterceptor implements HttpInterceptor {
         return throwError(() => error);
       })
     );
+  }
+
+  // True when the stored JWT is missing, unreadable or past its exp claim.
+  private isSessionExpired(): boolean {
+    let raw: any = this.secureTokenStorage.getToken() || sessionStorage.getItem('token');
+    if (!raw) return true;
+    try { raw = JSON.parse(raw); } catch { /* stored as a bare JWT */ }
+    const token = typeof raw === 'string' ? raw : (raw?.token || raw?.accessToken || '');
+    const payload = token.split('.')[1];
+    if (!payload) return true;
+    try {
+      const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return !json?.exp || json.exp * 1000 <= Date.now();
+    } catch {
+      return true;
+    }
   }
 
   private hasSession(): boolean {

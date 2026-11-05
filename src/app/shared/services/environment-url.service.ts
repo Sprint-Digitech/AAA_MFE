@@ -35,7 +35,10 @@ export class EnvironmentUrlService {
       routeLower.includes('initialsetup/') ||
       routeLower.includes('roles/') ||
       routeLower.includes('tenants/') ||
-      routeLower.includes('hrmsauthz/')) {
+      routeLower.includes('hrmsauthz/') ||
+      // ESI calculation month limits live in HRMSAuthZ (they used to be called on
+      // api/Currency/ in the login service, which has no such endpoints -> 404).
+      routeLower.includes('esi-calculation-month-limit/')) {
       return this.hrmsAuthZUrlAddress;
     }
 

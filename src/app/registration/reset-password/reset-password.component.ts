@@ -242,6 +242,17 @@ export class ResetPasswordComponent {
       baseForm: this.resetPasswordForm.errors
     });
 
+    const newPwd = this.newPasswordControl.value;
+    const confirmPwd = this.confirmPasswordControl.value;
+    if (newPwd && confirmPwd && newPwd !== confirmPwd) {
+      this.resetPasswordForm.markAllAsTouched();
+      this.isError = true;
+      this.apiMessage = 'New password and Confirm Password do not match.';
+      this.notificationService.showError(this.apiMessage);
+      return;
+    }
+    this.isError = false;
+
     if (this.resetPasswordForm.invalid) {
       console.warn('Form is invalid, marking as touched...');
       this.resetPasswordForm.markAllAsTouched();
@@ -351,7 +362,9 @@ export class ResetPasswordComponent {
           let msg = 'Reset password failed';
           try {
             const body = typeof err.error === 'string' ? JSON.parse(err.error) : err.error;
-            if (Array.isArray(body)) {
+            if (Array.isArray(body) && body.some((e: any) => e?.code === 'InvalidToken')) {
+              msg = 'This password reset link has expired or has already been used. Please request a new link.';
+            } else if (Array.isArray(body)) {
               msg = body.map((e: any) => e.description || e.message || String(e)).join(', ');
             } else if (body?.description) {
               msg = body.description;
@@ -361,6 +374,8 @@ export class ResetPasswordComponent {
               msg = body;
             }
           } catch { }
+          this.isError = true;
+          this.apiMessage = msg;
           this.notificationService.showError(msg);
         },
       });

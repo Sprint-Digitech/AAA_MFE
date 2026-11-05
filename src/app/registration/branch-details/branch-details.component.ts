@@ -489,7 +489,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Father Name',
               type: 'text',
               colSpan: 1,
-              value: initialValues?.fatherName || '',
+              value: initialValues?.fatherName || initialValues?.taxDeductorFatherName || '',
               onChange: (val: any) => (this.manualTaxData.fatherName = val),
               validations: [],
             },
@@ -498,7 +498,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Designation',
               type: 'text',
               colSpan: 1,
-              value: initialValues?.designation || '',
+              value: initialValues?.designation || initialValues?.taxDeductorDesignation || '',
               onChange: (val: any) => (this.manualTaxData.designation = val),
               validations: [],
             },
@@ -507,7 +507,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'AO Code',
               type: 'text',
               colSpan: 1,
-              value: initialValues?.aoCode || '',
+              value: initialValues?.aoCode || initialValues?.companyAoCode || this.dataSource1?.[0]?.companyAoCode || '',
               onChange: (val: any) => (this.manualTaxData.aoCode = val),
               validations: [],
             },
@@ -516,7 +516,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'TDS Circle',
               type: 'text',
               colSpan: 1,
-              value: initialValues?.tdsCircle || '',
+              value: initialValues?.tdsCircle || initialValues?.companyTdsCircle || this.dataSource1?.[0]?.companyTdsCircle || '',
               onChange: (val: any) => (this.manualTaxData.tdsCircle = val),
               validations: [],
             },
@@ -1423,6 +1423,9 @@ export class BranchDetailsComponent implements OnInit {
       quarterValueDays: compOffValues?.quarterValueDays ?? 0.25,
       includeWeeklyOffHolidayWork: compOffValues?.includeWeeklyOffHolidayWork ?? false,
       includeFixedOT: compOffValues?.includeFixedOT ?? false,
+      compOffWeekdayOTMode: compOffValues?.weekdayOTMode || 'Off',
+      compOffCarryOverMinutes: compOffValues?.carryOverMinutes ?? true,
+      compOffAutoAdjustUnpaid: compOffValues?.autoAdjustUnpaidDays ?? false,
       compOffMaxBalanceDays: compOffValues?.maxBalanceDays ?? '',
       compOffRedemptionRequiresApproval: compOffValues?.redemptionRequiresApproval ?? true,
       compOffCarryForwardMode: compOffValues?.carryForwardMode || 'NextMonth',
@@ -1715,6 +1718,38 @@ export class BranchDetailsComponent implements OnInit {
               value: compOffValues?.includeFixedOT ?? false,
               hint: 'Fixed OT (auto-approved, no daily approval) banks entirely as comp-off instead of being paid in cash. Turns off Fixed OT\'s cash payout at salary time for this branch.',
               onChange: (val: any) => { this.manualOvertimeData.includeFixedOT = val; },
+            },
+            {
+              name: 'compOffWeekdayOTMode',
+              label: 'Weekday OT',
+              type: 'select',
+              colSpan: 1,
+              options: [
+                { label: 'Paid in salary (no comp-off)', value: 'Off' },
+                { label: 'Comp-off after OT approval', value: 'AfterApproval' },
+                { label: 'Comp-off automatically', value: 'Automatic' },
+              ],
+              value: compOffValues?.weekdayOTMode || 'Off',
+              hint: 'Normal weekday OT banks as comp-off instead of being paid. Automatically = approved from the punches, no OT approval needed.',
+              onChange: (val: any) => { this.manualOvertimeData.compOffWeekdayOTMode = val; },
+            },
+            {
+              name: 'compOffCarryOverMinutes',
+              label: 'Carry Leftover Minutes',
+              type: 'toggle',
+              colSpan: 1,
+              value: compOffValues?.carryOverMinutes ?? true,
+              hint: 'On: minutes short of a unit carry to the next OT day. Off: each day counts alone - with 90 min per unit, 2 h = 1 unit and the extra 30 min are dropped.',
+              onChange: (val: any) => { this.manualOvertimeData.compOffCarryOverMinutes = val; },
+            },
+            {
+              name: 'compOffAutoAdjustUnpaid',
+              label: 'Auto-adjust Against Unpaid Days',
+              type: 'toggle',
+              colSpan: 1,
+              value: compOffValues?.autoAdjustUnpaidDays ?? false,
+              hint: 'At month-end freeze, comp off balance (in 0.5-day steps) covers absent days, unpaid leave and half-day deductions before salary is cut. E.g. 1.5 comp off, 3 absent + 1 half day = 2 days deducted.',
+              onChange: (val: any) => { this.manualOvertimeData.compOffAutoAdjustUnpaid = val; },
             },
             {
               name: 'compOffMaxBalanceDays',
@@ -2361,6 +2396,7 @@ export class BranchDetailsComponent implements OnInit {
             ? 'Tax Deductor updated successfully'
             : 'Tax Deductor saved successfully',
         );
+        this.saveAoCodeAndTdsCircle(payload.CompanyAoCode, payload.CompanyTdsCircle);
         this.getTaxDeductor();
       },
       error: (error: HttpErrorResponse) => {
@@ -2369,6 +2405,28 @@ export class BranchDetailsComponent implements OnInit {
           error?.error?.message || 'Error saving Tax Deductor',
         );
       },
+    });
+  }
+
+  // AO Code and TDS Circle are shown in the Tax Deductor form but stored on the
+  // branch's Statutory Identity record (CompanyTaxDeductor has no such columns),
+  // so the tax-deductor save silently dropped them. Write them to that record.
+  private saveAoCodeAndTdsCircle(aoCode: string, tdsCircle: string): void {
+    const existing = this.dataSource1?.[0];
+    const statutoryId = existing?.id || existing?.Id || existing?.companyStatutoryIdentityId;
+    if (!statutoryId) {
+      if (aoCode || tdsCircle) {
+        this.notificationService.showError('Save the Statutory details first; AO Code and TDS Circle are stored with them.');
+      }
+      return;
+    }
+    if ((existing.companyAoCode || '') === aoCode && (existing.companyTdsCircle || '') === tdsCircle) return;
+    const statutoryPayload = { ...existing, Id: statutoryId, CompanyBranchId: this.companyBranchId, CompanyAoCode: aoCode, CompanyTdsCircle: tdsCircle };
+    delete statutoryPayload.companyAoCode;
+    delete statutoryPayload.companyTdsCircle;
+    this.reposotory.update('api/company-branch/UpdateCompanyStatutory', statutoryPayload).subscribe({
+      next: () => this.getBranchStatutory(),
+      error: () => this.notificationService.showError('AO Code / TDS Circle could not be saved'),
     });
   }
 
@@ -2995,6 +3053,9 @@ export class BranchDetailsComponent implements OnInit {
       QuartersForFullDay: 4,
       IncludeWeeklyOffHolidayWork: !!d.includeWeeklyOffHolidayWork,
       IncludeFixedOT: !!d.includeFixedOT,
+      WeekdayOTMode: d.compOffWeekdayOTMode || 'Off',
+      CarryOverMinutes: d.compOffCarryOverMinutes !== false,
+      AutoAdjustUnpaidDays: !!d.compOffAutoAdjustUnpaid,
       MaxBalanceDays: d.compOffMaxBalanceDays ? (parseFloat(String(d.compOffMaxBalanceDays)) || null) : null,
       RedemptionRequiresApproval: d.compOffRedemptionRequiresApproval !== false,
       CarryForwardMode: d.compOffCarryForwardMode || 'NextMonth',
@@ -3139,6 +3200,9 @@ export class BranchDetailsComponent implements OnInit {
       isPfExpensesIncludeInCTC: data.isPfExpensesIncludeInCTC === 'Yes',
       isPfExpensesOverridableAtEmployeeLevel:
         data.isPfExpensesOverridableAtEmployeeLevel === 'Yes',
+      // Edited in the Tax Deductor section but stored on this record - keep them.
+      CompanyTdsCircle: this.dataSource1[0]?.companyTdsCircle || '',
+      CompanyAoCode: this.dataSource1[0]?.companyAoCode || '',
       Status: statusValue,
     };
 
@@ -3265,10 +3329,15 @@ export class BranchDetailsComponent implements OnInit {
       .subscribe((data: any[]) => {
         // Cast as an array
         // Map directly over 'data', not 'data.data'
-        this.branchLeaveEncashmentList = data.map((item: any) => ({
-          ...item,
-          status: UtilityService.normalizeStatus(item.status),
-        }));
+        // The API returns every branch's settings - keep only this branch's, otherwise
+        // the form showed (and Update overwrote) another branch's record.
+        const branchId = String(this.companyBranchId || '').toLowerCase();
+        this.branchLeaveEncashmentList = (data || [])
+          .filter((item: any) => !branchId || String(item.companyBranchId || '').toLowerCase() === branchId)
+          .map((item: any) => ({
+            ...item,
+            status: UtilityService.normalizeStatus(item.status),
+          }));
         this.dataSource5 = this.branchLeaveEncashmentList;
         // Refresh Form State
         this.initializeFormState('leaveEncashment');
