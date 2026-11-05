@@ -259,7 +259,26 @@ export class AppComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Progress Tracker opens some screens from inside its iframe (e.g. Create Task). Keep the shell's address on
+      // that screen so a browser refresh reopens it instead of the dashboard. replaceUrl: no extra history entry;
+      // mfeRouteSync tells MfeContainer the iframe already shows the page, so it is not reloaded.
+      if (event.data.type === 'PROGRESS_NAVIGATED' && event.origin === window.location.origin
+          && typeof event.data.url === 'string' && event.data.url.startsWith('/progress/') && !event.data.url.startsWith('//')) {
+        if (this.router.url !== event.data.url) {
+          this.router.navigateByUrl(event.data.url, { replaceUrl: true, state: { mfeRouteSync: true } });
+        }
+        return;
+      }
+
       if (event.data.type === 'ROUTER_NAVIGATED') {
+        // Onboarding opens plans from inside the Employee iframe (list -> plan -> new plan). Same as Progress above:
+        // keep the shell's address on that screen, otherwise the address stays on the list and clicking the
+        // "Onboarding Plans" menu changes nothing, leaving the previously opened/saved plan on screen.
+        const url = event.data.url;
+        if (event.origin === window.location.origin && typeof url === 'string'
+            && url.startsWith('/employee/onboardingHub/') && this.router.url !== url) {
+          this.router.navigateByUrl(url, { replaceUrl: true, state: { mfeRouteSync: true } });
+        }
         this.globalSearchTerm = '';
         this.isGlobalSearchOpen = false;
         this.globalEmployeeResults = [];

@@ -162,6 +162,14 @@ export class MfeContainerComponent implements OnInit, OnDestroy {
       targetUrl = mfeBaseUrl.endsWith('/') ? mfeBaseUrl + '#/' : mfeBaseUrl + '/#/';
     }
 
+    // The shell address was only brought in step with a screen the MFE opened itself (PROGRESS_NAVIGATED in
+    // app.component): the iframe already shows it, so remember the URL without reloading the frame.
+    const nav = this.router.lastSuccessfulNavigation;
+    if (this.mfeUrl && nav?.trigger === 'imperative' && nav.extras?.state?.['mfeRouteSync']) {
+      this.mfeUrl = targetUrl;
+      return;
+    }
+
     console.log('[MfeContainer] Updating Iframe Src to:', targetUrl);
 
     // Only update if changed to prevent unnecessary reloads
