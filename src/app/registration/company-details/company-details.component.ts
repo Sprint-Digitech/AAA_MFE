@@ -41,7 +41,7 @@ export class CompanyDetailsComponent implements OnInit {
     { field: 'srNo', header: '#' },
     { field: 'companyBranchName', header: 'Name' },
     { field: 'currencyName', header: 'Currency' },
-    { field: 'statusText', header: 'Status' },
+    { field: 'status', header: 'Status' },
   ];
 
   constructor(
@@ -98,8 +98,9 @@ export class CompanyDetailsComponent implements OnInit {
               ...item,
               srNo: index + 1,
               currencyName: item.currency?.currencyName || '',
-              // status may arrive as 1/0, "1"/"0", true/false or "Active"/"Inactive"
-              statusText: [1, '1', true, 'active', 'Active'].includes(item.status) ? 'Active' : 'Inactive',
+              // status may arrive as 1/0, "1"/"0", true/false or "Active"/"Inactive".
+              // The table shows a 'status' column as a green Active / red Inactive badge.
+              status: [1, '1', true, 'active', 'Active'].includes(item.status) ? 'Active' : 'Inactive',
             }));
           this.dataSource = this.companyDetailList;
         },

@@ -572,6 +572,7 @@ export class BranchDetailsComponent implements OnInit {
     this.leaveId = leaveId;
     const isUpdate = !!leaveId;
 
+    // Values go in as strings: the form treats a numeric 0 as empty, which blanked saved zeros.
     this.leaveEncashmentFormConfig = {
       formTitle: '',
       submitLabel: isUpdate ? 'Update Details' : 'Save Details',
@@ -592,7 +593,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Max Encashment Days',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.maxEncashmentDays || '',
+              value: String(initialValues?.maxEncashmentDays ?? ''),
               onChange: (val: any) => (this.manualLeaveData.maxEncashmentDays = val),
               validations: [{ type: 'required', message: 'Required' }],
             },
@@ -601,7 +602,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Min Leave Balance',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.minLeaveBalance || '',
+              value: String(initialValues?.minLeaveBalance ?? ''),
               onChange: (val: any) => (this.manualLeaveData.minLeaveBalance = val),
               validations: [{ type: 'required', message: 'Required' }],
             },
@@ -610,7 +611,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'Tax Exemption Limit',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.taxExemptionLimit || '',
+              value: String(initialValues?.taxExemptionLimit ?? ''),
               onChange: (val: any) => (this.manualLeaveData.taxExemptionLimit = val),
               validations: [{ type: 'required', message: 'Required' }],
             },
@@ -619,7 +620,7 @@ export class BranchDetailsComponent implements OnInit {
               label: 'TDS Rate (%)',
               type: 'number',
               colSpan: 1,
-              value: initialValues?.tdsRate || '',
+              value: String(initialValues?.tdsRate ?? ''),
               onChange: (val: any) => (this.manualLeaveData.tdsRate = val),
               validations: [{ type: 'required', message: 'Required' }],
             },
