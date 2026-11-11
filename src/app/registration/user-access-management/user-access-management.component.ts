@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -248,9 +249,29 @@ export class UserAccessManagementComponent implements OnInit, OnDestroy {
   }
 
   loadEmployeesWithRoles(): void {
-    this.http.get<EmployeeWithRoles[]>(`${this.envUrl.essUrlAddress}/api/EmployeeReport/GetEmployeesWithRoles`).subscribe({
-      next: (response) => {
-        const all = response || [];
+    // "Assign Role" writes to HRMSAuthZ (the source of menu access), while this list's roles come
+    // from the Employee service - so an assigned role never showed here. Show both: the Employee
+    // service roles plus each employee's active HRMSAuthZ assignments. A failed HRMSAuthZ read just
+    // falls back to the Employee service roles as before.
+    forkJoin({
+      employees: this.http.get<EmployeeWithRoles[]>(`${this.envUrl.essUrlAddress}/api/EmployeeReport/GetEmployeesWithRoles`),
+      assignments: this.authzSvc.getAllAssignments().pipe(catchError(() => of([] as any[])))
+    }).subscribe({
+      next: ({ employees, assignments }) => {
+        const authzRolesByEmail = new Map<string, string[]>();
+        (assignments || []).filter((a: any) => a?.isActive && a?.userEmail && a?.roleName).forEach((a: any) => {
+          const key = String(a.userEmail).trim().toLowerCase();
+          authzRolesByEmail.set(key, [...(authzRolesByEmail.get(key) || []), a.roleName]);
+        });
+        const all = (employees || []).map((e: any) => {
+          const extra = authzRolesByEmail.get(String(e.email || '').trim().toLowerCase()) || [];
+          if (!extra.length) return e;
+          const merged: string[] = [];
+          [...(e.roles || []), ...extra].forEach((r: string) => {
+            if (r && !merged.some(m => m.toLowerCase() === r.toLowerCase())) merged.push(r);
+          });
+          return { ...e, roles: merged };
+        });
         const withRoles = all.filter(e => e.roles && e.roles.length > 0);
         const withoutRoles = all.filter(e => !e.roles || e.roles.length === 0);
 

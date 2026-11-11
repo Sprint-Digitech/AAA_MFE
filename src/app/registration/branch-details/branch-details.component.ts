@@ -2049,7 +2049,7 @@ export class BranchDetailsComponent implements OnInit {
               // admins believe the new limits/rates were live everywhere when the
               // attendance side was still on stale settings.
               this.notificationService.showError(
-                `Attendance-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
+                `Attendance-service overtime sync failed (HTTP ${e.status}): ${this.syncErrorReason(e)}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
               );
             }
           });
@@ -2064,7 +2064,7 @@ export class BranchDetailsComponent implements OnInit {
             error: (e: HttpErrorResponse) => {
               console.error('[BRANCH_DETAILS] ALMS overtime sync error:', e);
               this.notificationService.showError(
-                `Attendance-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
+                `Attendance-service overtime sync failed (HTTP ${e.status}): ${this.syncErrorReason(e)}. Overtime calculated from attendance will NOT use these rates until this is fixed.`
               );
             }
           });
@@ -2082,7 +2082,7 @@ export class BranchDetailsComponent implements OnInit {
             error: (e: HttpErrorResponse) => {
               console.error('[BRANCH_DETAILS] CAB overtime sync error:', e.status, e.error, e.message);
               this.notificationService.showError(
-                `Salary-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Actual overtime pay will NOT use these rates until this is fixed.`
+                `Salary-service overtime sync failed (HTTP ${e.status}): ${this.syncErrorReason(e)}. Actual overtime pay will NOT use these rates until this is fixed.`
               );
             }
           });
@@ -2097,7 +2097,7 @@ export class BranchDetailsComponent implements OnInit {
             error: (e: HttpErrorResponse) => {
               console.error('[BRANCH_DETAILS] CAB overtime sync error:', e.status, e.error, e.message);
               this.notificationService.showError(
-                `Salary-service overtime sync failed (HTTP ${e.status}): ${e.error?.message || e.error?.title || e.message || 'unknown error'}. Actual overtime pay will NOT use these rates until this is fixed.`
+                `Salary-service overtime sync failed (HTTP ${e.status}): ${this.syncErrorReason(e)}. Actual overtime pay will NOT use these rates until this is fixed.`
               );
             }
           });
@@ -2118,6 +2118,15 @@ export class BranchDetailsComponent implements OnInit {
   // back and warns if they don't match, so a stale ALMS/CAB copy of these
   // specific fields can't silently cause auto-approved Fixed OT hours to go
   // un-priced, or hours that should require Dynamic approval to auto-process.
+  // A service's production error handler answers 500 as { message: "Something went wrong.",
+  // detail, inner } - show the actual reason (inner/detail) instead of only the generic text.
+  private syncErrorReason(e: HttpErrorResponse): string {
+    const body: any = e?.error;
+    const detail = body?.inner || body?.Inner || body?.detail || body?.Detail;
+    const message = body?.message || body?.Message || body?.title || e?.message || 'unknown error';
+    return detail && detail !== message ? `${message} ${detail}` : message;
+  }
+
   private verifyOvertimeFanOutApplied(serviceLabel: string, getUrl: string, expected: any): void {
     this.reposotory.get(getUrl).subscribe({
       next: (data: any) => {

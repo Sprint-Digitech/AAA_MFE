@@ -687,7 +687,8 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     const displayName = this.getDisplayName(userData);
-    const role = this.extractPrimaryRole(userData);
+    // Show every assigned role (e.g. "Director, Employee"), not only the first one.
+    const role = this.extractAllRoles(userData) || this.extractPrimaryRole(userData);
     const email = userData.email || userData.employeeEmail || userData.loginEmail || userData.userEmail || '';
     const department = userData.departmentName || userData.department || '';
     const designation = userData.designationName || userData.designation || '';
@@ -748,11 +749,30 @@ export class AppComponent implements OnInit, OnDestroy {
     return typeof fallback === 'string' ? fallback.trim() : '';
   }
 
+  private extractAllRoles(userData: any): string {
+    const roles = Array.isArray(userData?.employeeRoleLoginDtos) ? userData.employeeRoleLoginDtos : [];
+    const names = roles
+      .map((r: any) => r?.roleDisplayName || r?.roleName || r?.roleDescription || r?.name)
+      .filter((n: any) => typeof n === 'string' && n.trim())
+      .map((n: string) => n.trim());
+    return [...new Set(names)].join(', ');
+  }
+
   private extractPrimaryRole(userData: any): string {
     const roles = Array.isArray(userData?.employeeRoleLoginDtos) ? userData.employeeRoleLoginDtos : [];
     const primaryRole = roles.find((role: any) => role?.isPrimary) || roles[0] || null;
     const roleName = primaryRole?.roleName || primaryRole?.roleDescription || primaryRole?.name || userData.roleName || userData.role || '';
     return typeof roleName === 'string' ? roleName.trim() : '';
+  }
+
+  // A submenu whose path is the start of a sibling's path (Gratuity "Calculation" = /gratuity vs
+  // "Rules" = /gratuity/GratuityRule) must only be active on its own page - otherwise both were
+  // highlighted on the sibling's page. Others keep prefix matching so their child pages stay active.
+  isParentPathOfSibling(sub: any, siblings: any[]): boolean {
+    const norm = (p: any) => String(p || '').split('?')[0].replace(/\/+$/, '').toLowerCase();
+    const own = norm(sub?.menuPath);
+    if (!own) return false;
+    return (siblings || []).some((s: any) => s !== sub && norm(s?.menuPath).startsWith(own + '/'));
   }
 
   toggleSidebar() {

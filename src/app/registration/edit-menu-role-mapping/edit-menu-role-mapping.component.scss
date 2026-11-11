@@ -115,7 +115,8 @@ h2 {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
-  column-gap: 0;
+  column-gap: 16px; // was 0 - long labels ran into the next column
+  row-gap: 12px;
   width: 100%;
   
   @media (max-width: 1400px) {
@@ -168,11 +169,11 @@ h2 {
 }
 
 .menu-item {
-  margin: 0;
+  margin: 0 0 4px;
   padding: 0;
   display: block;
   min-height: 22px;
-  height: 22px;
+  height: auto; // was fixed 22px - a wrapped (2-line) label overlapped the next item
   line-height: 22px;
   overflow: visible;
   position: relative;
@@ -192,20 +193,22 @@ h2 {
   padding: 0 !important;
   display: inline-block !important;
   width: 100%;
-  height: 22px;
+  height: auto;
+  min-height: 22px;
   line-height: 22px;
   vertical-align: top;
   position: relative;
   z-index: 2;
   pointer-events: auto;
-  
+
   .mdc-form-field {
     display: inline-flex !important;
-    align-items: center !important;
+    align-items: flex-start !important; // checkbox stays on the first line of a wrapped label
     margin: 0 !important;
     padding: 0 !important;
     width: 100%;
-    height: 22px;
+    height: auto;
+    min-height: 22px;
     line-height: 22px;
     vertical-align: top;
     position: relative;
@@ -245,13 +248,18 @@ h2 {
   .mdc-form-field__label {
     padding-left: 0 !important;
     margin: 0 !important;
-    line-height: 22px !important;
+    line-height: 1.35 !important;
+    padding-top: 2px !important;
     display: inline-block;
     vertical-align: middle;
-    height: 22px;
-    white-space: nowrap;
+    height: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal; // wrap long menu names inside their own column instead of overlapping
+    overflow-wrap: anywhere;
     overflow: visible;
-    pointer-events: none;
+    pointer-events: auto; // labels no longer overlap, so a click on the name toggles its own checkbox
+    cursor: pointer;
   }
   
   .mdc-form-field__ripple {

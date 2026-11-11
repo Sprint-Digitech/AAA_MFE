@@ -341,7 +341,9 @@
         <div class="emp-modal-row" *ngFor="let emp of filteredModalEmployees"
           [class.emp-modal-row--selected]="isModalEmpSelected(emp)"
           (click)="toggleModalEmployee(emp)">
-          <input type="checkbox" [checked]="isModalEmpSelected(emp)" (click)="$event.stopPropagation()">
+          <!-- stopPropagation keeps the row click from toggling twice; (change) records the checkbox tick itself -->
+          <input type="checkbox" [checked]="isModalEmpSelected(emp)" (click)="$event.stopPropagation()"
+            (change)="toggleModalEmployee(emp)">
           <span class="emp-col-code">{{ emp.employeeCode }}</span>
           <span class="emp-col-name">{{ emp.employeeName }}</span>
           <span class="emp-col-email">{{ emp.email }}</span>

@@ -667,6 +667,17 @@ export class EditMenuRoleMappingComponent {
     this.groupMenusByCategory();
   }
 
+  // trackBy keeps the existing checkbox DOM when groupMenusByCategory() rebuilds the category
+  // objects on every toggle. Without it the whole list was re-created on each click, which
+  // dropped focus (page jumped to the top) and could land the click on a different checkbox.
+  trackByCategory(_index: number, category: any): any {
+    return category.categoryId ?? category.categoryName;
+  }
+
+  trackByMenu(_index: number, menu: any): any {
+    return menu.menuID;
+  }
+
   isCategoryAllSelected(category: any): boolean {
     if (!category.menus || category.menus.length === 0) {
       return false;

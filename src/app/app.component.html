@@ -71,7 +71,9 @@
                         <ng-template #plainSubmenu>
                             <div class="submenu-title">{{ item.menuDisplayName }}</div>
                             <a class="submenu-item" *ngFor="let sub of item.submenu" [routerLink]="sub.menuPath"
-                                routerLinkActive="active-submenu" (click)="closeSubmenus()">
+                                routerLinkActive="active-submenu"
+                                [routerLinkActiveOptions]="{ exact: isParentPathOfSibling(sub, item.submenu) }"
+                                (click)="closeSubmenus()">
                                 {{ sub.menuDisplayName }}
                             </a>
                         </ng-template>

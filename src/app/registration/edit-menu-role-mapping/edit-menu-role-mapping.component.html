@@ -13,7 +13,7 @@
       </mat-checkbox>
     </div>
     <div class="menu-categories">
-      <ng-container *ngFor="let category of groupedMenuCategories">
+      <ng-container *ngFor="let category of groupedMenuCategories; trackBy: trackByCategory">
         <div class="menu-category">
           <div class="category-header">
             <mat-checkbox 
@@ -23,7 +23,7 @@
             <h3 class="category-title">{{ category.categoryName }}</h3>
           </div>
           <div class="menu-items">
-            <div *ngFor="let menu of category.menus" class="menu-item">
+            <div *ngFor="let menu of category.menus; trackBy: trackByMenu" class="menu-item">
               <mat-checkbox 
                 [checked]="menu.access" 
                 (change)="toggleMenuAccess(menu)">
