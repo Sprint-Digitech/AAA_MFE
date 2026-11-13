@@ -1759,11 +1759,11 @@ export class BranchDetailsComponent implements OnInit {
             },
             {
               name: 'compOffCoverLeavesAndHalfDays',
-              label: 'Use Comp-off for Leaves & Half Days at Month End',
+              label: 'Cover Leaves & Half Days',
               type: 'toggle',
               colSpan: 1,
               value: compOffValues?.coverLeavesAndHalfDays ?? false,
-              hint: 'At attendance freeze, the month\'s leaves + half days (incl. half days from late in / early out) are taken from comp-off first, then from leave balance.',
+              hint: 'Month end: at attendance freeze, the month\'s leaves + half days (incl. half days from late in / early out) are taken from comp-off first, then from leave balance.',
               onChange: (val: any) => { this.manualOvertimeData.compOffCoverLeavesAndHalfDays = val; },
             },
             {
