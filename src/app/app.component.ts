@@ -274,9 +274,12 @@ export class AppComponent implements OnInit, OnDestroy {
         // Onboarding opens plans from inside the Employee iframe (list -> plan -> new plan). Same as Progress above:
         // keep the shell's address on that screen, otherwise the address stays on the list and clicking the
         // "Onboarding Plans" menu changes nothing, leaving the previously opened/saved plan on screen.
+        // Recruitment works the same way (requisitions -> job board -> candidate): without this a browser refresh
+        // reopened the first recruitment screen instead of the candidate / board on screen (TC-019).
         const url = event.data.url;
         if (event.origin === window.location.origin && typeof url === 'string'
-            && url.startsWith('/employee/onboardingHub/') && this.router.url !== url) {
+            && (url.startsWith('/employee/onboardingHub/') || url.startsWith('/employee/recruitment/'))
+            && this.router.url !== url) {
           this.router.navigateByUrl(url, { replaceUrl: true, state: { mfeRouteSync: true } });
         }
         this.globalSearchTerm = '';
